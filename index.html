@@ -198,8 +198,8 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Kuratorenbüro v9.0</h1>
-        <p>Bringe die Zahlen in Ordnung und erkunde das voll eingerichtete Büro des Museums-Chefs!</p>
+        <h1>🏛️ Kuratorenbüro v9.1</h1>
+        <p>Bringe die Zahlen in Ordnung und erkunde das voll eingerichtete Büro mit echten 3D-Bücherregalen!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile<br>
@@ -264,7 +264,7 @@
         floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 
         const subFloorGeo = new THREE.PlaneGeometry(SUB_ROOM_SIZE, SUB_ROOM_SIZE);
-        const subFloorMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.8 }); // Etwas wärmerer Büroboden
+        const subFloorMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.8 }); 
         const subFloor = new THREE.Mesh(subFloorGeo, subFloorMat);
         subFloor.rotation.x = -Math.PI / 2;
         subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0);
@@ -333,12 +333,11 @@
 
         // --- 2C. BÜRO-EINRICHTUNG (MÖBEL & DEKO) ---
         const officeGroup = new THREE.Group();
-        officeGroup.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); // Zentrum des Büros
+        officeGroup.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); 
         scene.add(officeGroup);
 
-        // Materialien für die Möbel
-        const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); // Dunkles Holz
-        const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); // Anthrazit Kunststoff
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); 
+        const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); 
         const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.1 }); 
 
         // 1. Schreibtisch
@@ -350,7 +349,7 @@
         const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg2.position.set(1.1, 0.38, 0); desk.add(leg2);
         officeGroup.add(desk);
 
-        // Deko auf dem Schreibtisch: PC-Monitor & Lampe
+        // Monitor & Lampe
         const monitor = new THREE.Group(); monitor.position.set(0, 0.8, -0.3);
         const stand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.1), plasticMat); stand.position.y = 0.15; monitor.add(stand);
         const screen = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), plasticMat); screen.position.y = 0.4; monitor.add(screen);
@@ -365,40 +364,99 @@
 
         // 2. Bürostuhl
         const chair = new THREE.Group();
-        chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; // Leicht weggedreht
+        chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; 
         const base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4), chromeMat); base.position.y = 0.2; chair.add(base);
         const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.55), plasticMat); seat.position.y = 0.43; chair.add(seat);
         const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), plasticMat); backrest.position.set(0, 0.73, -0.25); backrest.rotation.x = -0.1; chair.add(backrest);
         officeGroup.add(chair);
 
-        // 3. Bücherregale (An der Rückwand des Büros)
+        // 3. DAS NEUE HOCHWERTIGE 3D BÜCHERREGAL MIT ECHTEN BÜCHERN
         function createShelf(x, z) {
-            const shelf = new THREE.Group(); shelf.position.set(x, 0, z);
-            const frame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 0.4), woodMat); frame.position.y = 1.2; shelf.add(frame);
-            // Regal-Inlays (Ausschnitte)
-            for(let h=0.4; h<2.4; h+=0.5) {
-                const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.03, 0.36), woodMat); board.position.set(0, h, 0.01); shelf.add(board);
-                // Random Bücher hinzufügen
-                for(let b=-0.6; b<0.6; b+=0.12) {
-                    if(Math.random() > 0.2) {
-                        const bHeight = 0.25 + Math.random()*0.15; const bWidth = 0.04 + Math.random()*0.04;
-                        const book = new THREE.Mesh(new THREE.BoxGeometry(bWidth, bHeight, 0.25), new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff, roughness: 0.5 }));
-                        book.position.set(b + 0.05, h + bHeight/2, 0.05);
-                        if(Math.random() > 0.85) book.rotation.z = (Math.random() - 0.5) * 0.3; // Schiefes Buch
+            const shelf = new THREE.Group();
+            shelf.position.set(x, 0, z);
+
+            const shelfWoodMat = new THREE.MeshStandardMaterial({ 
+                color: 0x2c1a10, 
+                roughness: 0.5,
+                metalness: 0.1 
+            });
+            const bookColors = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f, 0x9b59b6, 0x16a085, 0xe67e22];
+
+            // Rückwand
+            const backwall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 0.04), shelfWoodMat);
+            backwall.position.set(0, 1.2, -0.18);
+            shelf.add(backwall);
+
+            // Seitenwände
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat);
+            leftWall.position.set(-0.78, 1.2, 0);
+            shelf.add(leftWall);
+
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat);
+            rightWall.position.set(0.78, 1.2, 0);
+            shelf.add(rightWall);
+
+            // Deckel und Boden
+            const topBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.4), shelfWoodMat);
+            topBoard.position.set(0, 2.38, 0);
+            shelf.add(topBoard);
+
+            const bottomBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.4), shelfWoodMat);
+            bottomBoard.position.set(0, 0.02, 0);
+            shelf.add(bottomBoard);
+
+            // Mittlere Regalböden & Bücher
+            const numShelves = 4;
+            const shelfSpacing = 2.4 / (numShelves + 1);
+
+            for (let i = 1; i <= numShelves; i++) {
+                const h = i * shelfSpacing;
+                
+                const board = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.03, 0.38), shelfWoodMat);
+                board.position.set(0, h, 0);
+                shelf.add(board);
+
+                let currentX = -0.7; 
+                const maxX = 0.7;    
+
+                while (currentX < maxX) {
+                    if (Math.random() > 0.15) {
+                        const bWidth = 0.03 + Math.random() * 0.04;  
+                        const bHeight = 0.22 + Math.random() * 0.13; 
+                        const bDepth = 0.22 + Math.random() * 0.05;  
+
+                        const bookMat = new THREE.MeshStandardMaterial({
+                            color: bookColors[Math.floor(Math.random() * bookColors.length)],
+                            roughness: 0.6
+                        });
+
+                        const bookGeo = new THREE.BoxGeometry(bWidth, bHeight, bDepth);
+                        const book = new THREE.Mesh(bookGeo, bookMat);
+                        book.position.set(currentX + bWidth / 2, h + 0.015 + bHeight / 2, 0.05);
+
+                        // Realistischer Kipp-Effekt für manche Bücher
+                        if (Math.random() > 0.85 && currentX < maxX - 0.1) {
+                            book.rotation.z = -0.25 - Math.random() * 0.15; 
+                            book.position.y -= 0.02; 
+                            currentX += bWidth + 0.08; 
+                        } else {
+                            currentX += bWidth + 0.01; 
+                        }
                         shelf.add(book);
+                    } else {
+                        currentX += 0.05 + Math.random() * 0.1; 
                     }
                 }
             }
             return shelf;
         }
-        officeGroup.add(createShelf(-2.5, -4.7)); // Linkes Regal hinten
-        officeGroup.add(createShelf(-0.8, -4.7)); // Rechtes Regal hinten
+        officeGroup.add(createShelf(-2.5, -4.7)); 
+        officeGroup.add(createShelf(-0.8, -4.7)); 
 
-        // 4. Aktenschränke (An der rechten Bürowand)
+        // 4. Aktenschränke
         function createCabinet(x, z, rot) {
             const cab = new THREE.Group(); cab.position.set(x, 0, z); cab.rotation.y = rot;
             const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.4 })); body.position.y = 0.9; cab.add(body);
-            // Schubladenblenden
             for(let f=0.25; f<1.8; f+=0.42) {
                 const drawer = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.36, 0.02), new THREE.MeshStandardMaterial({ color: 0xb2bec3, roughness: 0.3 })); drawer.position.set(0, f, 0.26); cab.add(drawer);
                 const handle = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.03), chromeMat); handle.position.set(0, f, 0.28); cab.add(handle);
@@ -408,7 +466,7 @@
         officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2));
         officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
 
-        // 5. Dekoration: Zimmerpflanze in der Ecke
+        // 5. Zimmerpflanze
         const plant = new THREE.Group(); plant.position.set(4.0, 0, 4.0);
         const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })); pot.position.y = 0.3; plant.add(pot);
         const plantMat = new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.9, flatShading: true });
@@ -420,7 +478,7 @@
         }
         officeGroup.add(plant);
 
-        // --- 3. EXPO-PLÄTZE (AN DER RÜCKWAND DES HAUPTRAUMS) ---
+        // --- 3. EXPO-PLÄTZE ---
         const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
         function createNumberTexture(number) {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d');
@@ -520,7 +578,7 @@
         });
         window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
 
-        // --- 7. GAME LOOP & ERWEITERTE KOLLISION (INKL. MÖBEL) ---
+        // --- 7. GAME LOOP & ERWEITERTE KOLLISION ---
         const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
@@ -540,31 +598,24 @@
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
                 let allowed = true;
 
-                // 1. HAUPTRAUM-KOLLISION
                 if (nextX < ROOM_SIZE / 2 - playerRadius) {
                     let maxCoord = ROOM_SIZE / 2 - playerRadius;
                     if (nextX < -maxCoord || nextZ < -maxCoord || nextZ > maxCoord) allowed = false;
                     let blockBound = BLOCK_SIZE / 2 + playerRadius;
                     if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
                 } 
-                // 2. BÜRO-KOLLISION (NEBENRAUM)
                 else if (nextX > ROOM_SIZE / 2 + playerRadius) {
                     let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius;
                     let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
                     if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
 
-                    // Möbel-Kollisionen im Büro (relativ zum officeGroup-Zentrum berechnet)
                     let relX = nextX - (ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2);
                     let relZ = nextZ;
 
-                    // Schreibtisch-Kollisionsbox
                     if (relX > -1.3 && relX < 1.3 && relZ > -0.7 && relZ < 0.7) allowed = false;
-                    // Regale hinten (Z-Achse beachten)
                     if (relZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false;
-                    // Aktenschränke rechts
                     if (relX > 4.6 - 0.5 - playerRadius && relZ > -2.8 && relZ < 0.5) allowed = false;
                 } 
-                // 3. TÜR-DURCHGANGS-KOLLISION
                 else {
                     if (nextZ < -DOOR_WIDTH / 2 + playerRadius || nextZ > DOOR_WIDTH / 2 - playerRadius) allowed = false;
                     if (!isDoorOpen && nextX > ROOM_SIZE / 2 - playerRadius) allowed = false;
