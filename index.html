@@ -150,6 +150,53 @@
             font-size: 1rem;
             cursor: pointer;
         }
+
+        /* Gewinn-Bildschirm Styles */
+        #win-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 25, 15, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        #win-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .win-box {
+            background: #142119;
+            border: 3px solid #2ed573;
+            border-radius: 20px;
+            padding: 40px;
+            width: 85%;
+            max-width: 450px;
+            color: white;
+            box-shadow: 0 0 30px rgba(46, 213, 115, 0.4);
+            text-align: center;
+        }
+        .win-box h2 { margin-top: 0; color: #2ed573; font-size: 2rem; }
+        .win-box p { color: #dddddd; font-size: 1.1rem; line-height: 1.5; margin-bottom: 30px; }
+        .restart-btn {
+            background: #2ed573;
+            color: #142119;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(46, 213, 115, 0.3);
+            transition: transform 0.2s;
+        }
+        .restart-btn:hover { transform: scale(1.05); }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -178,6 +225,15 @@
             <p id="inv-subtitle">Deine gesammelten Gegenstände</p>
             <div class="inventory-grid" id="inventory-grid"></div>
             <button class="close-btn" onclick="toggleInventory()">Schließen</button>
+        </div>
+    </div>
+
+    <!-- Neues Gewinn-Overlay -->
+    <div id="win-overlay">
+        <div class="win-box">
+            <h2>🎉 Gelöst!</h2>
+            <p>Ausgezeichnet! Du hast die Zahlenordnung im Museum wiederhergestellt (1 - 2 - 3 - 4 - 5).</p>
+            <button class="restart-btn" onclick="restartGame()">Nochmal spielen</button>
         </div>
     </div>
 
@@ -338,11 +394,13 @@
 
         // --- 5. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false;
+        let isGameWon = false;
         let activeExhibitNearMe = null; 
         let modePlacement = false;      
         const playerInventory = []; 
 
         function toggleInventory() {
+            if (isGameWon) return; // Inventar sperren wenn gewonnen
             isInventoryOpen = !isInventoryOpen;
             const overlay = document.getElementById('inventory-overlay');
             if (isInventoryOpen) {
@@ -383,6 +441,9 @@
                             activeExhibitNearMe.currentNumber = numberVal;
                             updateExhibitVisual(activeExhibitNearMe);
                             toggleInventory();
+                            
+                            // Nach jedem Aufhängen prüfen, ob die Reihenfolge stimmt
+                            checkWinCondition();
                         }
                     };
                 } else {
@@ -393,6 +454,7 @@
         }
 
         function triggerInteraction() {
+            if (isGameWon) return;
             if (activeExhibitNearMe !== null && !isInventoryOpen) {
                 if (activeExhibitNearMe.currentNumber !== null) {
                     playerInventory.push(activeExhibitNearMe.currentNumber);
@@ -403,6 +465,42 @@
                     toggleInventory();
                 }
             }
+        }
+
+        // Überprüfung der Win-Condition (1, 2, 3, 4, 5)
+        function checkWinCondition() {
+            const currentOrder = exhibits.map(ex => ex.currentNumber);
+            const correctOrder = [1, 2, 3, 4, 5];
+            
+            // Prüfen ob alle Plätze gefüllt sind und die Reihenfolge exakt übereinstimmt
+            const hasWon = currentOrder.every((val, index) => val === correctOrder[index]);
+            
+            if (hasWon) {
+                isGameWon = true;
+                // UI Prompts ausblenden
+                document.getElementById('interaction-prompt').style.display = 'none';
+                // Gewinn-Overlay anzeigen
+                document.getElementById('win-overlay').classList.add('open');
+            }
+        }
+
+        // Funktion zum Zurücksetzen des Spiels
+        function restartGame() {
+            isGameWon = false;
+            playerInventory.length = 0; // Inventar leeren
+            
+            // Plätze wieder mischen
+            const mixedNumbers = [4, 1, 5, 2, 3];
+            for(let i = 0; i < exhibits.length; i++) {
+                exhibits[i].currentNumber = mixedNumbers[i];
+                updateExhibitVisual(exhibits[i]);
+            }
+            
+            // Spieler zurücksetzen
+            playerGroup.position.set(0, 0, 5);
+            
+            // Overlay schließen
+            document.getElementById('win-overlay').classList.remove('open');
         }
 
         // --- 6. TIMEOUT: BEDIENUNG AUSBLENDEN ---
@@ -419,12 +517,12 @@
         let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
 
         window.addEventListener('mousedown', (e) => { 
-            if(isInventoryOpen || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn') return; 
+            if(isInventoryOpen || isGameWon || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn' || e.target.className === 'restart-btn') return; 
             isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; 
         });
         window.addEventListener('mouseup', () => isMouseDown = false);
         window.addEventListener('mousemove', (e) => {
-            if (!isMouseDown || isInventoryOpen) return;
+            if (!isMouseDown || isInventoryOpen || isGameWon) return;
             cameraAngleH += (e.clientX - previousMousePosition.x) * 0.005;
             cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + (e.clientY - previousMousePosition.y) * 0.005));
             previousMousePosition = { x: e.clientX, y: e.clientY };
@@ -432,6 +530,7 @@
 
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         window.addEventListener('keydown', (e) => { 
+            if (isGameWon) return;
             const pressedKey = e.key.toLowerCase();
             if (pressedKey === 'e') { toggleInventory(); return; }
             if (pressedKey === 'r') { triggerInteraction(); return; }
@@ -447,7 +546,7 @@
         let isTouching = false;
 
         window.addEventListener('touchstart', (e) => {
-            if(isInventoryOpen || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn') return;
+            if(isInventoryOpen || isGameWon || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn' || e.target.className === 'restart-btn') return;
             
             isTouching = true;
             touchStartPos.x = e.touches[0].clientX;
@@ -455,7 +554,7 @@
         }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
-            if (!isTouching || isInventoryOpen) return;
+            if (!isTouching || isInventoryOpen || isGameWon) return;
             e.preventDefault(); 
 
             let currentX = e.touches[0].clientX;
@@ -491,7 +590,7 @@
         const playerRadius = 0.4; 
 
         function updateGame() {
-            if (isInventoryOpen) return;
+            if (isInventoryOpen || isGameWon) return;
 
             let moveX = 0; let moveZ = 0;
 
