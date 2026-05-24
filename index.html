@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum mit Zahlenrätsel</title>
+    <title>3D Mathe-Museum mit Touch-Support</title>
     <style>
         body {
             margin: 0;
@@ -37,7 +37,7 @@
             color: #2ed573;
         }
 
-        /* Dynamisches Interaktions-Feld (Mitte unten) */
+        /* Klickbarer Interaktions-Button für PC & Tablet (Mitte unten) */
         #interaction-prompt {
             position: absolute;
             bottom: 100px;
@@ -46,19 +46,21 @@
             background: rgba(234, 32, 39, 0.85);
             border: 2px solid #ff4757;
             color: white;
-            padding: 12px 25px;
+            padding: 15px 30px;
             border-radius: 30px;
             font-size: 1.1rem;
             font-weight: bold;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            z-index: 90;
-            display: none; /* Wird per JS eingeblendet */
-            pointer-events: none;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.6);
+            z-index: 150;
+            display: none; 
+            cursor: pointer; /* Macht es als Button erkennbar */
+            user-select: none;
+            -webkit-user-select: none;
             animation: pulse 1.5s infinite alternate;
         }
         @keyframes pulse {
             from { transform: translateX(-50%) scale(1); }
-            to { transform: translateX(-50%) scale(1.05); }
+            to { transform: translateX(-50%) scale(1.03); }
         }
 
         /* Inventar-Button oben rechts */
@@ -76,7 +78,6 @@
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             z-index: 101;
-            transition: transform 0.1s, background 0.2s;
         }
         #inventory-btn:hover { background: #357abd; }
 
@@ -132,10 +133,7 @@
             align-items: center;
             font-size: 0.8rem;
             color: #747d8c;
-            cursor: default;
-            transition: background 0.2s, border-color 0.2s;
         }
-        /* Wenn ein Slot anwählbar ist, weil ein Bild drin liegt */
         .inventory-slot.selectable {
             border: 2px solid #2ed573;
             color: white;
@@ -163,29 +161,28 @@
 <body>
 
     <div id="ui-layer">
-        <h1>📐 Mathe-Museum v5</h1>
+        <h1>📐 Mathe-Museum v5.1</h1>
         <p>Bringe die Zahlen an der Rückwand in die richtige Reihenfolge!</p>
         <div class="controls-hint">
-            🕹️ STEUERUNG:<br>
-            • Laufen: W, A, S, D / Pfeile<br>
-            • Umsehen: Maus ziehen / Wischen<br>
-            • Interagieren: <b>Taste R</b> nahe am Bild<br>
-            • Inventar: Taste E oder Button
+            💻 PC-STEUERUNG:<br>
+            • Laufen: W, A, S, D / Pfeile | Interagieren: R<br>
+            <br>
+            📱 TABLET-STEUERUNG:<br>
+            • Laufen: Auf dem Bildschirm wischen<br>
+            • Interagieren: Auf den erscheinenden Button tippen
         </div>
     </div>
 
-    <!-- Einblendbares Interaktionsfeld -->
-    <div id="interaction-prompt">Drücke R zum Interagieren</div>
+    <!-- Klickbarer Button statt reinem Textfeld -->
+    <div id="interaction-prompt" onclick="triggerInteraction()">Tippen zum Interagieren</div>
 
-    <button id="inventory-btn" onclick="toggleInventory()">🎒 Inventar (E)</button>
+    <button id="inventory-btn" onclick="toggleInventory()">🎒 Inventar</button>
 
     <div id="inventory-overlay">
         <div class="inventory-box">
             <h2 id="inv-title">🎒 Dein Rucksack</h2>
             <p id="inv-subtitle">Deine gesammelten Gegenstände</p>
-            <div class="inventory-grid" id="inventory-grid">
-                <!-- Wird dynamisch via JavaScript befüllt -->
-            </div>
+            <div class="inventory-grid" id="inventory-grid"></div>
             <button class="close-btn" onclick="toggleInventory()">Schließen</button>
         </div>
     </div>
@@ -228,48 +225,29 @@
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
         const rightWall = new THREE.Mesh(wallGeo, wallMat); rightWall.position.set(ROOM_SIZE/2, 3, 0); rightWall.rotation.y = -Math.PI/2; scene.add(rightWall);
 
-        // --- 3. DYNAMISCHE EXPO-PLÄTZE (DAS ZAHLENRÄTSEL) ---
-        // 5 Plätze an der Rückwand (Z-Koordinate nahe an der Wand: -11.8)
-        // Start-Reihenfolge der Zahlen: 4, 1, 5, 2, 3
+        // --- 3. EXPO-PLÄTZE (DAS ZAHLENRÄTSEL) ---
         const initialNumbers = [4, 1, 5, 2, 3];
         const exhibits = [];
 
-        // Funktion zur Erzeugung einer Textur mit einer Zahl
         function createNumberTexture(number) {
             const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
+            canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            
-            // Hintergrund
-            ctx.fillStyle = '#4a90e2';
-            ctx.fillRect(0, 0, 256, 256);
-            // Weißer innerer Rahmen
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 12;
-            ctx.strokeRect(20, 20, 216, 216);
-            // Zahl zeichnen
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 130px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#4a90e2'; ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 216, 216);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 130px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(number, 128, 128);
-            
             return new THREE.CanvasTexture(canvas);
         }
 
-        // Erschaffe die 5 Plätze nebeneinander
         for(let i=0; i<5; i++) {
-            const posX = -8 + i * 4; // Verteilt von X = -8 bis X = +8
+            const posX = -8 + i * 4;
             const posZ = -ROOM_SIZE/2 + 0.15;
-
             const group = new THREE.Group();
             
-            // Schwarzer Rahmen (bleibt immer an der Wand hängen)
             const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
             group.add(frame);
 
-            // Der innere Bereich (Der "Hintergrund", wenn das Bild weg ist)
             const emptySpace = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.9 }));
             emptySpace.position.z = 0.051;
             group.add(emptySpace);
@@ -277,126 +255,108 @@
             group.position.set(posX, 3, posZ);
             scene.add(group);
 
-            // Struktur für die Logik
             exhibits.push({
-                id: i,
-                position: new THREE.Vector3(posX, 0, posZ), // Für Distanzberechnung (Y ignoriert)
-                currentNumber: initialNumbers[i],           // Welche Zahl hängt hier (null = leer)
-                posterMesh: null,                           // Das Mesh des Bildes selbst
-                groupRef: group
+                id: i, position: new THREE.Vector3(posX, 0, posZ), currentNumber: initialNumbers[i], posterMesh: null, groupRef: group
             });
-
-            // Bild direkt rendern, falls eine Zahl zugewiesen ist
             updateExhibitVisual(exhibits[i]);
         }
 
-        // Aktualisiert das Aussehen des Platzes, wenn ein Bild genommen oder aufgehängt wird
         function updateExhibitVisual(exhibit) {
-            // Falls vorher ein Poster da war, löschen
             if(exhibit.posterMesh) {
                 exhibit.groupRef.remove(exhibit.posterMesh);
                 exhibit.posterMesh.geometry.dispose();
                 exhibit.posterMesh.material.dispose();
                 exhibit.posterMesh = null;
             }
-
-            // Wenn eine Zahl existiert, neues Poster-Mesh erstellen
             if(exhibit.currentNumber !== null) {
                 const tex = createNumberTexture(exhibit.currentNumber);
                 const posterGeo = new THREE.PlaneGeometry(2.0, 2.0);
                 const posterMat = new THREE.MeshBasicMaterial({ map: tex });
-                
                 exhibit.posterMesh = new THREE.Mesh(posterGeo, posterMat);
-                exhibit.posterMesh.position.z = 0.06; // Leicht vor der Wand platziert
+                exhibit.posterMesh.position.z = 0.06;
                 exhibit.groupRef.add(exhibit.posterMesh);
             }
         }
 
         // --- 4. AVATAR ---
         const playerGroup = new THREE.Group();
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), new THREE.MeshStandardMaterial({ color: 0xdddddd }));
-        head.position.y = 1.6;
-        playerGroup.add(head);
-
-        const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.3), new THREE.MeshStandardMaterial({ color: 0x4a90e2 }));
-        bodyMesh.position.y = 1.1;
-        playerGroup.add(bodyMesh);
-
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), new THREE.MeshStandardMaterial({ color: 0xdddddd })); head.position.y = 1.6; playerGroup.add(head);
+        const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.3), new THREE.MeshStandardMaterial({ color: 0x4a90e2 })); bodyMesh.position.y = 1.1; playerGroup.add(bodyMesh);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x2f3542 });
         const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7), legMat); leftLeg.position.set(-0.15, 0.35, 0);
         const rightLeg = leftLeg.clone(); rightLeg.position.x = 0.15;
         playerGroup.add(leftLeg, rightLeg);
-
         playerGroup.position.set(0, 0, 5); 
         scene.add(playerGroup);
 
-        // --- 5. INTERAKTIONS- & INVENTARSYSTEM ---
+        // --- 5. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false;
-        let activeExhibitNearMe = null; // Welcher Ausstellungsplatz ist gerade nah?
-        let modePlacement = false;      // Befinden wir uns im "Aufhäng-Modus"?
-
-        // Globaler Rucksack-Inhalt des Spielers
+        let activeExhibitNearMe = null; 
+        let modePlacement = false;      
         const playerInventory = []; 
 
         function toggleInventory() {
             isInventoryOpen = !isInventoryOpen;
             const overlay = document.getElementById('inventory-overlay');
-            
             if (isInventoryOpen) {
                 overlay.classList.add('open');
-                for (let key in keys) keys[key] = false; // Bewegung stoppen
+                for (let key in keys) keys[key] = false; 
                 renderInventoryUI();
             } else {
                 overlay.classList.remove('open');
-                modePlacement = false; // Modus zurücksetzen
+                modePlacement = false;
             }
         }
 
-        // Generiert die HTML-Slots im Rucksack
         function renderInventoryUI() {
             const gridContainer = document.getElementById('inventory-grid');
             const title = document.getElementById('inv-title');
             const subtitle = document.getElementById('inv-subtitle');
-            
             gridContainer.innerHTML = '';
 
-            // Titel anpassen je nachdem, wie das Inventar geöffnet wurde
             if(modePlacement) {
-                title.innerText = "🖼️ Welches Bild aufhängen?";
-                subtitle.innerText = "Wähle eine Zahl aus, um sie am leeren Platz zu platzieren.";
+                title.innerText = "🖼️ Welches Bild aufhängen?"; subtitle.innerText = "Tippe eine Zahl an, um sie aufzuhängen.";
             } else {
-                title.innerText = "🎒 Dein Rucksack";
-                subtitle.innerText = "Hier siehst du deine gesammelten Zahlen.";
+                title.innerText = "🎒 Dein Rucksack"; subtitle.innerText = "Hier siehst du deine gesammelten Zahlen.";
             }
 
-            // Wir zeigen fix 6 Slots an
             for(let i = 0; i < 6; i++) {
                 const slot = document.createElement('div');
                 slot.className = 'inventory-slot';
 
                 if(playerInventory[i] !== undefined) {
                     const numberVal = playerInventory[i];
-                    slot.className = 'inventory-slot filled';
+                    slot.className = 'inventory-slot filled selectable';
                     slot.innerHTML = `<div class="slot-icon">${numberVal}</div><span>Bild-Zahl</span>`;
                     
-                    // Wenn wir im Platzierungsmodus sind, machen wir die Items anklickbar!
-                    if(modePlacement && activeExhibitNearMe !== null) {
-                        slot.classList.add('selectable');
-                        slot.onclick = () => {
-                            // Zahl aus Inventar entfernen
+                    slot.onclick = () => {
+                        if(modePlacement && activeExhibitNearMe !== null) {
                             playerInventory.splice(i, 1);
-                            // Zahl an die Wand hängen
                             activeExhibitNearMe.currentNumber = numberVal;
                             updateExhibitVisual(activeExhibitNearMe);
-                            
-                            // Inventar schließen und Erfolg vermelden
                             toggleInventory();
-                        };
-                    }
+                        }
+                    };
                 } else {
                     slot.innerHTML = `<div class="slot-icon">🔒</div><span>Leer</span>`;
                 }
                 gridContainer.appendChild(slot);
+            }
+        }
+
+        // Zentrale Funktion für die Interaktion (wird von Taste R UND vom Touch-Button genutzt)
+        function triggerInteraction() {
+            if (activeExhibitNearMe !== null && !isInventoryOpen) {
+                if (activeExhibitNearMe.currentNumber !== null) {
+                    // Bild einpacken
+                    playerInventory.push(activeExhibitNearMe.currentNumber);
+                    activeExhibitNearMe.currentNumber = null;
+                    updateExhibitVisual(activeExhibitNearMe);
+                } else {
+                    // Bild aufhängen (Menü öffnen)
+                    modePlacement = true;
+                    toggleInventory();
+                }
             }
         }
 
@@ -409,11 +369,14 @@
             }
         }, 20000);
 
-        // --- 7. MAUS-, TOUCH- & TASTATUR-CONTROLS ---
+        // --- 7. MAUS- & TOUCH-KAMERASTEUERUNG (REPARIERT) ---
         let cameraAngleH = 0; let cameraAngleV = 0.3; 
         let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
 
-        window.addEventListener('mousedown', (e) => { if(isInventoryOpen) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+        window.addEventListener('mousedown', (e) => { 
+            if(isInventoryOpen || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn') return; 
+            isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; 
+        });
         window.addEventListener('mouseup', () => isMouseDown = false);
         window.addEventListener('mousemove', (e) => {
             if (!isMouseDown || isInventoryOpen) return;
@@ -422,39 +385,45 @@
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
 
-        // Tastatur (inklusive R und E)
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+        // 📱 Reaktivierter Touch-Support für Tablet-Bewegung & Umschauen
+        window.addEventListener('touchstart', (e) => {
+            if(isInventoryOpen || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn') return;
+            isMouseDown = true;
+            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }, { passive: true });
         
+        window.addEventListener('touchend', () => {
+            isMouseDown = false;
+            keys.w = false; keys.s = false; // Stoppt Bewegung beim Loslassen
+        });
+        
+        window.addEventListener('touchmove', (e) => {
+            if (!isMouseDown || isInventoryOpen) return;
+            let deltaX = e.touches[0].clientX - previousMousePosition.x;
+            let deltaY = e.touches[0].clientY - previousMousePosition.y;
+
+            cameraAngleH += deltaX * 0.008;
+            cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + deltaY * 0.008));
+
+            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            
+            // Bewegung koppeln: Nach oben wischen = Vorwärts, nach unten wischen = Rückwärts
+            if (deltaY < -4) { keys.w = true; keys.s = false; }
+            else if (deltaY > 4) { keys.s = true; keys.w = false; }
+        }, { passive: true });
+
+        // PC-Tastatur
+        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         window.addEventListener('keydown', (e) => { 
             const pressedKey = e.key.toLowerCase();
-            
-            if (pressedKey === 'e') {
-                toggleInventory();
-                return;
-            }
-            
-            if (pressedKey === 'r') {
-                if (activeExhibitNearMe !== null && !isInventoryOpen) {
-                    if (activeExhibitNearMe.currentNumber !== null) {
-                        // FALL A: Bild hängt -> Einsammeln!
-                        playerInventory.push(activeExhibitNearMe.currentNumber);
-                        activeExhibitNearMe.currentNumber = null;
-                        updateExhibitVisual(activeExhibitNearMe);
-                    } else {
-                        // FALL B: Platz ist leer -> Inventar zum Auswählen öffnen!
-                        modePlacement = true;
-                        toggleInventory();
-                    }
-                }
-                return;
-            }
-
+            if (pressedKey === 'e') { toggleInventory(); return; }
+            if (pressedKey === 'r') { triggerInteraction(); return; }
             if (isInventoryOpen) return;
             if (e.key in keys) keys[e.key] = true; 
         });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
-        // --- 8. GAME LOOP & DISTANCE CHECK ---
+        // --- 8. GAME LOOP ---
         const moveSpeed = 0.08;
         const playerRadius = 0.4; 
 
@@ -485,38 +454,35 @@
                 leftLeg.rotation.x = 0; rightLeg.rotation.x = 0;
             }
 
-            // INTERAKTIONS-ENTFERNUNG PRÜFEN
+            // ENTFERNUNG ZU DEN BILDERN PRÜFEN
             let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
-            let closestExhibit = null;
-            let minDistance = Infinity;
+            let closestExhibit = null; let minDistance = Infinity;
 
             for(let ex of exhibits) {
                 let dist = playerPos2D.distanceTo(ex.position);
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    closestExhibit = ex;
-                }
+                if (dist < minDistance) { minDistance = dist; closestExhibit = ex; }
             }
 
-            // Anzeige-Feld steuern (Abstand kleiner als 2.5 Einheiten)
-            const prompt = document.getElementById('interaction-prompt');
+            const promptBtn = document.getElementById('interaction-prompt');
             if (minDistance < 2.5) {
                 activeExhibitNearMe = closestExhibit;
-                prompt.style.display = 'block';
+                promptBtn.style.display = 'block';
                 
                 if(closestExhibit.currentNumber !== null) {
-                    prompt.innerText = `Bild (${closestExhibit.currentNumber}) einpacken: Taste R drücken`;
-                    prompt.style.background = "rgba(234, 32, 39, 0.85)"; // Rot fürs Nehmen
+                    promptBtn.innerText = `👋 Bild (${closestExhibit.currentNumber}) einpacken`;
+                    promptBtn.style.background = "rgba(234, 32, 39, 0.85)";
+                    promptBtn.style.borderColor = "#ff4757";
                 } else {
-                    prompt.innerText = "Zahl aufhängen: Taste R drücken";
-                    prompt.style.background = "rgba(46, 213, 115, 0.85)"; // Grün fürs Platzieren
+                    promptBtn.innerText = "🖼️ Zahl aufhängen";
+                    promptBtn.style.background = "rgba(46, 213, 115, 0.85)";
+                    promptBtn.style.borderColor = "#2ed573";
                 }
             } else {
                 activeExhibitNearMe = null;
-                prompt.style.display = 'none';
+                promptBtn.style.display = 'none';
             }
 
-            // Kamera-Dritte-Person
+            // Dritte-Person-Kamera
             let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4;
             let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4;
             let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
