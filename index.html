@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum - Designer-Tür</title>
+    <title>3D Mathe-Museum - Das Kuratorenbüro</title>
     <style>
         body {
             margin: 0;
@@ -198,8 +198,8 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Marmor-Museum v8.5</h1>
-        <p>Bringe die Zahlen in Ordnung und teste die neue, maßgeschneiderte Sci-Fi-Tür!</p>
+        <h1>🏛️ Kuratorenbüro v9.0</h1>
+        <p>Bringe die Zahlen in Ordnung und erkunde das voll eingerichtete Büro des Museums-Chefs!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile<br>
@@ -250,54 +250,39 @@
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. RAUM-SETUP (PROPORTIONEN AN AVATAR ANGEPASST) ---
+        // --- 2. RAUM-SETUP ---
         const ROOM_SIZE = 24; 
         const BLOCK_SIZE = 8;
         const SUB_ROOM_SIZE = 10; 
-        const DOOR_HEIGHT = 2.8; // Optimale Höhe für den Avatar (1.66m)
-        const DOOR_WIDTH = 2.2;  // Schickere, kompaktere Breite
+        const DOOR_HEIGHT = 2.8; 
+        const DOOR_WIDTH = 2.2;  
         
         // Böden
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a26, roughness: 0.6 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.receiveShadow = true;
-        scene.add(floor);
+        floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 
         const subFloorGeo = new THREE.PlaneGeometry(SUB_ROOM_SIZE, SUB_ROOM_SIZE);
-        const subFloorMat = new THREE.MeshStandardMaterial({ color: 0x15151f, roughness: 0.7 });
+        const subFloorMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.8 }); // Etwas wärmerer Büroboden
         const subFloor = new THREE.Mesh(subFloorGeo, subFloorMat);
         subFloor.rotation.x = -Math.PI / 2;
         subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0);
-        subFloor.receiveShadow = true;
-        scene.add(subFloor);
+        subFloor.receiveShadow = true; scene.add(subFloor);
 
         // Grids
-        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x333344);
-        grid.position.y = 0.01; scene.add(grid);
-        const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0x2ed573, 0x223322);
-        subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.01, 0); scene.add(subGrid);
+        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x333344); grid.position.y = 0.01; scene.add(grid);
+        const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0x718093, 0x2f3640); subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.01, 0); scene.add(subGrid);
 
         // Prozedurale Marmor-Textur
         function createMarbleTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 512; canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#e8e8f0'; ctx.fillRect(0, 0, 512, 512);
-            for (let i = 0; i < 20; i++) {
-                ctx.fillStyle = `rgba(220, 220, 230, ${Math.random() * 0.3})`;
-                ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 200, Math.random() * 200);
-            }
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8e8f0'; ctx.fillRect(0, 0, 512, 512);
+            for (let i = 0; i < 20; i++) { ctx.fillStyle = `rgba(220, 220, 230, ${Math.random() * 0.3})`; ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 200, Math.random() * 200); }
             ctx.strokeStyle = 'rgba(150, 150, 165, 0.25)'; ctx.lineWidth = 1.5;
-            for (let j = 0; j < 8; j++) {
-                ctx.beginPath(); let x = Math.random() * 512; let y = 0; ctx.moveTo(x, y);
-                while (y < 512) { x += (Math.random() - 0.5) * 45; y += Math.random() * 40 + 10; ctx.lineTo(x, y); }
-                ctx.stroke();
-            }
+            for (let j = 0; j < 8; j++) { ctx.beginPath(); let x = Math.random() * 512; let y = 0; ctx.moveTo(x, y); while (y < 512) { x += (Math.random() - 0.5) * 45; y += Math.random() * 40 + 10; ctx.lineTo(x, y); } ctx.stroke(); }
             return new THREE.CanvasTexture(canvas);
         }
-
         const marbleTexture = createMarbleTexture();
         const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
         
@@ -307,140 +292,153 @@
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
         const frontWall = new THREE.Mesh(wallGeo, wallMat); frontWall.position.set(0, 3, ROOM_SIZE/2); frontWall.rotation.y = Math.PI; scene.add(frontWall);
 
-        // Trennwände zwischen Haupt- und Nebenraum (unter Berücksichtigung der neuen Tür-Maße)
-        // Wand über der Tür (Sturz)
-        const lintelGeo = new THREE.PlaneGeometry(DOOR_WIDTH, 6 - DOOR_HEIGHT);
-        const lintel = new THREE.Mesh(lintelGeo, wallMat);
-        lintel.position.set(ROOM_SIZE/2, DOOR_HEIGHT + (6 - DOOR_HEIGHT)/2, 0);
-        lintel.rotation.y = -Math.PI/2;
-        scene.add(lintel);
+        // Trennwände & Sturz
+        const lintel = new THREE.Mesh(new THREE.PlaneGeometry(DOOR_WIDTH, 6 - DOOR_HEIGHT), wallMat); lintel.position.set(ROOM_SIZE/2, DOOR_HEIGHT + (6 - DOOR_HEIGHT)/2, 0); lintel.rotation.y = -Math.PI/2; scene.add(lintel);
+        const sideWallLength = (ROOM_SIZE - DOOR_WIDTH) / 2; const rightWallSegGeo = new THREE.PlaneGeometry(sideWallLength, 6);
+        const rightWallSeg1 = new THREE.Mesh(rightWallSegGeo, wallMat); rightWallSeg1.position.set(ROOM_SIZE/2, 3, -ROOM_SIZE/4 - DOOR_WIDTH/4); rightWallSeg1.rotation.y = -Math.PI/2; scene.add(rightWallSeg1);
+        const rightWallSeg2 = new THREE.Mesh(rightWallSegGeo, wallMat); rightWallSeg2.position.set(ROOM_SIZE/2, 3, ROOM_SIZE/4 + DOOR_WIDTH/4); rightWallSeg2.rotation.y = -Math.PI/2; scene.add(rightWallSeg2);
 
-        // Seitliche Segmente links/rechts der Türöffnung
-        const sideWallLength = (ROOM_SIZE - DOOR_WIDTH) / 2;
-        const rightWallSegGeo = new THREE.PlaneGeometry(sideWallLength, 6);
-        
-        const rightWallSeg1 = new THREE.Mesh(rightWallSegGeo, wallMat);
-        rightWallSeg1.position.set(ROOM_SIZE/2, 3, -ROOM_SIZE/4 - DOOR_WIDTH/4);
-        rightWallSeg1.rotation.y = -Math.PI/2; scene.add(rightWallSeg1);
-
-        const rightWallSeg2 = new THREE.Mesh(rightWallSegGeo, wallMat);
-        rightWallSeg2.position.set(ROOM_SIZE/2, 3, ROOM_SIZE/4 + DOOR_WIDTH/4);
-        rightWallSeg2.rotation.y = -Math.PI/2; scene.add(rightWallSeg2);
-
-        // Nebenraum-Wände
+        // Nebenraum-Wände (Büro)
         const subWallGeoH = new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6);
         const subBackWall = new THREE.Mesh(subWallGeoH, wallMat); subBackWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, -SUB_ROOM_SIZE/2); scene.add(subBackWall);
         const subFrontWall = new THREE.Mesh(subWallGeoH, wallMat); subFrontWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, SUB_ROOM_SIZE/2); subFrontWall.rotation.y = Math.PI; scene.add(subFrontWall);
         const subRightWall = new THREE.Mesh(new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6), wallMat); subRightWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE, 3, 0); subRightWall.rotation.y = -Math.PI/2; scene.add(subRightWall);
 
         // Center-Block im Hauptraum
-        const centerBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK_SIZE, 6, BLOCK_SIZE), wallMat);
-        centerBlock.position.set(0, 3, 0); scene.add(centerBlock);
+        const centerBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK_SIZE, 6, BLOCK_SIZE), wallMat); centerBlock.position.set(0, 3, 0); scene.add(centerBlock);
 
-        // --- 2B. SCHÖNE DESIGNER-TÜR GRAPHIK (PROZEDURAL) ---
+        // --- 2B. TÜR ---
         function createDoorTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-            
-            // Basis Carbon-Look
-            ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, 256, 512);
-            
-            // Tech-Muster (Inlays)
-            ctx.fillStyle = '#1a252f';
-            ctx.fillRect(20, 20, 216, 210);
-            ctx.fillRect(20, 250, 216, 240);
-            
-            // Leuchtbänder an den Seiten
-            ctx.fillStyle = '#00a8ff';
-            ctx.fillRect(15, 20, 4, 472);
-            ctx.fillRect(237, 20, 4, 472);
-            
-            // Geometrische Details in den Panels
-            ctx.strokeStyle = '#34495e'; ctx.lineWidth = 4;
-            ctx.strokeRect(35, 35, 186, 180);
-            ctx.strokeRect(35, 265, 186, 210);
-
-            // Digitaler Türgriff / Sensor-Feld
-            ctx.fillStyle = '#e74c3c'; // Rot im gesperrten/geschlossenen Zustand
-            ctx.fillRect(20, 235, 20, 10);
-            
-            return new THREE.CanvasTexture(canvas);
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 512; const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, 256, 512); ctx.fillStyle = '#1a252f'; ctx.fillRect(20, 20, 216, 210); ctx.fillRect(20, 250, 216, 240);
+            ctx.fillStyle = '#00a8ff'; ctx.fillRect(15, 20, 4, 472); ctx.fillRect(237, 20, 4, 472);
+            ctx.strokeStyle = '#34495e'; ctx.lineWidth = 4; ctx.strokeRect(35, 35, 186, 180); ctx.strokeRect(35, 265, 186, 210);
+            ctx.fillStyle = '#e74c3c'; ctx.fillRect(20, 235, 20, 10); return new THREE.CanvasTexture(canvas);
         }
-
         const doorTexture = createDoorTexture();
-        const doorGroup = new THREE.Group();
-        doorGroup.position.set(ROOM_SIZE / 2, 0, -DOOR_WIDTH / 2); // Drehachse exakt an der Wandkante
-        
-        // Das edle Türblatt
-        const doorPanelGeo = new THREE.BoxGeometry(0.1, DOOR_HEIGHT, DOOR_WIDTH);
-        const customDoorMat = new THREE.MeshStandardMaterial({ 
-            map: doorTexture, 
-            metalness: 0.7, 
-            roughness: 0.2 
-        });
-        const doorPanel = new THREE.Mesh(doorPanelGeo, customDoorMat);
-        doorPanel.position.set(0, DOOR_HEIGHT / 2, DOOR_WIDTH / 2); // Verschiebung zum Pivot-Punkt
-        doorGroup.add(doorPanel);
-        
-        // Futuristischer, leuchtender Türrahmen
+        const doorGroup = new THREE.Group(); doorGroup.position.set(ROOM_SIZE / 2, 0, -DOOR_WIDTH / 2);
+        const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(0.1, DOOR_HEIGHT, DOOR_WIDTH), new THREE.MeshStandardMaterial({ map: doorTexture, metalness: 0.7, roughness: 0.2 }));
+        doorPanel.position.set(0, DOOR_HEIGHT / 2, DOOR_WIDTH / 2); doorGroup.add(doorPanel);
         const frameMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff });
-        const leftFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, DOOR_HEIGHT, 0.08), frameMat);
-        leftFrame.position.set(0, DOOR_HEIGHT/2, 0); doorGroup.add(leftFrame);
-        
-        const rightFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, DOOR_HEIGHT, 0.08), frameMat);
-        rightFrame.position.set(0, DOOR_HEIGHT/2, DOOR_WIDTH); doorGroup.add(rightFrame);
-
-        const topFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, DOOR_WIDTH), frameMat);
-        topFrame.position.set(0, DOOR_HEIGHT, DOOR_WIDTH/2); doorGroup.add(topFrame);
-
+        const leftFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, DOOR_HEIGHT, 0.08), frameMat); leftFrame.position.set(0, DOOR_HEIGHT/2, 0); doorGroup.add(leftFrame);
+        const rightFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, DOOR_HEIGHT, 0.08), frameMat); rightFrame.position.set(0, DOOR_HEIGHT/2, DOOR_WIDTH); doorGroup.add(rightFrame);
+        const topFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, DOOR_WIDTH), frameMat); topFrame.position.set(0, DOOR_HEIGHT, DOOR_WIDTH/2); doorGroup.add(topFrame);
         scene.add(doorGroup);
 
-        let isDoorOpen = false;
-        let doorTargetAngle = 0;
-
+        let isDoorOpen = false; let doorTargetAngle = 0;
         function toggleDoor() {
-            isDoorOpen = !isDoorOpen;
-            doorTargetAngle = isDoorOpen ? Math.PI / 1.7 : 0;
-            
-            // Dynamischer Farbwechsel der Statusleuchte auf der Textur bei Interaktion
-            const ctx = doorTexture.image.getContext('2d');
-            ctx.fillStyle = isDoorOpen ? '#2ed573' : '#e74c3c'; // Grün bei offen, Rot bei zu
-            ctx.fillRect(20, 235, 20, 10);
-            doorTexture.needsUpdate = true;
+            isDoorOpen = !isDoorOpen; doorTargetAngle = isDoorOpen ? Math.PI / 1.7 : 0;
+            const ctx = doorTexture.image.getContext('2d'); ctx.fillStyle = isDoorOpen ? '#2ed573' : '#e74c3c'; ctx.fillRect(20, 235, 20, 10); doorTexture.needsUpdate = true;
         }
 
-        // --- 3. EXPO-PLÄTZE (AN DER RÜCKWAND) ---
-        const initialNumbers = [4, 1, 5, 2, 3];
-        const exhibits = [];
+        // --- 2C. BÜRO-EINRICHTUNG (MÖBEL & DEKO) ---
+        const officeGroup = new THREE.Group();
+        officeGroup.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); // Zentrum des Büros
+        scene.add(officeGroup);
 
+        // Materialien für die Möbel
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); // Dunkles Holz
+        const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); // Anthrazit Kunststoff
+        const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.1 }); 
+
+        // 1. Schreibtisch
+        const desk = new THREE.Group();
+        desk.position.set(0, 0, 0); 
+        const tabletop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 1.2), woodMat); tabletop.position.y = 0.76; desk.add(tabletop);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.5 });
+        const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg1.position.set(-1.1, 0.38, 0); desk.add(leg1);
+        const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg2.position.set(1.1, 0.38, 0); desk.add(leg2);
+        officeGroup.add(desk);
+
+        // Deko auf dem Schreibtisch: PC-Monitor & Lampe
+        const monitor = new THREE.Group(); monitor.position.set(0, 0.8, -0.3);
+        const stand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.1), plasticMat); stand.position.y = 0.15; monitor.add(stand);
+        const screen = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), plasticMat); screen.position.y = 0.4; monitor.add(screen);
+        const display = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.46), new THREE.MeshBasicMaterial({ color: 0x00a8ff })); display.position.set(0, 0.4, 0.026); monitor.add(display);
+        desk.add(monitor);
+
+        const deskLamp = new THREE.Group(); deskLamp.position.set(-0.8, 0.8, -0.2);
+        const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.02), chromeMat); deskLamp.add(lampBase);
+        const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.4), chromeMat); lampArm.position.set(0, 0.2, 0); lampArm.rotation.z = 0.2; deskLamp.add(lampArm);
+        const lampHead = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.1), plasticMat); lampHead.position.set(0.08, 0.4, 0); lampHead.rotation.z = -0.5; deskLamp.add(lampHead);
+        desk.add(deskLamp);
+
+        // 2. Bürostuhl
+        const chair = new THREE.Group();
+        chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; // Leicht weggedreht
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4), chromeMat); base.position.y = 0.2; chair.add(base);
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.55), plasticMat); seat.position.y = 0.43; chair.add(seat);
+        const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), plasticMat); backrest.position.set(0, 0.73, -0.25); backrest.rotation.x = -0.1; chair.add(backrest);
+        officeGroup.add(chair);
+
+        // 3. Bücherregale (An der Rückwand des Büros)
+        function createShelf(x, z) {
+            const shelf = new THREE.Group(); shelf.position.set(x, 0, z);
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 0.4), woodMat); frame.position.y = 1.2; shelf.add(frame);
+            // Regal-Inlays (Ausschnitte)
+            for(let h=0.4; h<2.4; h+=0.5) {
+                const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.03, 0.36), woodMat); board.position.set(0, h, 0.01); shelf.add(board);
+                // Random Bücher hinzufügen
+                for(let b=-0.6; b<0.6; b+=0.12) {
+                    if(Math.random() > 0.2) {
+                        const bHeight = 0.25 + Math.random()*0.15; const bWidth = 0.04 + Math.random()*0.04;
+                        const book = new THREE.Mesh(new THREE.BoxGeometry(bWidth, bHeight, 0.25), new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff, roughness: 0.5 }));
+                        book.position.set(b + 0.05, h + bHeight/2, 0.05);
+                        if(Math.random() > 0.85) book.rotation.z = (Math.random() - 0.5) * 0.3; // Schiefes Buch
+                        shelf.add(book);
+                    }
+                }
+            }
+            return shelf;
+        }
+        officeGroup.add(createShelf(-2.5, -4.7)); // Linkes Regal hinten
+        officeGroup.add(createShelf(-0.8, -4.7)); // Rechtes Regal hinten
+
+        // 4. Aktenschränke (An der rechten Bürowand)
+        function createCabinet(x, z, rot) {
+            const cab = new THREE.Group(); cab.position.set(x, 0, z); cab.rotation.y = rot;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.4 })); body.position.y = 0.9; cab.add(body);
+            // Schubladenblenden
+            for(let f=0.25; f<1.8; f+=0.42) {
+                const drawer = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.36, 0.02), new THREE.MeshStandardMaterial({ color: 0xb2bec3, roughness: 0.3 })); drawer.position.set(0, f, 0.26); cab.add(drawer);
+                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.03), chromeMat); handle.position.set(0, f, 0.28); cab.add(handle);
+            }
+            return cab;
+        }
+        officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2));
+        officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
+
+        // 5. Dekoration: Zimmerpflanze in der Ecke
+        const plant = new THREE.Group(); plant.position.set(4.0, 0, 4.0);
+        const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })); pot.position.y = 0.3; plant.add(pot);
+        const plantMat = new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.9, flatShading: true });
+        for(let p=0; p<8; p++) {
+            const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.15, 1.2, 4), plantMat);
+            leaf.position.set((Math.random()-0.5)*0.2, 0.7, (Math.random()-0.5)*0.2);
+            leaf.rotation.set((Math.random()-0.5)*0.5, Math.random()*Math.PI, 0.3 + Math.random()*0.4);
+            plant.add(leaf);
+        }
+        officeGroup.add(plant);
+
+        // --- 3. EXPO-PLÄTZE (AN DER RÜCKWAND DES HAUPTRAUMS) ---
+        const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
         function createNumberTexture(number) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#4a90e2'; ctx.fillRect(0, 0, 256, 256);
-            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 216, 216);
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 130px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(number, 128, 128);
-            return new THREE.CanvasTexture(canvas);
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#4a90e2'; ctx.fillRect(0, 0, 256, 256); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 216, 216);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 130px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(number, 128, 128); return new THREE.CanvasTexture(canvas);
         }
-
         for(let i=0; i<5; i++) {
-            const posX = -8 + i * 4;
-            const posZ = -ROOM_SIZE/2 + 0.15;
-            const group = new THREE.Group();
+            const posX = -8 + i * 4; const posZ = -ROOM_SIZE/2 + 0.15; const group = new THREE.Group();
             const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 })); group.add(frame);
             const emptySpace = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.9 })); emptySpace.position.z = 0.051; group.add(emptySpace);
             group.position.set(posX, 3, posZ); scene.add(group);
             exhibits.push({ id: i, position: new THREE.Vector3(posX, 0, posZ), currentNumber: initialNumbers[i], posterMesh: null, groupRef: group });
             updateExhibitVisual(exhibits[i]);
         }
-
         function updateExhibitVisual(exhibit) {
             if(exhibit.posterMesh) { exhibit.groupRef.remove(exhibit.posterMesh); exhibit.posterMesh.geometry.dispose(); exhibit.posterMesh.material.dispose(); exhibit.posterMesh = null; }
             if(exhibit.currentNumber !== null) {
-                const tex = createNumberTexture(exhibit.currentNumber);
-                exhibit.posterMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), new THREE.MeshBasicMaterial({ map: tex }));
+                const tex = createNumberTexture(exhibit.currentNumber); exhibit.posterMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), new THREE.MeshBasicMaterial({ map: tex }));
                 exhibit.posterMesh.position.z = 0.06; exhibit.groupRef.add(exhibit.posterMesh);
             }
         }
@@ -449,9 +447,7 @@
         const playerGroup = new THREE.Group();
         const metalMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.2, metalness: 0.8 });
         const armorMat = new THREE.MeshStandardMaterial({ color: 0x2e3192, roughness: 0.3 });
-        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff });
-        const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
-
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff }); const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
         const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8), jointMat); pelvis.position.y = 0.85; playerGroup.add(pelvis);
         const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6), armorMat); torso.position.y = 1.2; playerGroup.add(torso);
         const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glowMat); core.position.set(0, 1.3, 0.21); playerGroup.add(core);
@@ -459,33 +455,21 @@
         const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), metalMat); rightArm.position.set(0.32, 1.15, 0); playerGroup.add(rightArm);
         const robotHead = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.24, 0.24), armorMat); robotHead.position.y = 1.66; playerGroup.add(robotHead);
         const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.03), glowMat); visor.position.set(0, 1.68, 0.12); playerGroup.add(visor);
-
         const leftLegGroup = new THREE.Group(); leftLegGroup.position.set(-0.13, 0.85, 0);
         const leftLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); leftLegMesh.position.y = -0.25; leftLegGroup.add(leftLegMesh);
-        const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); leftFoot.position.set(0, -0.5, 0.03); leftLegGroup.add(leftFoot);
-        playerGroup.add(leftLegGroup);
-
+        const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); leftFoot.position.set(0, -0.5, 0.03); leftLegGroup.add(leftFoot); playerGroup.add(leftLegGroup);
         const rightLegGroup = new THREE.Group(); rightLegGroup.position.set(0.13, 0.85, 0);
         const rightLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
-        const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot);
-        playerGroup.add(rightLegGroup);
-
+        const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot); playerGroup.add(rightLegGroup);
         playerGroup.position.set(0, 0, 7); scene.add(playerGroup);
 
         // --- 5. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false; let isGameWon = false; let activeExhibitNearMe = null; let isNearDoor = false; let modePlacement = false; const playerInventory = []; 
-
         function toggleInventory() {
-            if (isGameWon) return; 
-            isInventoryOpen = !isInventoryOpen;
-            const overlay = document.getElementById('inventory-overlay');
-            if (isInventoryOpen) {
-                overlay.classList.add('open');
-                for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0;
-                renderInventoryUI();
-            } else { overlay.classList.remove('open'); modePlacement = false; }
+            if (isGameWon) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
+            if (isInventoryOpen) { overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; renderInventoryUI(); } 
+            else { overlay.classList.remove('open'); modePlacement = false; }
         }
-
         function renderInventoryUI() {
             const gridContainer = document.getElementById('inventory-grid'); gridContainer.innerHTML = '';
             document.getElementById('inv-title').innerText = modePlacement ? "🖼️ Welches Bild aufhängen?" : "🎒 Dein Rucksack";
@@ -494,39 +478,22 @@
                 if(playerInventory[i] !== undefined) {
                     const numberVal = playerInventory[i]; slot.className = 'inventory-slot filled selectable';
                     slot.innerHTML = `<div class="slot-icon">${numberVal}</div><span>Bild-Zahl</span>`;
-                    slot.onclick = () => {
-                        if(modePlacement && activeExhibitNearMe !== null) {
-                            playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = numberVal;
-                            updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition();
-                        }
-                    };
+                    slot.onclick = () => { if(modePlacement && activeExhibitNearMe !== null) { playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = numberVal; updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition(); } };
                 } else { slot.innerHTML = `<div class="slot-icon">🔒</div><span>Leer</span>`; }
                 gridContainer.appendChild(slot);
             }
         }
-
         function triggerInteraction() {
-            if (isGameWon) return;
-            if (isNearDoor) { toggleDoor(); return; }
+            if (isGameWon) return; if (isNearDoor) { toggleDoor(); return; }
             if (activeExhibitNearMe !== null && !isInventoryOpen) {
-                if (activeExhibitNearMe.currentNumber !== null) {
-                    playerInventory.push(activeExhibitNearMe.currentNumber); activeExhibitNearMe.currentNumber = null; updateExhibitVisual(activeExhibitNearMe);
-                } else { modePlacement = true; toggleInventory(); }
+                if (activeExhibitNearMe.currentNumber !== null) { playerInventory.push(activeExhibitNearMe.currentNumber); activeExhibitNearMe.currentNumber = null; updateExhibitVisual(activeExhibitNearMe); } 
+                else { modePlacement = true; toggleInventory(); }
             }
         }
-
-        function checkWinCondition() {
-            if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) {
-                isGameWon = true; document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open');
-            }
-        }
-
+        function checkWinCondition() { if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) { isGameWon = true; document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open'); } }
         function restartGame() {
-            isGameWon = false; playerInventory.length = 0;
-            const mixed = [4, 1, 5, 2, 3];
-            exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
-            playerGroup.position.set(0, 0, 7); if(isDoorOpen) toggleDoor();
-            document.getElementById('win-overlay').classList.remove('open');
+            isGameWon = false; playerInventory.length = 0; const mixed = [4, 1, 5, 2, 3]; exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
+            playerGroup.position.set(0, 0, 7); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
         }
 
         // --- 6. STEUERUNGS-SYSTEM ---
@@ -535,18 +502,11 @@
         window.addEventListener('mouseup', () => isMouseDown = false);
         window.addEventListener('mousemove', (e) => {
             if (!isMouseDown || isInventoryOpen || isGameWon) return;
-            cameraAngleH += (e.clientX - previousMousePosition.x) * 0.005;
-            cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + (e.clientY - previousMousePosition.y) * 0.005));
+            cameraAngleH += (e.clientX - previousMousePosition.x) * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + (e.clientY - previousMousePosition.y) * 0.005));
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
-
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
-        window.addEventListener('keydown', (e) => { 
-            if (isGameWon) return;
-            if (e.key.toLowerCase() === 'e') { toggleInventory(); return; }
-            if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; }
-            if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
-        });
+        window.addEventListener('keydown', (e) => { if (isGameWon) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } if (!isInventoryOpen && e.key in keys) keys[e.key] = true; });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
         let touchStartPos = { x: 0, y: 0 }; let touchVelocity = { x: 0, z: 0 }; let isTouching = false;
@@ -560,12 +520,11 @@
         });
         window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
 
-        // --- 7. GAME LOOP & KOLLISION ---
+        // --- 7. GAME LOOP & ERWEITERTE KOLLISION (INKL. MÖBEL) ---
         const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
             if (isInventoryOpen || isGameWon) return;
-
             doorGroup.rotation.y += (doorTargetAngle - doorGroup.rotation.y) * 0.1;
 
             let moveX = 0; let moveZ = 0;
@@ -581,18 +540,32 @@
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
                 let allowed = true;
 
-                // Kollisionszonen-Berechnung
+                // 1. HAUPTRAUM-KOLLISION
                 if (nextX < ROOM_SIZE / 2 - playerRadius) {
                     let maxCoord = ROOM_SIZE / 2 - playerRadius;
                     if (nextX < -maxCoord || nextZ < -maxCoord || nextZ > maxCoord) allowed = false;
                     let blockBound = BLOCK_SIZE / 2 + playerRadius;
                     if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
-                } else if (nextX > ROOM_SIZE / 2 + playerRadius) {
+                } 
+                // 2. BÜRO-KOLLISION (NEBENRAUM)
+                else if (nextX > ROOM_SIZE / 2 + playerRadius) {
                     let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius;
                     let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
                     if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
-                } else {
-                    // Spieler ist exakt in der Türschwelle
+
+                    // Möbel-Kollisionen im Büro (relativ zum officeGroup-Zentrum berechnet)
+                    let relX = nextX - (ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2);
+                    let relZ = nextZ;
+
+                    // Schreibtisch-Kollisionsbox
+                    if (relX > -1.3 && relX < 1.3 && relZ > -0.7 && relZ < 0.7) allowed = false;
+                    // Regale hinten (Z-Achse beachten)
+                    if (relZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false;
+                    // Aktenschränke rechts
+                    if (relX > 4.6 - 0.5 - playerRadius && relZ > -2.8 && relZ < 0.5) allowed = false;
+                } 
+                // 3. TÜR-DURCHGANGS-KOLLISION
+                else {
                     if (nextZ < -DOOR_WIDTH / 2 + playerRadius || nextZ > DOOR_WIDTH / 2 - playerRadius) allowed = false;
                     if (!isDoorOpen && nextX > ROOM_SIZE / 2 - playerRadius) allowed = false;
                 }
@@ -604,8 +577,7 @@
                 leftLegGroup.rotation.x = Math.sin(time) * 0.6; rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
                 leftArm.rotation.x = -Math.sin(time) * 0.4; rightArm.rotation.x = Math.sin(time) * 0.4;
             } else {
-                leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8;
-                leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8;
+                leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8; leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8;
             }
 
             // Trigger-Checks
@@ -624,8 +596,7 @@
                 if (minDist < 2.5) {
                     activeExhibitNearMe = closest; promptBtn.style.display = 'block';
                     if(closest.currentNumber !== null) {
-                        promptBtn.innerText = `👋 Bild (${closest.currentNumber}) einpacken`;
-                        promptBtn.style.background = "rgba(234, 32, 39, 0.85)"; promptBtn.style.borderColor = "#ff4757";
+                        promptBtn.innerText = `👋 Bild (${closest.currentNumber}) einpacken`; promptBtn.style.background = "rgba(234, 32, 39, 0.85)"; promptBtn.style.borderColor = "#ff4757";
                     } else {
                         promptBtn.innerText = "🖼️ Zahl aufhängen"; promptBtn.style.background = "rgba(46, 213, 115, 0.85)"; promptBtn.style.borderColor = "#2ed573";
                     }
@@ -646,5 +617,3 @@
     </script>
 </body>
 </html>
-
-```
