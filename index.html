@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum mit Marmorwänden</title>
+    <title>3D Mathe-Museum mit modernem Avatar</title>
     <style>
         body {
             margin: 0;
@@ -37,7 +37,7 @@
             color: #2ed573;
         }
 
-        /* Klickbarer Interaktions-Button für PC & Tablet (Mitte unten) */
+        /* Klickbarer Interaktions-Button */
         #interaction-prompt {
             position: absolute;
             bottom: 100px;
@@ -203,7 +203,7 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Marmor-Museum v5.3</h1>
+        <h1>🏛️ Marmor-Museum v5.5</h1>
         <p>Bringe die Zahlen an der Rückwand in die richtige Reihenfolge!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
@@ -228,7 +228,7 @@
         </div>
     </div>
 
-    <!-- Neues Gewinn-Overlay -->
+    <!-- Gewinn-Overlay -->
     <div id="win-overlay">
         <div class="win-box">
             <h2>🎉 Gelöst!</h2>
@@ -249,16 +249,15 @@
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5)); // Etwas heller für den Marmor
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5)); 
         const light = new THREE.DirectionalLight(0xffffff, 0.7);
         light.position.set(10, 20, 10);
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. RAUM-SETUP & MARMOR-GENERATOR ---
+        // --- 2. RAUM-SETUP & MARMOR-WÄNDE ---
         const ROOM_SIZE = 24; 
         
-        // Boden
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a26, roughness: 0.6 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
@@ -270,57 +269,40 @@
         grid.position.y = 0.01;
         scene.add(grid);
 
-        // Prozedurale Marmor-Textur erstellen
+        // Prozedurale Marmor-Textur
         function createMarbleTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 512;
+            canvas.width = 512; canvas.height = 512;
             const ctx = canvas.getContext('2d');
-            
-            // Grundfarbe: Helles, weiches Carrara-Weiß/Grau
             ctx.fillStyle = '#e8e8f0';
             ctx.fillRect(0, 0, 512, 512);
             
-            // Sanfte Textur-Nuancen im Hintergrund
             for (let i = 0; i < 20; i++) {
                 ctx.fillStyle = `rgba(220, 220, 230, ${Math.random() * 0.3})`;
                 ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 200, Math.random() * 200);
             }
 
-            // Typische feine Marmor-Äderungen zeichnen
             ctx.strokeStyle = 'rgba(150, 150, 165, 0.25)';
             ctx.lineWidth = 1.5;
-            
             for (let j = 0; j < 8; j++) {
                 ctx.beginPath();
-                let x = Math.random() * 512;
-                let y = 0;
+                let x = Math.random() * 512; let y = 0;
                 ctx.moveTo(x, y);
-                
                 while (y < 512) {
-                    // Zufälliger "Zick-Zack"-Verlauf nach unten für natürliche Adern
                     x += (Math.random() - 0.5) * 45;
                     y += Math.random() * 40 + 10;
                     ctx.lineTo(x, y);
                 }
                 ctx.stroke();
             }
-            
             const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(2, 1); // Zerrt den Marmor nicht zu stark
+            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(2, 1);
             return texture;
         }
 
-        // Marmor-Material mit leichtem Glanz (geringe Roughness)
         const marbleTexture = createMarbleTexture();
-        const wallMat = new THREE.MeshStandardMaterial({ 
-            map: marbleTexture, 
-            roughness: 0.2, // Macht die Wände edel und leicht reflektierend
-            metalness: 0.05
-        });
-        
+        const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
 
         const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
@@ -347,7 +329,6 @@
             const posZ = -ROOM_SIZE/2 + 0.15;
             const group = new THREE.Group();
             
-            // Dunkler Kontrastrahmen, damit die Bilder auf dem hellen Marmor gut poppen
             const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
             group.add(frame);
 
@@ -381,16 +362,73 @@
             }
         }
 
-        // --- 4. AVATAR ---
+        // --- 4. DER NEUE AVATAR (MODERNER LOW-POLY ROBOTER) ---
         const playerGroup = new THREE.Group();
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), new THREE.MeshStandardMaterial({ color: 0xdddddd })); head.position.y = 1.6; playerGroup.add(head);
-        const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.3), new THREE.MeshStandardMaterial({ color: 0x4a90e2 })); bodyMesh.position.y = 1.1; playerGroup.add(bodyMesh);
-        const legMat = new THREE.MeshStandardMaterial({ color: 0x2f3542 });
-        const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7), legMat); leftLeg.position.set(-0.15, 0.35, 0);
-        const rightLeg = leftLeg.clone(); rightLeg.position.x = 0.15;
-        playerGroup.add(leftLeg, rightLeg);
+
+        // Materialien für den coolen Roboter-Look
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.2, metalness: 0.8 });
+        const armorMat = new THREE.MeshStandardMaterial({ color: 0x2e3192, roughness: 0.3 });
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff });
+        const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
+
+        // Hüfte/Becken (Drehpunkt für Beine)
+        const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8), jointMat);
+        pelvis.position.y = 0.85;
+        playerGroup.add(pelvis);
+
+        // Torso (Kantig & Modern)
+        const torsoGeom = new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6);
+        const torso = new THREE.Mesh(torsoGeom, armorMat);
+        torso.position.y = 1.2;
+        playerGroup.add(torso);
+
+        // Energie-Kern auf der Brust
+        const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glowMat);
+        core.position.set(0, 1.3, 0.21);
+        playerGroup.add(core);
+
+        // Schultern & Arme
+        const armGeom = new THREE.BoxGeometry(0.08, 0.4, 0.08);
+        const shoulderGeom = new THREE.SphereGeometry(0.07, 8, 8);
+
+        const leftShoulder = new THREE.Mesh(shoulderGeom, jointMat); leftShoulder.position.set(-0.32, 1.4, 0); playerGroup.add(leftShoulder);
+        const leftArm = new THREE.Mesh(armGeom, metalMat); leftArm.position.set(-0.32, 1.15, 0); playerGroup.add(leftArm);
+
+        const rightShoulder = new THREE.Mesh(shoulderGeom, jointMat); rightShoulder.position.set(0.32, 1.4, 0); playerGroup.add(rightShoulder);
+        const rightArm = new THREE.Mesh(armGeom, metalMat); rightArm.position.set(0.32, 1.15, 0); playerGroup.add(rightArm);
+
+        // Hals & Kopf
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.1), jointMat);
+        neck.position.y = 1.5;
+        playerGroup.add(neck);
+
+        const headGeom = new THREE.BoxGeometry(0.26, 0.24, 0.24);
+        const robotHead = new THREE.Mesh(headGeom, armorMat);
+        robotHead.position.y = 1.66;
+        playerGroup.add(robotHead);
+
+        // Visier (Leuchtende Augen-Leiste)
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.03), glowMat);
+        visor.position.set(0, 1.68, 0.12);
+        playerGroup.add(visor);
+
+        // Beine (Kapseln/Zylinder)
+        const legGeom = new THREE.CylinderGeometry(0.07, 0.05, 0.5);
+        const footGeom = new THREE.BoxGeometry(0.1, 0.06, 0.16);
+
+        const leftLegGroup = new THREE.Group(); leftLegGroup.position.set(-0.13, 0.85, 0);
+        const leftLegMesh = new THREE.Mesh(legGeom, metalMat); leftLegMesh.position.y = -0.25; leftLegGroup.add(leftLegMesh);
+        const leftFoot = new THREE.Mesh(footGeom, armorMat); leftFoot.position.set(0, -0.5, 0.03); leftLegGroup.add(leftFoot);
+        playerGroup.add(leftLegGroup);
+
+        const rightLegGroup = new THREE.Group(); rightLegGroup.position.set(0.13, 0.85, 0);
+        const rightLegMesh = new THREE.Mesh(legGeom, metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
+        const rightFoot = new THREE.Mesh(footGeom, armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot);
+        playerGroup.add(rightLegGroup);
+
         playerGroup.position.set(0, 0, 5); 
         scene.add(playerGroup);
+
 
         // --- 5. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false;
@@ -400,7 +438,7 @@
         const playerInventory = []; 
 
         function toggleInventory() {
-            if (isGameWon) return; // Inventar sperren wenn gewonnen
+            if (isGameWon) return; 
             isInventoryOpen = !isInventoryOpen;
             const overlay = document.getElementById('inventory-overlay');
             if (isInventoryOpen) {
@@ -441,8 +479,6 @@
                             activeExhibitNearMe.currentNumber = numberVal;
                             updateExhibitVisual(activeExhibitNearMe);
                             toggleInventory();
-                            
-                            // Nach jedem Aufhängen prüfen, ob die Reihenfolge stimmt
                             checkWinCondition();
                         }
                     };
@@ -467,43 +503,30 @@
             }
         }
 
-        // Überprüfung der Win-Condition (1, 2, 3, 4, 5)
         function checkWinCondition() {
             const currentOrder = exhibits.map(ex => ex.currentNumber);
             const correctOrder = [1, 2, 3, 4, 5];
-            
-            // Prüfen ob alle Plätze gefüllt sind und die Reihenfolge exakt übereinstimmt
             const hasWon = currentOrder.every((val, index) => val === correctOrder[index]);
             
             if (hasWon) {
                 isGameWon = true;
-                // UI Prompts ausblenden
                 document.getElementById('interaction-prompt').style.display = 'none';
-                // Gewinn-Overlay anzeigen
                 document.getElementById('win-overlay').classList.add('open');
             }
         }
 
-        // Funktion zum Zurücksetzen des Spiels
         function restartGame() {
             isGameWon = false;
-            playerInventory.length = 0; // Inventar leeren
-            
-            // Plätze wieder mischen
+            playerInventory.length = 0; 
             const mixedNumbers = [4, 1, 5, 2, 3];
             for(let i = 0; i < exhibits.length; i++) {
                 exhibits[i].currentNumber = mixedNumbers[i];
                 updateExhibitVisual(exhibits[i]);
             }
-            
-            // Spieler zurücksetzen
             playerGroup.position.set(0, 0, 5);
-            
-            // Overlay schließen
             document.getElementById('win-overlay').classList.remove('open');
         }
 
-        // --- 6. TIMEOUT: BEDIENUNG AUSBLENDEN ---
         setTimeout(() => {
             const uiLayer = document.getElementById('ui-layer');
             if (uiLayer) {
@@ -512,7 +535,7 @@
             }
         }, 20000);
 
-        // --- 7. STEUERUNGS-SYSTEM (PC MAUS & TASTATUR) ---
+        // --- 6. STEUERUNGS-SYSTEM (PC MAUS & TASTATUR) ---
         let cameraAngleH = 0; let cameraAngleV = 0.3; 
         let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
 
@@ -539,15 +562,13 @@
         });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
-
-        // --- 8. EMULIERTES TOUCH-SYSTEM FÜR TABLETS ---
+        // --- 7. EMULIERTES TOUCH-SYSTEM FÜR TABLETS ---
         let touchStartPos = { x: 0, y: 0 };
         let touchVelocity = { x: 0, z: 0 }; 
         let isTouching = false;
 
         window.addEventListener('touchstart', (e) => {
             if(isInventoryOpen || isGameWon || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn' || e.target.className === 'restart-btn') return;
-            
             isTouching = true;
             touchStartPos.x = e.touches[0].clientX;
             touchStartPos.y = e.touches[0].clientY;
@@ -556,12 +577,8 @@
         window.addEventListener('touchmove', (e) => {
             if (!isTouching || isInventoryOpen || isGameWon) return;
             e.preventDefault(); 
-
-            let currentX = e.touches[0].clientX;
-            let currentY = e.touches[0].clientY;
-
-            let diffX = currentX - touchStartPos.x;
-            let diffY = currentY - touchStartPos.y;
+            let currentX = e.touches[0].clientX; let currentY = e.touches[0].clientY;
+            let diffX = currentX - touchStartPos.x; let diffY = currentY - touchStartPos.y;
 
             cameraAngleH += diffX * 0.0003;
             cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
@@ -573,19 +590,13 @@
                 touchVelocity.x = -Math.sin(cameraAngleH) * forwardFactor;
                 touchVelocity.z = -Math.cos(cameraAngleH) * forwardFactor;
             } else {
-                touchVelocity.x = 0;
-                touchVelocity.z = 0;
+                touchVelocity.x = 0; touchVelocity.z = 0;
             }
         }, { passive: false });
 
-        window.addEventListener('touchend', () => {
-            isTouching = false;
-            touchVelocity.x = 0;
-            touchVelocity.z = 0;
-        });
+        window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
 
-
-        // --- 9. GAME LOOP ---
+        // --- 8. GAME LOOP & ANIMATIONEN ---
         const moveSpeed = 0.08;
         const playerRadius = 0.4; 
 
@@ -599,10 +610,7 @@
             if (keys.a || keys.ArrowLeft) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
             if (keys.d || keys.ArrowRight) { moveX += Math.sin(cameraAngleH + Math.PI/2); moveZ += Math.cos(cameraAngleH + Math.PI/2); }
 
-            if (isTouching) {
-                moveX += touchVelocity.x;
-                moveZ += touchVelocity.z;
-            }
+            if (isTouching) { moveX += touchVelocity.x; moveZ += touchVelocity.z; }
 
             if (moveX !== 0 || moveZ !== 0) {
                 let length = Math.sqrt(moveX * moveX + moveZ * moveZ);
@@ -615,14 +623,22 @@
 
                 playerGroup.rotation.y = Math.atan2(moveX, moveZ);
 
+                // --- GANG-ANIMATION (NEU: Beine UND Arme schwingen asynchron) ---
                 let time = Date.now() * 0.01;
-                leftLeg.rotation.x = Math.sin(time) * 0.5;
-                rightLeg.rotation.x = -Math.sin(time) * 0.5;
+                leftLegGroup.rotation.x = Math.sin(time) * 0.6;
+                rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
+                
+                leftArm.rotation.x = -Math.sin(time) * 0.4;
+                rightArm.rotation.x = Math.sin(time) * 0.4;
             } else {
-                leftLeg.rotation.x = 0; rightLeg.rotation.x = 0;
+                // In den flüssigen Standby-Zustand zurückkehren
+                leftLegGroup.rotation.x *= 0.8;
+                rightLegGroup.rotation.x *= 0.8;
+                leftArm.rotation.x *= 0.8;
+                rightArm.rotation.x *= 0.8;
             }
 
-            // ENTFERNUNG ZU DEN BILDERN PRÜFEN
+            // Entfernung checken
             let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
             let closestExhibit = null; let minDistance = Infinity;
 
@@ -635,22 +651,18 @@
             if (minDistance < 2.5) {
                 activeExhibitNearMe = closestExhibit;
                 promptBtn.style.display = 'block';
-                
                 if(closestExhibit.currentNumber !== null) {
                     promptBtn.innerText = `👋 Bild (${closestExhibit.currentNumber}) einpacken`;
-                    promptBtn.style.background = "rgba(234, 32, 39, 0.85)";
-                    promptBtn.style.borderColor = "#ff4757";
+                    promptBtn.style.background = "rgba(234, 32, 39, 0.85)"; promptBtn.style.borderColor = "#ff4757";
                 } else {
                     promptBtn.innerText = "🖼️ Zahl aufhängen";
-                    promptBtn.style.background = "rgba(46, 213, 115, 0.85)";
-                    promptBtn.style.borderColor = "#2ed573";
+                    promptBtn.style.background = "rgba(46, 213, 115, 0.85)"; promptBtn.style.borderColor = "#2ed573";
                 }
             } else {
-                activeExhibitNearMe = null;
-                promptBtn.style.display = 'none';
+                activeExhibitNearMe = null; promptBtn.style.display = 'none';
             }
 
-            // Dritte-Person-Kamera
+            // Kamera-Verfolgung
             let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4;
             let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4;
             let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
