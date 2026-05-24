@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum - Center-Block & Rückwand</title>
+    <title>3D Mathe-Museum - Mit Nebenraum</title>
     <style>
         body {
             margin: 0;
@@ -198,15 +198,16 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Marmor-Museum v7.0</h1>
-        <p>Bringe die Zahlen an der Rückwand in die richtige Reihenfolge (1 - 2 - 3 - 4 - 5)!</p>
+        <h1>🏛️ Marmor-Museum v8.0</h1>
+        <p>Bringe die Zahlen in Ordnung und erkunde den neuen, kleineren Nebenraum auf der rechten Seite!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
-            • Laufen: W, A, S, D / Pfeile | Interagieren: R<br>
+            • Laufen: W, A, S, D / Pfeile<br>
+            • Interagieren / Tür steuern: R<br>
             <br>
             📱 TABLET-STEUERUNG:<br>
-            • Laufen & Umschauen: Wischen auf dem Bildschirm<br>
-            • Interagieren: Auf den Interaktions-Button tippen
+            • Laufen & Umschauen: Wischen<br>
+            • Interagieren: Auf den Button tippen
         </div>
     </div>
 
@@ -249,10 +250,12 @@
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. RAUM-SETUP & INNENBLOCK ---
+        // --- 2. RAUM-SETUP (HAUPTRAUM & NEBENRAUM) ---
         const ROOM_SIZE = 24; 
-        const BLOCK_SIZE = 8; // Größe des Blocks in der Mitte
+        const BLOCK_SIZE = 8;
+        const SUB_ROOM_SIZE = 10; // Kleinerer neuer Raum
         
+        // Böden für beide Räume
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a26, roughness: 0.6 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
@@ -260,9 +263,22 @@
         floor.receiveShadow = true;
         scene.add(floor);
 
+        const subFloorGeo = new THREE.PlaneGeometry(SUB_ROOM_SIZE, SUB_ROOM_SIZE);
+        const subFloorMat = new THREE.MeshStandardMaterial({ color: 0x15151f, roughness: 0.7 });
+        const subFloor = new THREE.Mesh(subFloorGeo, subFloorMat);
+        subFloor.rotation.x = -Math.PI / 2;
+        subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); // Rechts neben Hauptraum
+        subFloor.receiveShadow = true;
+        scene.add(subFloor);
+
+        // Grids für beide Räume
         const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x333344);
         grid.position.y = 0.01;
         scene.add(grid);
+
+        const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0x2ed573, 0x223322);
+        subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.01, 0);
+        scene.add(subGrid);
 
         // Prozedurale Marmor-Textur
         function createMarbleTexture() {
@@ -271,12 +287,10 @@
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#e8e8f0';
             ctx.fillRect(0, 0, 512, 512);
-            
             for (let i = 0; i < 20; i++) {
                 ctx.fillStyle = `rgba(220, 220, 230, ${Math.random() * 0.3})`;
                 ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 200, Math.random() * 200);
             }
-
             ctx.strokeStyle = 'rgba(150, 150, 165, 0.25)';
             ctx.lineWidth = 1.5;
             for (let j = 0; j < 8; j++) {
@@ -296,20 +310,58 @@
         const marbleTexture = createMarbleTexture();
         const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
         
-        // Außenwände
+        // Außenwände Hauptraum
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
         const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
-        const rightWall = new THREE.Mesh(wallGeo, wallMat); rightWall.position.set(ROOM_SIZE/2, 3, 0); rightWall.rotation.y = -Math.PI/2; scene.add(rightWall);
         const frontWall = new THREE.Mesh(wallGeo, wallMat); frontWall.position.set(0, 3, ROOM_SIZE/2); frontWall.rotation.y = Math.PI; scene.add(frontWall);
 
-        // Der Center-Block (bleibt als architektonisches Element im Raum)
+        // Rechte Wand geteilt in zwei Abschnitte wegen des Tür-Durchgangs (Breite: 3 Meter)
+        const doorWidth = 3;
+        const sideWallLength = (ROOM_SIZE - doorWidth) / 2; // 10.5 Meter pro Teilstück
+        const rightWallSegGeo = new THREE.PlaneGeometry(sideWallLength, 6);
+        
+        const rightWallSeg1 = new THREE.Mesh(rightWallSegGeo, wallMat);
+        rightWallSeg1.position.set(ROOM_SIZE/2, 3, -ROOM_SIZE/4 - doorWidth/4);
+        rightWallSeg1.rotation.y = -Math.PI/2;
+        scene.add(rightWallSeg1);
+
+        const rightWallSeg2 = new THREE.Mesh(rightWallSegGeo, wallMat);
+        rightWallSeg2.position.set(ROOM_SIZE/2, 3, ROOM_SIZE/4 + doorWidth/4);
+        rightWallSeg2.rotation.y = -Math.PI/2;
+        scene.add(rightWallSeg2);
+
+        // Wände für den kleineren Nebenraum
+        const subWallGeoH = new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6);
+        const subWallGeoV = new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6);
+        
+        const subBackWall = new THREE.Mesh(subWallGeoH, wallMat); subBackWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, -SUB_ROOM_SIZE/2); scene.add(subBackWall);
+        const subFrontWall = new THREE.Mesh(subWallGeoH, wallMat); subFrontWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, SUB_ROOM_SIZE/2); subFrontWall.rotation.y = Math.PI; scene.add(subFrontWall);
+        
+        // Rechte Außenwand des Nebenraums
+        const subRightWall = new THREE.Mesh(subWallGeoV, wallMat); subRightWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE, 3, 0); subRightWall.rotation.y = -Math.PI/2; scene.add(subRightWall);
+
+        // Trennwände links im Nebenraum (oberhalb und unterhalb der Tür)
+        const subLeftLength = (SUB_ROOM_SIZE - doorWidth) / 2; // 3.5 Meter Teilstücke
+        const subLeftSegGeo = new THREE.PlaneGeometry(subLeftLength, 6);
+        
+        const subLeftWall1 = new THREE.Mesh(subLeftSegGeo, wallMat);
+        subLeftWall1.position.set(ROOM_SIZE/2, 3, -SUB_ROOM_SIZE/2 + subLeftLength/2);
+        subLeftWall1.rotation.y = Math.PI/2;
+        scene.add(subLeftWall1);
+
+        const subLeftWall2 = new THREE.Mesh(subLeftSegGeo, wallMat);
+        subLeftWall2.position.set(ROOM_SIZE/2, 3, SUB_ROOM_SIZE/2 - subLeftLength/2);
+        subLeftWall2.rotation.y = Math.PI/2;
+        scene.add(subLeftWall2);
+
+        // Der Center-Block (bleibt im Hauptraum)
         const blockGeo = new THREE.BoxGeometry(BLOCK_SIZE, 6, BLOCK_SIZE);
         const centerBlock = new THREE.Mesh(blockGeo, wallMat);
         centerBlock.position.set(0, 3, 0);
         scene.add(centerBlock);
 
-        // Dekorative blaue Kanten für den Center-Block
+        // Dekorative Kanten für den Center-Block
         const edgeGeo = new THREE.BoxGeometry(0.15, 6.1, 0.15);
         const edgeMat = new THREE.MeshBasicMaterial({ color: 0x4a90e2 });
         const halfB = BLOCK_SIZE / 2;
@@ -319,7 +371,34 @@
             scene.add(edge);
         });
 
-        // --- 3. EXPO-PLÄTZE (WIEDER AN DER RÜCKWAND) ---
+        // --- 2B. INTERAKTIVE TÜR ERSTELLEN ---
+        const doorGroup = new THREE.Group();
+        // Der Drehpunkt (Hinge) liegt am Rand der Tür, damit sie realistisch aufschwingt
+        doorGroup.position.set(ROOM_SIZE / 2, 0, -doorWidth / 2); 
+        
+        const doorPanelGeo = new THREE.BoxGeometry(0.15, 4.5, doorWidth);
+        const doorMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.6, roughness: 0.2 });
+        const doorPanel = new THREE.Mesh(doorPanelGeo, doorMat);
+        // Panel verschieben, damit die Kante am Gruppen-Nullpunkt (Drehachse) liegt
+        doorPanel.position.set(0, 2.25, doorWidth / 2);
+        doorGroup.add(doorPanel);
+        
+        // Türrahmen-Lichtleiste (Futuristisch)
+        const doorLightGeo = new THREE.BoxGeometry(0.2, 4.6, 0.1);
+        const doorLightMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff });
+        const dl = new THREE.Mesh(doorLightGeo, doorLightMat); dl.position.set(0, 2.25, doorWidth); doorGroup.add(dl);
+
+        scene.add(doorGroup);
+
+        let isDoorOpen = false;
+        let doorTargetAngle = 0;
+
+        function toggleDoor() {
+            isDoorOpen = !isDoorOpen;
+            doorTargetAngle = isDoorOpen ? Math.PI / 1.8 : 0; // Schwingt in den Nebenraum hinein auf
+        }
+
+        // --- 3. EXPO-PLÄTZE (AN DER RÜCKWAND) ---
         const initialNumbers = [4, 1, 5, 2, 3];
         const exhibits = [];
 
@@ -372,55 +451,33 @@
             }
         }
 
-        // --- 4. AVATAR (MODERNER LOW-POLY ROBOTER) ---
+        // --- 4. AVATAR ---
         const playerGroup = new THREE.Group();
-
         const metalMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.2, metalness: 0.8 });
         const armorMat = new THREE.MeshStandardMaterial({ color: 0x2e3192, roughness: 0.3 });
         const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff });
         const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
 
-        const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8), jointMat);
-        pelvis.position.y = 0.85; playerGroup.add(pelvis);
+        const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8), jointMat); pelvis.position.y = 0.85; playerGroup.add(pelvis);
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6), armorMat); torso.position.y = 1.2; playerGroup.add(torso);
+        const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glowMat); core.position.set(0, 1.3, 0.21); playerGroup.add(core);
 
-        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6), armorMat);
-        torso.position.y = 1.2; playerGroup.add(torso);
-
-        const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glowMat);
-        core.position.set(0, 1.3, 0.21); playerGroup.add(core);
-
-        const armGeom = new THREE.BoxGeometry(0.08, 0.4, 0.08);
-        const shoulderGeom = new THREE.SphereGeometry(0.07, 8, 8);
-
-        const leftShoulder = new THREE.Mesh(shoulderGeom, jointMat); leftShoulder.position.set(-0.32, 1.4, 0); playerGroup.add(leftShoulder);
-        const leftArm = new THREE.Mesh(armGeom, metalMat); leftArm.position.set(-0.32, 1.15, 0); playerGroup.add(leftArm);
-
-        const rightShoulder = new THREE.Mesh(shoulderGeom, jointMat); rightShoulder.position.set(0.32, 1.4, 0); playerGroup.add(rightShoulder);
-        const rightArm = new THREE.Mesh(armGeom, metalMat); rightArm.position.set(0.32, 1.15, 0); playerGroup.add(rightArm);
-
-        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.1), jointMat);
-        neck.position.y = 1.5; playerGroup.add(neck);
-
-        const robotHead = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.24, 0.24), armorMat);
-        robotHead.position.y = 1.66; playerGroup.add(robotHead);
-
-        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.03), glowMat);
-        visor.position.set(0, 1.68, 0.12); playerGroup.add(visor);
-
-        const legGeom = new THREE.CylinderGeometry(0.07, 0.05, 0.5);
-        const footGeom = new THREE.BoxGeometry(0.1, 0.06, 0.16);
+        const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), metalMat); leftArm.position.set(-0.32, 1.15, 0); playerGroup.add(leftArm);
+        const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), metalMat); rightArm.position.set(0.32, 1.15, 0); playerGroup.add(rightArm);
+        
+        const robotHead = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.24, 0.24), armorMat); robotHead.position.y = 1.66; playerGroup.add(robotHead);
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.03), glowMat); visor.position.set(0, 1.68, 0.12); playerGroup.add(visor);
 
         const leftLegGroup = new THREE.Group(); leftLegGroup.position.set(-0.13, 0.85, 0);
-        const leftLegMesh = new THREE.Mesh(legGeom, metalMat); leftLegMesh.position.y = -0.25; leftLegGroup.add(leftLegMesh);
-        const leftFoot = new THREE.Mesh(footGeom, armorMat); leftFoot.position.set(0, -0.5, 0.03); leftLegGroup.add(leftFoot);
+        const leftLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); leftLegMesh.position.y = -0.25; leftLegGroup.add(leftLegMesh);
+        const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); leftFoot.position.set(0, -0.5, 0.03); leftLegGroup.add(leftFoot);
         playerGroup.add(leftLegGroup);
 
         const rightLegGroup = new THREE.Group(); rightLegGroup.position.set(0.13, 0.85, 0);
-        const rightLegMesh = new THREE.Mesh(legGeom, metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
-        const rightFoot = new THREE.Mesh(footGeom, armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot);
+        const rightLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
+        const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot);
         playerGroup.add(rightLegGroup);
 
-        // Startposition im südlichen Teil des Rundwegs
         playerGroup.position.set(0, 0, 7); 
         scene.add(playerGroup);
 
@@ -428,6 +485,7 @@
         let isInventoryOpen = false;
         let isGameWon = false;
         let activeExhibitNearMe = null; 
+        let isNearDoor = false;
         let modePlacement = false;      
         const playerInventory = []; 
 
@@ -448,25 +506,16 @@
 
         function renderInventoryUI() {
             const gridContainer = document.getElementById('inventory-grid');
-            const title = document.getElementById('inv-title');
-            const subtitle = document.getElementById('inv-subtitle');
             gridContainer.innerHTML = '';
-
-            if(modePlacement) {
-                title.innerText = "🖼️ Welches Bild aufhängen?"; subtitle.innerText = "Tippe eine Zahl an, um sie aufzuhängen.";
-            } else {
-                title.innerText = "🎒 Dein Rucksack"; subtitle.innerText = "Deine gesammelten Gegenstände";
-            }
+            document.getElementById('inv-title').innerText = modePlacement ? "🖼️ Welches Bild aufhängen?" : "🎒 Dein Rucksack";
 
             for(let i = 0; i < 6; i++) {
                 const slot = document.createElement('div');
                 slot.className = 'inventory-slot';
-
                 if(playerInventory[i] !== undefined) {
                     const numberVal = playerInventory[i];
                     slot.className = 'inventory-slot filled selectable';
                     slot.innerHTML = `<div class="slot-icon">${numberVal}</div><span>Bild-Zahl</span>`;
-                    
                     slot.onclick = () => {
                         if(modePlacement && activeExhibitNearMe !== null) {
                             playerInventory.splice(i, 1);
@@ -476,15 +525,17 @@
                             checkWinCondition();
                         }
                     };
-                } else {
-                    slot.innerHTML = `<div class="slot-icon">🔒</div><span>Leer</span>`;
-                }
+                } else { slot.innerHTML = `<div class="slot-icon">🔒</div><span>Leer</span>`; }
                 gridContainer.appendChild(slot);
             }
         }
 
         function triggerInteraction() {
             if (isGameWon) return;
+            if (isNearDoor) {
+                toggleDoor();
+                return;
+            }
             if (activeExhibitNearMe !== null && !isInventoryOpen) {
                 if (activeExhibitNearMe.currentNumber !== null) {
                     playerInventory.push(activeExhibitNearMe.currentNumber);
@@ -499,10 +550,7 @@
 
         function checkWinCondition() {
             const currentOrder = exhibits.map(ex => ex.currentNumber);
-            const correctOrder = [1, 2, 3, 4, 5];
-            const hasWon = currentOrder.every((val, index) => val === correctOrder[index]);
-            
-            if (hasWon) {
+            if (currentOrder.every((val, index) => val === [1, 2, 3, 4, 5][index])) {
                 isGameWon = true;
                 document.getElementById('interaction-prompt').style.display = 'none';
                 document.getElementById('win-overlay').classList.add('open');
@@ -510,31 +558,20 @@
         }
 
         function restartGame() {
-            isGameWon = false;
-            playerInventory.length = 0; 
-            const mixedNumbers = [4, 1, 5, 2, 3];
-            for(let i = 0; i < exhibits.length; i++) {
-                exhibits[i].currentNumber = mixedNumbers[i];
-                updateExhibitVisual(exhibits[i]);
-            }
+            isGameWon = false; playerInventory.length = 0;
+            const mixed = [4, 1, 5, 2, 3];
+            exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
             playerGroup.position.set(0, 0, 7);
+            if(isDoorOpen) toggleDoor();
             document.getElementById('win-overlay').classList.remove('open');
         }
-
-        setTimeout(() => {
-            const uiLayer = document.getElementById('ui-layer');
-            if (uiLayer) {
-                uiLayer.style.opacity = '0';
-                setTimeout(() => uiLayer.style.display = 'none', 1000);
-            }
-        }, 15000);
 
         // --- 6. STEUERUNGS-SYSTEM ---
         let cameraAngleH = 0; let cameraAngleV = 0.3; 
         let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
 
         window.addEventListener('mousedown', (e) => { 
-            if(isInventoryOpen || isGameWon || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn' || e.target.className === 'restart-btn') return; 
+            if(isInventoryOpen || isGameWon || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; 
             isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; 
         });
         window.addEventListener('mouseup', () => isMouseDown = false);
@@ -548,61 +585,41 @@
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         window.addEventListener('keydown', (e) => { 
             if (isGameWon) return;
-            const pressedKey = e.key.toLowerCase();
-            if (pressedKey === 'e') { toggleInventory(); return; }
-            if (pressedKey === 'r') { triggerInteraction(); return; }
-            if (isInventoryOpen) return;
-            if (e.key in keys) keys[e.key] = true; 
+            if (e.key.toLowerCase() === 'e') { toggleInventory(); return; }
+            if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; }
+            if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
         });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
-        // Touch für Mobile/Tablets
-        let touchStartPos = { x: 0, y: 0 };
-        let touchVelocity = { x: 0, z: 0 }; 
-        let isTouching = false;
-
+        let touchStartPos = { x: 0, y: 0 }; let touchVelocity = { x: 0, z: 0 }; let isTouching = false;
         window.addEventListener('touchstart', (e) => {
-            if(isInventoryOpen || isGameWon || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn' || e.target.className === 'restart-btn') return;
-            isTouching = true;
-            touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
-        }, { passive: false });
-
+            if(isInventoryOpen || isGameWon || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return;
+            isTouching = true; touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
+        });
         window.addEventListener('touchmove', (e) => {
             if (!isTouching || isInventoryOpen || isGameWon) return;
-            e.preventDefault(); 
-            let currentX = e.touches[0].clientX; let currentY = e.touches[0].clientY;
-            let diffX = currentX - touchStartPos.x; let diffY = currentY - touchStartPos.y;
-
-            cameraAngleH += diffX * 0.0003;
-            cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
-
-            let forwardFactor = -diffY * 0.01; 
-            forwardFactor = Math.max(-1, Math.min(1, forwardFactor)); 
-
-            if (Math.abs(diffY) > 10) { 
-                touchVelocity.x = -Math.sin(cameraAngleH) * forwardFactor;
-                touchVelocity.z = -Math.cos(cameraAngleH) * forwardFactor;
-            } else {
-                touchVelocity.x = 0; touchVelocity.z = 0;
-            }
-        }, { passive: false });
-
+            let diffX = e.touches[0].clientX - touchStartPos.x; let diffY = e.touches[0].clientY - touchStartPos.y;
+            cameraAngleH += diffX * 0.0003; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
+            let forward = Math.max(-1, Math.min(1, -diffY * 0.01));
+            if (Math.abs(diffY) > 10) { touchVelocity.x = -Math.sin(cameraAngleH) * forward; touchVelocity.z = -Math.cos(cameraAngleH) * forward; }
+            else { touchVelocity.x = 0; touchVelocity.z = 0; }
+        });
         window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
 
-        // --- 7. GAME LOOP & KOLLISIONSDETEKTION ---
-        const moveSpeed = 0.08;
-        const playerRadius = 0.4; 
+        // --- 7. GAME LOOP & ERWEITERTE KOLLISION ---
+        const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
             if (isInventoryOpen || isGameWon) return;
 
-            let moveX = 0; let moveZ = 0;
+            // Sanfte Tür-Animation
+            doorGroup.rotation.y += (doorTargetAngle - doorGroup.rotation.y) * 0.1;
 
+            let moveX = 0; let moveZ = 0;
             if (keys.w || keys.ArrowUp) { moveX -= Math.sin(cameraAngleH); moveZ -= Math.cos(cameraAngleH); }
             if (keys.s || keys.ArrowDown) { moveX += Math.sin(cameraAngleH); moveZ += Math.cos(cameraAngleH); }
             if (keys.a || keys.ArrowLeft) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
             if (keys.d || keys.ArrowRight) { moveX += Math.sin(cameraAngleH + Math.PI/2); moveZ += Math.cos(cameraAngleH + Math.PI/2); }
-
             if (isTouching) { moveX += touchVelocity.x; moveZ += touchVelocity.z; }
 
             if (moveX !== 0 || moveZ !== 0) {
@@ -610,86 +627,4 @@
                 let nextX = playerGroup.position.x + (moveX / length) * moveSpeed;
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
                 
-                let allowed = true;
-
-                // 1. Kollision Außenwände
-                let maxCoord = ROOM_SIZE / 2 - playerRadius;
-                if (nextX < -maxCoord || nextX > maxCoord || nextZ < -maxCoord || nextZ > maxCoord) {
-                    allowed = false;
-                }
-
-                // 2. Kollision Innenblock
-                let blockBound = BLOCK_SIZE / 2 + playerRadius;
-                if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) {
-                    allowed = false;
-                }
-
-                if (allowed) {
-                    playerGroup.position.x = nextX;
-                    playerGroup.position.z = nextZ;
-                }
-
-                playerGroup.rotation.y = Math.atan2(moveX, moveZ);
-
-                // Gang-Animation
-                let time = Date.now() * 0.01;
-                leftLegGroup.rotation.x = Math.sin(time) * 0.6;
-                rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
-                leftArm.rotation.x = -Math.sin(time) * 0.4;
-                rightArm.rotation.x = Math.sin(time) * 0.4;
-            } else {
-                leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8;
-                leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8;
-            }
-
-            // Exponat-Nähe prüfen
-            let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
-            let closestExhibit = null; let minDistance = Infinity;
-
-            for(let ex of exhibits) {
-                let dist = playerPos2D.distanceTo(ex.position);
-                if (dist < minDistance) { minDistance = dist; closestExhibit = ex; }
-            }
-
-            const promptBtn = document.getElementById('interaction-prompt');
-            if (minDistance < 2.5) {
-                activeExhibitNearMe = closestExhibit;
-                promptBtn.style.display = 'block';
-                if(closestExhibit.currentNumber !== null) {
-                    promptBtn.innerText = `👋 Bild (${closestExhibit.currentNumber}) einpacken`;
-                    promptBtn.style.background = "rgba(234, 32, 39, 0.85)"; promptBtn.style.borderColor = "#ff4757";
-                } else {
-                    promptBtn.innerText = "🖼️ Zahl aufhängen";
-                    promptBtn.style.background = "rgba(46, 213, 115, 0.85)"; promptBtn.style.borderColor = "#2ed573";
-                }
-            } else {
-                activeExhibitNearMe = null; promptBtn.style.display = 'none';
-            }
-
-            // Kamera-Führung
-            let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4.5;
-            let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4.5;
-            let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
-
-            camera.position.x += (targetCamX - camera.position.x) * 0.1;
-            camera.position.y += (targetCamY - camera.position.y) * 0.1;
-            camera.position.z += (targetCamZ - camera.position.z) * 0.1;
-            camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.1, playerGroup.position.z);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            updateGame();
-            renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        animate();
-    </script>
-</body>
-</html>
+                let allowed = true
