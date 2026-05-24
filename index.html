@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum mit Avatar</title>
+    <title>3D Mathe-Museum mit Inventar</title>
     <style>
         body {
             margin: 0;
@@ -12,6 +12,8 @@
             font-family: 'Segoe UI', sans-serif;
             touch-action: none;
         }
+        
+        /* Steuerungshinweis oben links */
         #ui-layer {
             position: absolute;
             top: 20px;
@@ -20,9 +22,10 @@
             background: rgba(0, 0, 0, 0.75);
             padding: 15px;
             border-radius: 10px;
-            pointer-events: none;
             max-width: 280px;
             z-index: 100;
+            transition: opacity 1s ease; /* Ermöglicht sanftes Ausblenden */
+            pointer-events: none;
         }
         h1 { margin: 0 0 5px 0; font-size: 1.3rem; color: #4a90e2; }
         p { margin: 3px 0; font-size: 0.85rem; line-height: 1.3; }
@@ -33,27 +36,159 @@
             font-size: 0.8rem;
             color: #2ed573;
         }
+
+        /* Inventar-Button oben rechts */
+        #inventory-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            z-index: 101;
+            transition: transform 0.1s, background 0.2s;
+        }
+        #inventory-btn:active { transform: scale(0.95); }
+        #inventory-btn:hover { background: #357abd; }
+
+        /* Das Inventar-Overlay (Vollbild, aber leicht transparent) */
+        #inventory-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 10, 22, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #inventory-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .inventory-box {
+            background: #1e1e24;
+            border: 3px solid #4a90e2;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        .inventory-box h2 {
+            margin-top: 0;
+            color: #4a90e2;
+            margin-bottom: 20px;
+        }
+        
+        /* Die Inventarplätze (Grid) */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .inventory-slot {
+            background: rgba(255,255,255,0.05);
+            border: 2px dashed #444;
+            border-radius: 12px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #747d8c;
+        }
+        .inventory-slot.filled {
+            border: 2px solid #2ed573;
+            color: white;
+            background: rgba(46, 213, 115, 0.1);
+        }
+        .slot-icon { font-size: 2rem; margin-bottom: 5px; }
+
+        .close-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 25px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .close-btn:hover { background: #e03d4b; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
+    <!-- Anleitung (blendet sich nach 20 Sek aus) -->
     <div id="ui-layer">
-        <h1>📐 Mathe-Museum v3.1</h1>
-        <p>Die Steuerung ist jetzt korrigiert!</p>
+        <h1>📐 Mathe-Museum v4</h1>
+        <p>Erkunde die Ausstellung!</p>
         
         <div class="controls-hint">
-            💻 PC-STEUERUNG:<br>
-            • <b>Laufen:</b> W, A, S, D oder Pfeiltasten<br>
-            • <b>Umsehen:</b> Maus klicken & ziehen<br>
-            <br>
-            📱 TABLET-STEUERUNG:<br>
-            • <b>Laufen & Drehen:</b> Ziehe deinen Finger auf dem Bildschirm!
+            🕹️ STEUERUNG:<br>
+            • Laufen: W, A, S, D / Pfeile<br>
+            • Umsehen: Maus ziehen / Wischen<br>
+            • <b>Inventar: Taste E oder Button</b>
+        </div>
+    </div>
+
+    <!-- Rucksack Button -->
+    <button id="inventory-btn" onclick="toggleInventory()">🎒 Inventar (E)</button>
+
+    <!-- Das Inventar Menü -->
+    <div id="inventory-overlay">
+        <div class="inventory-box">
+            <h2>🎒 Dein Mathe-Rucksack</h2>
+            <div class="inventory-grid">
+                <!-- Beispiel-Items für die Schüler -->
+                <div class="inventory-slot filled">
+                    <div class="slot-icon">📐</div>
+                    <span>Geodreieck</span>
+                </div>
+                <div class="inventory-slot filled">
+                    <div class="slot-icon">✏️</div>
+                    <span>Bleistift</span>
+                </div>
+                <div class="inventory-slot">
+                    <div class="slot-icon">🔒</div>
+                    <span>Leer</span>
+                </div>
+                <div class="inventory-slot">
+                    <div class="slot-icon">🔒</div>
+                    <span>Leer</span>
+                </div>
+                <div class="inventory-slot">
+                    <div class="slot-icon">🔒</div>
+                    <span>Leer</span>
+                </div>
+                <div class="inventory-slot">
+                    <div class="slot-icon">🔒</div>
+                    <span>Leer</span>
+                </div>
+            </div>
+            <button class="close-btn" onclick="toggleInventory()">Schließen</button>
         </div>
     </div>
 
     <script>
-        // 1. BASICS: SCENE, CAMERA & RENDERER
+        // --- 1. BASICS: SCENE, CAMERA & RENDERER ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a0a16);
         scene.fog = new THREE.FogExp2(0x0a0a16, 0.04);
@@ -73,7 +208,7 @@
         light.castShadow = true;
         scene.add(light);
 
-        // 2. DIE RAUM-GRENZEN
+        // --- 2. RAUM-SETUP ---
         const ROOM_SIZE = 24; 
 
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
@@ -114,9 +249,8 @@
         createExhibit(0x2ed573, -ROOM_SIZE/2 + 0.1, -2, Math.PI/2);
         createExhibit(0x1e90ff, ROOM_SIZE/2 - 0.1, -2, -Math.PI/2);
 
-        // 3. DER AVATAR
+        // --- 3. AVATAR ---
         const playerGroup = new THREE.Group();
-        
         const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.3 }));
         head.position.y = 1.6;
         playerGroup.add(head);
@@ -135,37 +269,66 @@
         playerGroup.position.set(0, 0, 5); 
         scene.add(playerGroup);
 
-        // 4. MAUS- & TOUCH-KAMERASTEUERUNG
+        // --- 4. INTERACTION & INVENTAR LOGIK ---
+        let isInventoryOpen = false;
+
+        function toggleInventory() {
+            isInventoryOpen = !isInventoryOpen;
+            const overlay = document.getElementById('inventory-overlay');
+            if (isInventoryOpen) {
+                overlay.classList.add('open');
+                // Tasten zurücksetzen, damit die Figur beim Öffnen nicht weiterläuft
+                for (let key in keys) keys[key] = false;
+            } else {
+                overlay.classList.remove('open');
+            }
+        }
+
+        // --- 5. AUTOMATISCHES AUSBLENDEN DER STEUERUNG ---
+        setTimeout(() => {
+            const uiLayer = document.getElementById('ui-layer');
+            if (uiLayer) {
+                uiLayer.style.opacity = '0';
+                // Nach der Animation komplett aus dem Klickbereich entfernen
+                setTimeout(() => uiLayer.style.display = 'none', 1000);
+            }
+        }, 20000); // 20000 Millisekunden = 20 Sekunden
+
+        // --- 6. MAUS- & TOUCH-KAMERASTEUERUNG ---
         let cameraAngleH = 0; 
         let cameraAngleV = 0.3; 
         let isMouseDown = false;
         let previousMousePosition = { x: 0, y: 0 };
 
-        window.addEventListener('mousedown', (e) => { isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+        window.addEventListener('mousedown', (e) => { 
+            if(isInventoryOpen) return;
+            isMouseDown = true; 
+            previousMousePosition = { x: e.clientX, y: e.clientY }; 
+        });
         window.addEventListener('mouseup', () => isMouseDown = false);
         window.addEventListener('mousemove', (e) => {
-            if (!isMouseDown) return;
+            if (!isMouseDown || isInventoryOpen) return;
             let deltaX = e.clientX - previousMousePosition.x;
             let deltaY = e.clientY - previousMousePosition.y;
 
-            cameraAngleH += deltaX * 0.005; // Vorzeichen gedreht für korrekte Maus-Drehung
+            cameraAngleH += deltaX * 0.005; 
             cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + deltaY * 0.005));
 
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
 
-        // Touch-Support fürs Tablet
+        // Touch-Support
         window.addEventListener('touchstart', (e) => {
+            if(isInventoryOpen) return;
             isMouseDown = true;
             previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         }, { passive: true });
         window.addEventListener('touchend', () => {
             isMouseDown = false;
-            keys.w = false;
-            keys.s = false;
+            keys.w = false; keys.s = false;
         });
         window.addEventListener('touchmove', (e) => {
-            if (!isMouseDown) return;
+            if (!isMouseDown || isInventoryOpen) return;
             let deltaX = e.touches[0].clientX - previousMousePosition.x;
             let deltaY = e.touches[0].clientY - previousMousePosition.y;
 
@@ -178,20 +341,31 @@
             else if (deltaY > 5) { keys.s = true; keys.w = false; }
         }, { passive: true });
 
-        // 5. TASTATUR-STEUERUNG
+        // --- 7. TASTATUR-STEUERUNG (Inklusive E-Taste) ---
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
-        window.addEventListener('keydown', (e) => { if (e.key in keys) keys[e.key] = true; });
-        window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
+        
+        window.addEventListener('keydown', (e) => { 
+            if (e.key.toLowerCase() === 'e') {
+                toggleInventory();
+                return;
+            }
+            if (isInventoryOpen) return; // Keine Bewegung im Inventar
+            if (e.key in keys) keys[e.key] = true; 
+        });
+        window.addEventListener('keyup', (e) => { 
+            if (e.key in keys) keys[e.key] = false; 
+        });
 
-        // 6. ANIMATION & KOLLISIONSLOGIK
+        // --- 8. GAME LOOP & MOVE LOGIC ---
         const moveSpeed = 0.08;
         const playerRadius = 0.4; 
 
         function updateGame() {
+            if (isInventoryOpen) return; // Pausiert die Bewegung
+
             let moveX = 0;
             let moveZ = 0;
 
-            // 🛠️ HIER WURDEN DIE VORZEICHEN KORRIGIERT:
             if (keys.w || keys.ArrowUp) { moveX -= Math.sin(cameraAngleH); moveZ -= Math.cos(cameraAngleH); }
             if (keys.s || keys.ArrowDown) { moveX += Math.sin(cameraAngleH); moveZ += Math.cos(cameraAngleH); }
             if (keys.a || keys.ArrowLeft) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
@@ -204,12 +378,8 @@
 
                 let maxCoord = ROOM_SIZE / 2 - playerRadius;
                 
-                if (nextX >= -maxCoord && nextX <= maxCoord) {
-                    playerGroup.position.x = nextX;
-                }
-                if (nextZ >= -maxCoord && nextZ <= maxCoord) {
-                    playerGroup.position.z = nextZ;
-                }
+                if (nextX >= -maxCoord && nextX <= maxCoord) playerGroup.position.x = nextX;
+                if (nextZ >= -maxCoord && nextZ <= maxCoord) playerGroup.position.z = nextZ;
 
                 playerGroup.rotation.y = Math.atan2(moveX, moveZ);
 
@@ -221,7 +391,7 @@
                 rightLeg.rotation.x = 0;
             }
 
-            // DRITTPERSONEN-KAMERABERECHNUNG
+            // Kamera-Positionierung
             let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4;
             let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4;
             let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
