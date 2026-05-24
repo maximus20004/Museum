@@ -39,8 +39,8 @@
 <body>
 
     <div id="ui-layer">
-        <h1>📐 Mathe-Museum v3</h1>
-        <p>Steuere deine Spielfigur durch die Galerie!</p>
+        <h1>📐 Mathe-Museum v3.1</h1>
+        <p>Die Steuerung ist jetzt korrigiert!</p>
         
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
@@ -48,7 +48,7 @@
             • <b>Umsehen:</b> Maus klicken & ziehen<br>
             <br>
             📱 TABLET-STEUERUNG:<br>
-            • <b>Laufen & Drehen:</b> Ziehe deinen Finger auf der linken oder rechten Bildschirmhälfte!
+            • <b>Laufen & Drehen:</b> Ziehe deinen Finger auf dem Bildschirm!
         </div>
     </div>
 
@@ -65,7 +65,6 @@
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        // Lichter
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
         scene.add(ambientLight);
 
@@ -74,10 +73,9 @@
         light.castShadow = true;
         scene.add(light);
 
-        // 2. DIE RAUM-GRENZEN (Für die Wand-Kollision)
-        const ROOM_SIZE = 24; // Der Raum geht von -12 bis +12 auf X- und Z-Achse
+        // 2. DIE RAUM-GRENZEN
+        const ROOM_SIZE = 24; 
 
-        // Boden
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x222233, roughness: 0.8 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
@@ -89,7 +87,6 @@
         grid.position.y = 0.01;
         scene.add(grid);
 
-        // Wände
         const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e1e24, roughness: 0.9 });
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
 
@@ -97,7 +94,7 @@
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
         const rightWall = new THREE.Mesh(wallGeo, wallMat); rightWall.position.set(ROOM_SIZE/2, 3, 0); rightWall.rotation.y = -Math.PI/2; scene.add(rightWall);
 
-        // Exponate erstellen
+        // Exponate
         function createExhibit(color, posX, posZ, rotY) {
             const group = new THREE.Group();
             const frame = new THREE.Mesh(new THREE.BoxGeometry(4, 2.5, 0.2), new THREE.MeshStandardMaterial({ color: 0x111111 }));
@@ -117,20 +114,17 @@
         createExhibit(0x2ed573, -ROOM_SIZE/2 + 0.1, -2, Math.PI/2);
         createExhibit(0x1e90ff, ROOM_SIZE/2 - 0.1, -2, -Math.PI/2);
 
-        // 3. DER AVATAR (Die steuerbare Figur)
+        // 3. DER AVATAR
         const playerGroup = new THREE.Group();
         
-        // Kopf
         const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.3 }));
         head.position.y = 1.6;
         playerGroup.add(head);
 
-        // Torso (Körper)
         const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.3), new THREE.MeshStandardMaterial({ color: 0x4a90e2 }));
         bodyMesh.position.y = 1.1;
         playerGroup.add(bodyMesh);
 
-        // Zwei einfache Beine
         const legMat = new THREE.MeshStandardMaterial({ color: 0x2f3542 });
         const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.7), legMat);
         leftLeg.position.set(-0.15, 0.35, 0);
@@ -138,12 +132,12 @@
         rightLeg.position.x = 0.15;
         playerGroup.add(leftLeg, rightLeg);
 
-        playerGroup.position.set(0, 0, 5); // Startposition mitten im Raum
+        playerGroup.position.set(0, 0, 5); 
         scene.add(playerGroup);
 
-        // 4. MAUS- & TOUCH-KAMERASTEUERUNG (Umsehen)
-        let cameraAngleH = 0; // Horizontale Drehung
-        let cameraAngleV = 0.3; // Vertikale Neigung
+        // 4. MAUS- & TOUCH-KAMERASTEUERUNG
+        let cameraAngleH = 0; 
+        let cameraAngleV = 0.3; 
         let isMouseDown = false;
         let previousMousePosition = { x: 0, y: 0 };
 
@@ -154,31 +148,34 @@
             let deltaX = e.clientX - previousMousePosition.x;
             let deltaY = e.clientY - previousMousePosition.y;
 
-            cameraAngleH -= deltaX * 0.005;
+            cameraAngleH += deltaX * 0.005; // Vorzeichen gedreht für korrekte Maus-Drehung
             cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + deltaY * 0.005));
 
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
 
-        // Touch-Support fürs Tablet (Umsehen und Steuern kombiniert)
+        // Touch-Support fürs Tablet
         window.addEventListener('touchstart', (e) => {
             isMouseDown = true;
             previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         }, { passive: true });
-        window.addEventListener('touchend', () => isMouseDown = false);
+        window.addEventListener('touchend', () => {
+            isMouseDown = false;
+            keys.w = false;
+            keys.s = false;
+        });
         window.addEventListener('touchmove', (e) => {
             if (!isMouseDown) return;
             let deltaX = e.touches[0].clientX - previousMousePosition.x;
             let deltaY = e.touches[0].clientY - previousMousePosition.y;
 
-            cameraAngleH -= deltaX * 0.008;
+            cameraAngleH += deltaX * 0.008;
             cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + deltaY * 0.008));
 
             previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
             
-            // Simuliere Vorwärtslaufen beim Wischen auf dem Tablet
-            if (deltaY < -5) keys.w = true; else keys.w = false;
-            if (deltaY > 5) keys.s = true; else keys.s = false;
+            if (deltaY < -5) { keys.w = true; keys.s = false; }
+            else if (deltaY > 5) { keys.s = true; keys.w = false; }
         }, { passive: true });
 
         // 5. TASTATUR-STEUERUNG
@@ -186,27 +183,25 @@
         window.addEventListener('keydown', (e) => { if (e.key in keys) keys[e.key] = true; });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
-        // 6. ANIMATION & KOLLISIONSLOGIK (Game Loop)
+        // 6. ANIMATION & KOLLISIONSLOGIK
         const moveSpeed = 0.08;
-        const playerRadius = 0.4; // Der persönliche Sicherheitsabstand der Figur zu Wänden
+        const playerRadius = 0.4; 
 
         function updateGame() {
             let moveX = 0;
             let moveZ = 0;
 
-            // Bewegung relativ zur Kamera-Blickrichtung berechnen
-            if (keys.w || keys.ArrowUp) { moveX += Math.sin(cameraAngleH); moveZ += Math.cos(cameraAngleH); }
-            if (keys.s || keys.ArrowDown) { moveX -= Math.sin(cameraAngleH); moveZ -= Math.cos(cameraAngleH); }
-            if (keys.a || keys.ArrowLeft) { moveX += Math.sin(cameraAngleH + Math.PI/2); moveZ += Math.cos(cameraAngleH + Math.PI/2); }
-            if (keys.d || keys.ArrowRight) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
+            // 🛠️ HIER WURDEN DIE VORZEICHEN KORRIGIERT:
+            if (keys.w || keys.ArrowUp) { moveX -= Math.sin(cameraAngleH); moveZ -= Math.cos(cameraAngleH); }
+            if (keys.s || keys.ArrowDown) { moveX += Math.sin(cameraAngleH); moveZ += Math.cos(cameraAngleH); }
+            if (keys.a || keys.ArrowLeft) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
+            if (keys.d || keys.ArrowRight) { moveX += Math.sin(cameraAngleH + Math.PI/2); moveZ += Math.cos(cameraAngleH + Math.PI/2); }
 
             if (moveX !== 0 || moveZ !== 0) {
-                // Eingabe normalisieren, damit diagonales Laufen nicht schneller ist
                 let length = Math.sqrt(moveX * moveX + moveZ * moveZ);
                 let nextX = playerGroup.position.x + (moveX / length) * moveSpeed;
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
 
-                // 🛑 DIE KOLLISIONSPRÜFUNG (Wandgrenzen abfragen)
                 let maxCoord = ROOM_SIZE / 2 - playerRadius;
                 
                 if (nextX >= -maxCoord && nextX <= maxCoord) {
@@ -216,30 +211,25 @@
                     playerGroup.position.z = nextZ;
                 }
 
-                // Drehe die Figur in die Richtung, in die sie läuft
                 playerGroup.rotation.y = Math.atan2(moveX, moveZ);
 
-                // Kleiner Laufeffekt (Beine schwingen lassen)
                 let time = Date.now() * 0.01;
                 leftLeg.rotation.x = Math.sin(time) * 0.5;
                 rightLeg.rotation.x = -Math.sin(time) * 0.5;
             } else {
-                // Beine stillstellen, wenn man anhält
                 leftLeg.rotation.x = 0;
                 rightLeg.rotation.x = 0;
             }
 
-            // 🎥 DRITTPERSONEN-KAMERABERECHNUNG (Hinter der Figur herlaufen)
+            // DRITTPERSONEN-KAMERABERECHNUNG
             let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4;
             let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4;
             let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
 
-            // Kamera flüssig hinterherziehen (Interpolation)
             camera.position.x += (targetCamX - camera.position.x) * 0.1;
             camera.position.y += (targetCamY - camera.position.y) * 0.1;
             camera.position.z += (targetCamZ - camera.position.z) * 0.1;
 
-            // Kamera schaut immer auf den Oberkörper des Avatars
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.1, playerGroup.position.z);
         }
 
