@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum mit Touch-Support</title>
+    <title>3D Mathe-Museum mit Marmorwänden</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             background-color: #0a0a16;
             font-family: 'Segoe UI', sans-serif;
-            touch-action: none; /* Verhindert standardmäßiges Scrollen/Zoomen */
+            touch-action: none;
         }
         
         /* Steuerungshinweis oben links */
@@ -156,7 +156,7 @@
 <body>
 
     <div id="ui-layer">
-        <h1>📐 Mathe-Museum v5.2</h1>
+        <h1>🏛️ Marmor-Museum v5.3</h1>
         <p>Bringe die Zahlen an der Rückwand in die richtige Reihenfolge!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
@@ -193,26 +193,78 @@
         renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-        const light = new THREE.DirectionalLight(0xffffff, 0.6);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5)); // Etwas heller für den Marmor
+        const light = new THREE.DirectionalLight(0xffffff, 0.7);
         light.position.set(10, 20, 10);
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. RAUM-SETUP ---
+        // --- 2. RAUM-SETUP & MARMOR-GENERATOR ---
         const ROOM_SIZE = 24; 
+        
+        // Boden
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x222233, roughness: 0.8 });
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a26, roughness: 0.6 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2;
         floor.receiveShadow = true;
         scene.add(floor);
 
-        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x444455);
+        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x333344);
         grid.position.y = 0.01;
         scene.add(grid);
 
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e1e24, roughness: 0.9 });
+        // Prozedurale Marmor-Textur erstellen
+        function createMarbleTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Grundfarbe: Helles, weiches Carrara-Weiß/Grau
+            ctx.fillStyle = '#e8e8f0';
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Sanfte Textur-Nuancen im Hintergrund
+            for (let i = 0; i < 20; i++) {
+                ctx.fillStyle = `rgba(220, 220, 230, ${Math.random() * 0.3})`;
+                ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 200, Math.random() * 200);
+            }
+
+            // Typische feine Marmor-Äderungen zeichnen
+            ctx.strokeStyle = 'rgba(150, 150, 165, 0.25)';
+            ctx.lineWidth = 1.5;
+            
+            for (let j = 0; j < 8; j++) {
+                ctx.beginPath();
+                let x = Math.random() * 512;
+                let y = 0;
+                ctx.moveTo(x, y);
+                
+                while (y < 512) {
+                    // Zufälliger "Zick-Zack"-Verlauf nach unten für natürliche Adern
+                    x += (Math.random() - 0.5) * 45;
+                    y += Math.random() * 40 + 10;
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(2, 1); // Zerrt den Marmor nicht zu stark
+            return texture;
+        }
+
+        // Marmor-Material mit leichtem Glanz (geringe Roughness)
+        const marbleTexture = createMarbleTexture();
+        const wallMat = new THREE.MeshStandardMaterial({ 
+            map: marbleTexture, 
+            roughness: 0.2, // Macht die Wände edel und leicht reflektierend
+            metalness: 0.05
+        });
+        
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
 
         const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
@@ -239,6 +291,7 @@
             const posZ = -ROOM_SIZE/2 + 0.15;
             const group = new THREE.Group();
             
+            // Dunkler Kontrastrahmen, damit die Bilder auf dem hellen Marmor gut poppen
             const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
             group.add(frame);
 
@@ -388,13 +441,12 @@
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
 
-        // --- 8. EMULIERTES TOUCH-SYSTEM FÜR TABLETS (Überarbeitet & Schussfest) ---
+        // --- 8. EMULIERTES TOUCH-SYSTEM FÜR TABLETS ---
         let touchStartPos = { x: 0, y: 0 };
-        let touchVelocity = { x: 0, z: 0 }; // Temporäre Bewegungsvektoren über Touch
+        let touchVelocity = { x: 0, z: 0 }; 
         let isTouching = false;
 
         window.addEventListener('touchstart', (e) => {
-            // Ignoriere UI-Klicks
             if(isInventoryOpen || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn') return;
             
             isTouching = true;
@@ -404,7 +456,7 @@
 
         window.addEventListener('touchmove', (e) => {
             if (!isTouching || isInventoryOpen) return;
-            e.preventDefault(); // Zwingt das Tablet, NICHT die Seite zu scrollen
+            e.preventDefault(); 
 
             let currentX = e.touches[0].clientX;
             let currentY = e.touches[0].clientY;
@@ -412,17 +464,13 @@
             let diffX = currentX - touchStartPos.x;
             let diffY = currentY - touchStartPos.y;
 
-            // 1. Kamera-Rotierung (Horizontales Wischen beeinflusst Blickwinkel)
             cameraAngleH += diffX * 0.0003;
             cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
 
-            // 2. Bewegung (Vertikales Wischen berechnet Vorwärts-/Rückwärtsdrang)
-            // Wenn man den Finger nach oben schiebt (diffY negativ), läuft man vorwärts
             let forwardFactor = -diffY * 0.01; 
-            // Begrenzen, damit man nicht unendlich schnell beschleunigt
             forwardFactor = Math.max(-1, Math.min(1, forwardFactor)); 
 
-            if (Math.abs(diffY) > 10) { // Kleiner Schwellenwert gegen Zitterfinger
+            if (Math.abs(diffY) > 10) { 
                 touchVelocity.x = -Math.sin(cameraAngleH) * forwardFactor;
                 touchVelocity.z = -Math.cos(cameraAngleH) * forwardFactor;
             } else {
@@ -447,13 +495,11 @@
 
             let moveX = 0; let moveZ = 0;
 
-            // PC-Tastatur Abfrage
             if (keys.w || keys.ArrowUp) { moveX -= Math.sin(cameraAngleH); moveZ -= Math.cos(cameraAngleH); }
             if (keys.s || keys.ArrowDown) { moveX += Math.sin(cameraAngleH); moveZ += Math.cos(cameraAngleH); }
             if (keys.a || keys.ArrowLeft) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
             if (keys.d || keys.ArrowRight) { moveX += Math.sin(cameraAngleH + Math.PI/2); moveZ += Math.cos(cameraAngleH + Math.PI/2); }
 
-            // Tablet-Touch-Werte addieren, falls vorhanden
             if (isTouching) {
                 moveX += touchVelocity.x;
                 moveZ += touchVelocity.z;
