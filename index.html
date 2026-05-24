@@ -627,4 +627,94 @@
                 let nextX = playerGroup.position.x + (moveX / length) * moveSpeed;
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
                 
-                let allowed = true
+                let allowed = true;
+
+                // KOLLISIONSABFRAGE FÜR ZWEI RÄUME
+                if (nextX < ROOM_SIZE / 2 - playerRadius) {
+                    // Spieler ist im HAUPTRAUM
+                    let maxCoord = ROOM_SIZE / 2 - playerRadius;
+                    if (nextX < -maxCoord || nextZ < -maxCoord || nextZ > maxCoord) allowed = false;
+
+                    // Center-Block Kollision
+                    let blockBound = BLOCK_SIZE / 2 + playerRadius;
+                    if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
+                } else if (nextX > ROOM_SIZE / 2 + playerRadius) {
+                    // Spieler ist im NEBENRAUM
+                    let minSubX = ROOM_SIZE / 2 + playerRadius;
+                    let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius;
+                    let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
+
+                    if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
+                } else {
+                    // Spieler ist GENAU IM TÜR-DURCHGANG (X nahe der Trennwand)
+                    // Prüfen, ob er sich innerhalb der Türöffnung (Z-Achse) befindet
+                    if (nextZ < -doorWidth / 2 + playerRadius || nextZ > doorWidth / 2 - playerRadius) {
+                        allowed = false; // Wand blockiert außerhalb der Türöffnung
+                    }
+                    // Wenn die Tür ZU ist, blockiert sie den Durchgang komplett
+                    if (!isDoorOpen && nextX > ROOM_SIZE / 2 - playerRadius) {
+                        allowed = false;
+                    }
+                }
+
+                if (allowed) { playerGroup.position.x = nextX; playerGroup.position.z = nextZ; }
+                playerGroup.rotation.y = Math.atan2(moveX, moveZ);
+
+                let time = Date.now() * 0.01;
+                leftLegGroup.rotation.x = Math.sin(time) * 0.6; rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
+                leftArm.rotation.x = -Math.sin(time) * 0.4; rightArm.rotation.x = Math.sin(time) * 0.4;
+            } else {
+                leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8;
+                leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8;
+            }
+
+            // Nähe zur Tür oder zu Exponaten prüfen
+            let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
+            let doorTriggerPos = new THREE.Vector3(ROOM_SIZE / 2, 0, 0);
+            let distToDoor = playerPos2D.distanceTo(doorTriggerPos);
+
+            const promptBtn = document.getElementById('interaction-prompt');
+
+            if (distToDoor < 2.5) {
+                isNearDoor = true; activeExhibitNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)";
+                promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
+            } else {
+                isNearDoor = false;
+                let closest = null; let minDist = Infinity;
+                for(let ex of exhibits) {
+                    let dist = playerPos2D.distanceTo(ex.position);
+                    if (dist < minDist) { minDist = dist; closest = ex; }
+                }
+
+                if (minDist < 2.5) {
+                    activeExhibitNearMe = closest;
+                    promptBtn.style.display = 'block';
+                    if(closest.currentNumber !== null) {
+                        promptBtn.innerText = `👋 Bild (${closest.currentNumber}) einpacken`;
+                        promptBtn.style.background = "rgba(234, 32, 39, 0.85)"; promptBtn.style.borderColor = "#ff4757";
+                    } else {
+                        promptBtn.innerText = "🖼️ Zahl aufhängen";
+                        promptBtn.style.background = "rgba(46, 213, 115, 0.85)"; promptBtn.style.borderColor = "#2ed573";
+                    }
+                } else { activeExhibitNearMe = null; promptBtn.style.display = 'none'; }
+            }
+
+            // Kamera-Führung
+            let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4.5;
+            let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4.5;
+            let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
+
+            camera.position.x += (targetCamX - camera.position.x) * 0.1;
+            camera.position.y += (targetCamY - camera.position.y) * 0.1;
+            camera.position.z += (targetCamZ - camera.position.z) * 0.1;
+            camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.1, playerGroup.position.z);
+        }
+
+        function animate() { requestAnimationFrame(animate); updateGame(); renderer.render(scene, camera); }
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        animate();
+    </script>
+</body>
+</html>
