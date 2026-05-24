@@ -10,7 +10,7 @@
             overflow: hidden;
             background-color: #0a0a16;
             font-family: 'Segoe UI', sans-serif;
-            touch-action: none;
+            touch-action: none; /* Verhindert standardmäßiges Scrollen/Zoomen */
         }
         
         /* Steuerungshinweis oben links */
@@ -53,7 +53,7 @@
             box-shadow: 0 6px 25px rgba(0,0,0,0.6);
             z-index: 150;
             display: none; 
-            cursor: pointer; /* Macht es als Button erkennbar */
+            cursor: pointer;
             user-select: none;
             -webkit-user-select: none;
             animation: pulse 1.5s infinite alternate;
@@ -79,7 +79,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             z-index: 101;
         }
-        #inventory-btn:hover { background: #357abd; }
 
         /* Das Inventar-Overlay */
         #inventory-overlay {
@@ -140,10 +139,6 @@
             background: rgba(46, 213, 115, 0.1);
             cursor: pointer;
         }
-        .inventory-slot.selectable:hover {
-            background: rgba(46, 213, 115, 0.25);
-            transform: scale(1.03);
-        }
         .slot-icon { font-size: 2rem; font-weight: bold; margin-bottom: 5px; }
 
         .close-btn {
@@ -161,19 +156,18 @@
 <body>
 
     <div id="ui-layer">
-        <h1>📐 Mathe-Museum v5.1</h1>
+        <h1>📐 Mathe-Museum v5.2</h1>
         <p>Bringe die Zahlen an der Rückwand in die richtige Reihenfolge!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile | Interagieren: R<br>
             <br>
             📱 TABLET-STEUERUNG:<br>
-            • Laufen: Auf dem Bildschirm wischen<br>
-            • Interagieren: Auf den erscheinenden Button tippen
+            • Laufen & Umschauen: Wischen auf dem Bildschirm<br>
+            • Interagieren: Auf den roten/grünen Button tippen
         </div>
     </div>
 
-    <!-- Klickbarer Button statt reinem Textfeld -->
     <div id="interaction-prompt" onclick="triggerInteraction()">Tippen zum Interagieren</div>
 
     <button id="inventory-btn" onclick="toggleInventory()">🎒 Inventar</button>
@@ -225,7 +219,7 @@
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
         const rightWall = new THREE.Mesh(wallGeo, wallMat); rightWall.position.set(ROOM_SIZE/2, 3, 0); rightWall.rotation.y = -Math.PI/2; scene.add(rightWall);
 
-        // --- 3. EXPO-PLÄTZE (DAS ZAHLENRÄTSEL) ---
+        // --- 3. EXPO-PLÄTZE ---
         const initialNumbers = [4, 1, 5, 2, 3];
         const exhibits = [];
 
@@ -301,6 +295,7 @@
             if (isInventoryOpen) {
                 overlay.classList.add('open');
                 for (let key in keys) keys[key] = false; 
+                touchVelocity.x = 0; touchVelocity.z = 0;
                 renderInventoryUI();
             } else {
                 overlay.classList.remove('open');
@@ -344,16 +339,13 @@
             }
         }
 
-        // Zentrale Funktion für die Interaktion (wird von Taste R UND vom Touch-Button genutzt)
         function triggerInteraction() {
             if (activeExhibitNearMe !== null && !isInventoryOpen) {
                 if (activeExhibitNearMe.currentNumber !== null) {
-                    // Bild einpacken
                     playerInventory.push(activeExhibitNearMe.currentNumber);
                     activeExhibitNearMe.currentNumber = null;
                     updateExhibitVisual(activeExhibitNearMe);
                 } else {
-                    // Bild aufhängen (Menü öffnen)
                     modePlacement = true;
                     toggleInventory();
                 }
@@ -369,7 +361,7 @@
             }
         }, 20000);
 
-        // --- 7. MAUS- & TOUCH-KAMERASTEUERUNG (REPARIERT) ---
+        // --- 7. STEUERUNGS-SYSTEM (PC MAUS & TASTATUR) ---
         let cameraAngleH = 0; let cameraAngleV = 0.3; 
         let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
 
@@ -385,34 +377,6 @@
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
 
-        // 📱 Reaktivierter Touch-Support für Tablet-Bewegung & Umschauen
-        window.addEventListener('touchstart', (e) => {
-            if(isInventoryOpen || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn') return;
-            isMouseDown = true;
-            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        }, { passive: true });
-        
-        window.addEventListener('touchend', () => {
-            isMouseDown = false;
-            keys.w = false; keys.s = false; // Stoppt Bewegung beim Loslassen
-        });
-        
-        window.addEventListener('touchmove', (e) => {
-            if (!isMouseDown || isInventoryOpen) return;
-            let deltaX = e.touches[0].clientX - previousMousePosition.x;
-            let deltaY = e.touches[0].clientY - previousMousePosition.y;
-
-            cameraAngleH += deltaX * 0.008;
-            cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + deltaY * 0.008));
-
-            previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            
-            // Bewegung koppeln: Nach oben wischen = Vorwärts, nach unten wischen = Rückwärts
-            if (deltaY < -4) { keys.w = true; keys.s = false; }
-            else if (deltaY > 4) { keys.s = true; keys.w = false; }
-        }, { passive: true });
-
-        // PC-Tastatur
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         window.addEventListener('keydown', (e) => { 
             const pressedKey = e.key.toLowerCase();
@@ -423,7 +387,58 @@
         });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
-        // --- 8. GAME LOOP ---
+
+        // --- 8. EMULIERTES TOUCH-SYSTEM FÜR TABLETS (Überarbeitet & Schussfest) ---
+        let touchStartPos = { x: 0, y: 0 };
+        let touchVelocity = { x: 0, z: 0 }; // Temporäre Bewegungsvektoren über Touch
+        let isTouching = false;
+
+        window.addEventListener('touchstart', (e) => {
+            // Ignoriere UI-Klicks
+            if(isInventoryOpen || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn') return;
+            
+            isTouching = true;
+            touchStartPos.x = e.touches[0].clientX;
+            touchStartPos.y = e.touches[0].clientY;
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isTouching || isInventoryOpen) return;
+            e.preventDefault(); // Zwingt das Tablet, NICHT die Seite zu scrollen
+
+            let currentX = e.touches[0].clientX;
+            let currentY = e.touches[0].clientY;
+
+            let diffX = currentX - touchStartPos.x;
+            let diffY = currentY - touchStartPos.y;
+
+            // 1. Kamera-Rotierung (Horizontales Wischen beeinflusst Blickwinkel)
+            cameraAngleH += diffX * 0.0003;
+            cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
+
+            // 2. Bewegung (Vertikales Wischen berechnet Vorwärts-/Rückwärtsdrang)
+            // Wenn man den Finger nach oben schiebt (diffY negativ), läuft man vorwärts
+            let forwardFactor = -diffY * 0.01; 
+            // Begrenzen, damit man nicht unendlich schnell beschleunigt
+            forwardFactor = Math.max(-1, Math.min(1, forwardFactor)); 
+
+            if (Math.abs(diffY) > 10) { // Kleiner Schwellenwert gegen Zitterfinger
+                touchVelocity.x = -Math.sin(cameraAngleH) * forwardFactor;
+                touchVelocity.z = -Math.cos(cameraAngleH) * forwardFactor;
+            } else {
+                touchVelocity.x = 0;
+                touchVelocity.z = 0;
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => {
+            isTouching = false;
+            touchVelocity.x = 0;
+            touchVelocity.z = 0;
+        });
+
+
+        // --- 9. GAME LOOP ---
         const moveSpeed = 0.08;
         const playerRadius = 0.4; 
 
@@ -431,10 +446,18 @@
             if (isInventoryOpen) return;
 
             let moveX = 0; let moveZ = 0;
+
+            // PC-Tastatur Abfrage
             if (keys.w || keys.ArrowUp) { moveX -= Math.sin(cameraAngleH); moveZ -= Math.cos(cameraAngleH); }
             if (keys.s || keys.ArrowDown) { moveX += Math.sin(cameraAngleH); moveZ += Math.cos(cameraAngleH); }
             if (keys.a || keys.ArrowLeft) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
             if (keys.d || keys.ArrowRight) { moveX += Math.sin(cameraAngleH + Math.PI/2); moveZ += Math.cos(cameraAngleH + Math.PI/2); }
+
+            // Tablet-Touch-Werte addieren, falls vorhanden
+            if (isTouching) {
+                moveX += touchVelocity.x;
+                moveZ += touchVelocity.z;
+            }
 
             if (moveX !== 0 || moveZ !== 0) {
                 let length = Math.sqrt(moveX * moveX + moveZ * moveZ);
