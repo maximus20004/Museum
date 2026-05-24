@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum mit modernem Avatar</title>
+    <title>3D Mathe-Museum - Center-Block & Rückwand</title>
     <style>
         body {
             margin: 0;
@@ -13,7 +13,6 @@
             touch-action: none;
         }
         
-        /* Steuerungshinweis oben links */
         #ui-layer {
             position: absolute;
             top: 20px;
@@ -37,7 +36,6 @@
             color: #2ed573;
         }
 
-        /* Klickbarer Interaktions-Button */
         #interaction-prompt {
             position: absolute;
             bottom: 100px;
@@ -63,7 +61,6 @@
             to { transform: translateX(-50%) scale(1.03); }
         }
 
-        /* Inventar-Button oben rechts */
         #inventory-btn {
             position: absolute;
             top: 20px;
@@ -80,7 +77,6 @@
             z-index: 101;
         }
 
-        /* Das Inventar-Overlay */
         #inventory-overlay {
             position: absolute;
             top: 0;
@@ -151,7 +147,6 @@
             cursor: pointer;
         }
 
-        /* Gewinn-Bildschirm Styles */
         #win-overlay {
             position: absolute;
             top: 0;
@@ -203,15 +198,15 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Marmor-Museum v5.5</h1>
-        <p>Bringe die Zahlen an der Rückwand in die richtige Reihenfolge!</p>
+        <h1>🏛️ Marmor-Museum v7.0</h1>
+        <p>Bringe die Zahlen an der Rückwand in die richtige Reihenfolge (1 - 2 - 3 - 4 - 5)!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile | Interagieren: R<br>
             <br>
             📱 TABLET-STEUERUNG:<br>
             • Laufen & Umschauen: Wischen auf dem Bildschirm<br>
-            • Interagieren: Auf den roten/grünen Button tippen
+            • Interagieren: Auf den Interaktions-Button tippen
         </div>
     </div>
 
@@ -228,11 +223,10 @@
         </div>
     </div>
 
-    <!-- Gewinn-Overlay -->
     <div id="win-overlay">
         <div class="win-box">
             <h2>🎉 Gelöst!</h2>
-            <p>Ausgezeichnet! Du hast die Zahlenordnung im Museum wiederhergestellt (1 - 2 - 3 - 4 - 5).</p>
+            <p>Ausgezeichnet! Du hast die Zahlenordnung an der Wand wiederhergestellt (1 - 2 - 3 - 4 - 5).</p>
             <button class="restart-btn" onclick="restartGame()">Nochmal spielen</button>
         </div>
     </div>
@@ -250,13 +244,14 @@
         document.body.appendChild(renderer.domElement);
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.5)); 
-        const light = new THREE.DirectionalLight(0xffffff, 0.7);
+        const light = new THREE.DirectionalLight(0xffffff, 0.8);
         light.position.set(10, 20, 10);
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. RAUM-SETUP & MARMOR-WÄNDE ---
+        // --- 2. RAUM-SETUP & INNENBLOCK ---
         const ROOM_SIZE = 24; 
+        const BLOCK_SIZE = 8; // Größe des Blocks in der Mitte
         
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
         const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a26, roughness: 0.6 });
@@ -295,21 +290,36 @@
                 }
                 ctx.stroke();
             }
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(2, 1);
-            return texture;
+            return new THREE.CanvasTexture(canvas);
         }
 
         const marbleTexture = createMarbleTexture();
         const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
+        
+        // Außenwände
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
-
         const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
         const rightWall = new THREE.Mesh(wallGeo, wallMat); rightWall.position.set(ROOM_SIZE/2, 3, 0); rightWall.rotation.y = -Math.PI/2; scene.add(rightWall);
+        const frontWall = new THREE.Mesh(wallGeo, wallMat); frontWall.position.set(0, 3, ROOM_SIZE/2); frontWall.rotation.y = Math.PI; scene.add(frontWall);
 
-        // --- 3. EXPO-PLÄTZE ---
+        // Der Center-Block (bleibt als architektonisches Element im Raum)
+        const blockGeo = new THREE.BoxGeometry(BLOCK_SIZE, 6, BLOCK_SIZE);
+        const centerBlock = new THREE.Mesh(blockGeo, wallMat);
+        centerBlock.position.set(0, 3, 0);
+        scene.add(centerBlock);
+
+        // Dekorative blaue Kanten für den Center-Block
+        const edgeGeo = new THREE.BoxGeometry(0.15, 6.1, 0.15);
+        const edgeMat = new THREE.MeshBasicMaterial({ color: 0x4a90e2 });
+        const halfB = BLOCK_SIZE / 2;
+        [[-1,-1], [-1,1], [1,-1], [1,1]].forEach(o => {
+            const edge = new THREE.Mesh(edgeGeo, edgeMat);
+            edge.position.set(halfB * o[0], 3, halfB * o[1]);
+            scene.add(edge);
+        });
+
+        // --- 3. EXPO-PLÄTZE (WIEDER AN DER RÜCKWAND) ---
         const initialNumbers = [4, 1, 5, 2, 3];
         const exhibits = [];
 
@@ -362,32 +372,23 @@
             }
         }
 
-        // --- 4. DER NEUE AVATAR (MODERNER LOW-POLY ROBOTER) ---
+        // --- 4. AVATAR (MODERNER LOW-POLY ROBOTER) ---
         const playerGroup = new THREE.Group();
 
-        // Materialien für den coolen Roboter-Look
         const metalMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.2, metalness: 0.8 });
         const armorMat = new THREE.MeshStandardMaterial({ color: 0x2e3192, roughness: 0.3 });
         const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff });
         const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
 
-        // Hüfte/Becken (Drehpunkt für Beine)
         const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8), jointMat);
-        pelvis.position.y = 0.85;
-        playerGroup.add(pelvis);
+        pelvis.position.y = 0.85; playerGroup.add(pelvis);
 
-        // Torso (Kantig & Modern)
-        const torsoGeom = new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6);
-        const torso = new THREE.Mesh(torsoGeom, armorMat);
-        torso.position.y = 1.2;
-        playerGroup.add(torso);
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6), armorMat);
+        torso.position.y = 1.2; playerGroup.add(torso);
 
-        // Energie-Kern auf der Brust
         const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glowMat);
-        core.position.set(0, 1.3, 0.21);
-        playerGroup.add(core);
+        core.position.set(0, 1.3, 0.21); playerGroup.add(core);
 
-        // Schultern & Arme
         const armGeom = new THREE.BoxGeometry(0.08, 0.4, 0.08);
         const shoulderGeom = new THREE.SphereGeometry(0.07, 8, 8);
 
@@ -397,22 +398,15 @@
         const rightShoulder = new THREE.Mesh(shoulderGeom, jointMat); rightShoulder.position.set(0.32, 1.4, 0); playerGroup.add(rightShoulder);
         const rightArm = new THREE.Mesh(armGeom, metalMat); rightArm.position.set(0.32, 1.15, 0); playerGroup.add(rightArm);
 
-        // Hals & Kopf
         const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.1), jointMat);
-        neck.position.y = 1.5;
-        playerGroup.add(neck);
+        neck.position.y = 1.5; playerGroup.add(neck);
 
-        const headGeom = new THREE.BoxGeometry(0.26, 0.24, 0.24);
-        const robotHead = new THREE.Mesh(headGeom, armorMat);
-        robotHead.position.y = 1.66;
-        playerGroup.add(robotHead);
+        const robotHead = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.24, 0.24), armorMat);
+        robotHead.position.y = 1.66; playerGroup.add(robotHead);
 
-        // Visier (Leuchtende Augen-Leiste)
         const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.03), glowMat);
-        visor.position.set(0, 1.68, 0.12);
-        playerGroup.add(visor);
+        visor.position.set(0, 1.68, 0.12); playerGroup.add(visor);
 
-        // Beine (Kapseln/Zylinder)
         const legGeom = new THREE.CylinderGeometry(0.07, 0.05, 0.5);
         const footGeom = new THREE.BoxGeometry(0.1, 0.06, 0.16);
 
@@ -426,9 +420,9 @@
         const rightFoot = new THREE.Mesh(footGeom, armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot);
         playerGroup.add(rightLegGroup);
 
-        playerGroup.position.set(0, 0, 5); 
+        // Startposition im südlichen Teil des Rundwegs
+        playerGroup.position.set(0, 0, 7); 
         scene.add(playerGroup);
-
 
         // --- 5. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false;
@@ -461,7 +455,7 @@
             if(modePlacement) {
                 title.innerText = "🖼️ Welches Bild aufhängen?"; subtitle.innerText = "Tippe eine Zahl an, um sie aufzuhängen.";
             } else {
-                title.innerText = "🎒 Dein Rucksack"; subtitle.innerText = "Hier siehst du deine gesammelten Zahlen.";
+                title.innerText = "🎒 Dein Rucksack"; subtitle.innerText = "Deine gesammelten Gegenstände";
             }
 
             for(let i = 0; i < 6; i++) {
@@ -523,7 +517,7 @@
                 exhibits[i].currentNumber = mixedNumbers[i];
                 updateExhibitVisual(exhibits[i]);
             }
-            playerGroup.position.set(0, 0, 5);
+            playerGroup.position.set(0, 0, 7);
             document.getElementById('win-overlay').classList.remove('open');
         }
 
@@ -533,9 +527,9 @@
                 uiLayer.style.opacity = '0';
                 setTimeout(() => uiLayer.style.display = 'none', 1000);
             }
-        }, 20000);
+        }, 15000);
 
-        // --- 6. STEUERUNGS-SYSTEM (PC MAUS & TASTATUR) ---
+        // --- 6. STEUERUNGS-SYSTEM ---
         let cameraAngleH = 0; let cameraAngleV = 0.3; 
         let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
 
@@ -562,7 +556,7 @@
         });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
-        // --- 7. EMULIERTES TOUCH-SYSTEM FÜR TABLETS ---
+        // Touch für Mobile/Tablets
         let touchStartPos = { x: 0, y: 0 };
         let touchVelocity = { x: 0, z: 0 }; 
         let isTouching = false;
@@ -570,8 +564,7 @@
         window.addEventListener('touchstart', (e) => {
             if(isInventoryOpen || isGameWon || e.target.id === 'interaction-prompt' || e.target.id === 'inventory-btn' || e.target.className === 'restart-btn') return;
             isTouching = true;
-            touchStartPos.x = e.touches[0].clientX;
-            touchStartPos.y = e.touches[0].clientY;
+            touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
         }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
@@ -596,7 +589,7 @@
 
         window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
 
-        // --- 8. GAME LOOP & ANIMATIONEN ---
+        // --- 7. GAME LOOP & KOLLISIONSDETEKTION ---
         const moveSpeed = 0.08;
         const playerRadius = 0.4; 
 
@@ -616,29 +609,40 @@
                 let length = Math.sqrt(moveX * moveX + moveZ * moveZ);
                 let nextX = playerGroup.position.x + (moveX / length) * moveSpeed;
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
-                let maxCoord = ROOM_SIZE / 2 - playerRadius;
                 
-                if (nextX >= -maxCoord && nextX <= maxCoord) playerGroup.position.x = nextX;
-                if (nextZ >= -maxCoord && nextZ <= maxCoord) playerGroup.position.z = nextZ;
+                let allowed = true;
+
+                // 1. Kollision Außenwände
+                let maxCoord = ROOM_SIZE / 2 - playerRadius;
+                if (nextX < -maxCoord || nextX > maxCoord || nextZ < -maxCoord || nextZ > maxCoord) {
+                    allowed = false;
+                }
+
+                // 2. Kollision Innenblock
+                let blockBound = BLOCK_SIZE / 2 + playerRadius;
+                if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) {
+                    allowed = false;
+                }
+
+                if (allowed) {
+                    playerGroup.position.x = nextX;
+                    playerGroup.position.z = nextZ;
+                }
 
                 playerGroup.rotation.y = Math.atan2(moveX, moveZ);
 
-                // --- GANG-ANIMATION (NEU: Beine UND Arme schwingen asynchron) ---
+                // Gang-Animation
                 let time = Date.now() * 0.01;
                 leftLegGroup.rotation.x = Math.sin(time) * 0.6;
                 rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
-                
                 leftArm.rotation.x = -Math.sin(time) * 0.4;
                 rightArm.rotation.x = Math.sin(time) * 0.4;
             } else {
-                // In den flüssigen Standby-Zustand zurückkehren
-                leftLegGroup.rotation.x *= 0.8;
-                rightLegGroup.rotation.x *= 0.8;
-                leftArm.rotation.x *= 0.8;
-                rightArm.rotation.x *= 0.8;
+                leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8;
+                leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8;
             }
 
-            // Entfernung checken
+            // Exponat-Nähe prüfen
             let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
             let closestExhibit = null; let minDistance = Infinity;
 
@@ -662,9 +666,9 @@
                 activeExhibitNearMe = null; promptBtn.style.display = 'none';
             }
 
-            // Kamera-Verfolgung
-            let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4;
-            let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4;
+            // Kamera-Führung
+            let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4.5;
+            let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4.5;
             let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
 
             camera.position.x += (targetCamX - camera.position.x) * 0.1;
