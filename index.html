@@ -147,6 +147,63 @@
             cursor: pointer;
         }
 
+        /* --- NEU: Zettel-Overlay-Stile --- */
+        #document-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 250;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #document-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .document-box {
+            background: #f4edd2; /* Helles Pergamentpapier */
+            color: #2c3e50;
+            border: 8px double #8e44ad;
+            border-radius: 4px;
+            padding: 40px;
+            width: 80%;
+            max-width: 450px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+            transform: scale(0.8) rotate(-1deg);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Georgia', serif;
+        }
+        #document-overlay.open .document-box {
+            transform: scale(1) rotate(0deg);
+        }
+        .document-box h2 {
+            margin-top: 0;
+            font-family: 'Times New Roman', serif;
+            border-bottom: 2px dashed #8e44ad;
+            padding-bottom: 10px;
+            color: #6c5ce7;
+        }
+        .document-box p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            white-space: pre-line; /* Behält Zeilenumbrüche bei */
+        }
+        .document-close-hint {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            text-align: center;
+            font-style: italic;
+        }
+
         #win-overlay {
             position: absolute;
             top: 0;
@@ -198,12 +255,12 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Kuratorenbüro v9.1</h1>
-        <p>Bringe die Zahlen in Ordnung und erkunde das voll eingerichtete Büro mit echten 3D-Bücherregalen!</p>
+        <h1>🏛️ Kuratorenbüro v9.2</h1>
+        <p>Erkunde das voll eingerichtete Büro und lies die geheimen Notizen auf dem Schreibtisch!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile<br>
-            • Interagieren / Tür steuern: R<br>
+            • Interagieren / Lesen / Tür: R<br>
             <br>
             📱 TABLET-STEUERUNG:<br>
             • Laufen & Umschauen: Wischen<br>
@@ -221,6 +278,14 @@
             <p id="inv-subtitle">Deine gesammelten Gegenstände</p>
             <div class="inventory-grid" id="inventory-grid"></div>
             <button class="close-btn" onclick="toggleInventory()">Schließen</button>
+        </div>
+    </div>
+
+    <div id="document-overlay" onclick="closeDocument()">
+        <div class="document-box" onclick="event.stopPropagation()">
+            <h2 id="doc-title">Titel des Dokuments</h2>
+            <p id="doc-content">Inhalt...</p>
+            <div class="document-close-hint">Klicke irgendwo hin oder drücke 'R', um zu schließen</div>
         </div>
     </div>
 
@@ -362,6 +427,101 @@
         const lampHead = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.1), plasticMat); lampHead.position.set(0.08, 0.4, 0); lampHead.rotation.z = -0.5; deskLamp.add(lampHead);
         desk.add(deskLamp);
 
+        // --- NEU: INTERAKTIVE ZETTEL AUF DEM SCHREIBTISCH ---
+        const papers = [
+            { 
+                title: "📜 Tagebucheintrag des Kurators", 
+                content: "Tag 42 im mathematischen Exil:\nDie KI verhält sich seltsam. Sie weigert sich, die Exponate in einer chaotischen Reihenfolge anzuzeigen. Ordnung ist ihr oberstes Gebot.\n\nIch habe versucht, die Bilder zu sabotieren, aber das System setzt alles zurück, sobald die natürliche Zahlenfolge von 1 bis 5 hergestellt ist. Ich muss vorsichtig sein...",
+                offsetX: 0.5, offsetZ: 0.2, rotY: 0.2
+            },
+            { 
+                title: "📋 Labornotiz: Systemfehler #04", 
+                content: "ACHTUNG - Kritischer Fehler in der Galerie-Matrix!\n\nDie Hauptwand registriert fehlerhafte Zustände. Falls die Schilder verrückt spielen, hilft nur ein händischer Reset.\n\nRegel für den Neustart:\nDas kleinste Glied steht immer links am Anfang. Die Energie fließt lückenlos aufsteigend nach rechts weg. (1... 2... 3...)",
+                offsetX: -0.4, offsetZ: 0.3, rotY: -0.4
+            },
+            { 
+                title: "✉️ Ungelesener Brief", 
+                content: "Lieber Kollege,\n\nich habe das Büro wie besprochen abgeschlossen. Der Code für die Magnetschranke ist prozedural verschlüsselt.\n\nFalls du feststeckst: Schau dich einfach im Raum um. Die Möbel verbergen keine Geheimnisse, aber der Geist des Museums verlangt nach absoluter, mathematischer Symmetrie.\n\n- Dr. Alpha",
+                offsetX: 0.2, offsetZ: -0.2, rotY: 0.5
+            }
+        ];
+
+        const paperMeshes = [];
+        const paperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+        const paperGeo = new THREE.BoxGeometry(0.24, 0.005, 0.32); // A4 Proportionen im Raum
+
+        papers.forEach((pData, idx) => {
+            const paperMesh = new THREE.Mesh(paperGeo, paperMat);
+            // Auf der Tischplatte (Y = 0.8) platzieren
+            paperMesh.position.set(pData.offsetX, 0.805, pData.offsetZ);
+            paperMesh.rotation.y = pData.rotY;
+            desk.add(paperMesh);
+            
+            // Weltkoordinaten für Entfernungsberechnung speichern
+            paperMeshes.push({
+                mesh: paperMesh,
+                title: pData.title,
+                content: pData.content,
+                getWorldPos: function() {
+                    let target = new THREE.Vector3();
+                    return paperMesh.getWorldPosition(target);
+                }
+            });
+        });
+
+        let activeDocumentNearMe = null;
+        let isDocumentOpen = false;
+
+        function openDocument(doc) {
+            isDocumentOpen = true;
+            const overlay = document.getElementById('document-overlay');
+            document.getElementById('doc-title').innerText = doc.title;
+            document.getElementById('doc-content').innerText = doc.content;
+            overlay.classList.add('open');
+            // Stoppe Bewegung
+            for (let key in keys) keys[key] = false;
+            touchVelocity.x = 0; touchVelocity.z = 0;
+        }
+
+        function closeDocument() {
+            isDocumentOpen = false;
+            document.getElementById('document-overlay').classList.remove('open');
+        }
+
+        // 3. Bücherregale 
+        function createShelf(x, z) {
+            const shelf = new THREE.Group(); shelf.position.set(x, 0, z);
+            const shelfWoodMat = new THREE.MeshStandardMaterial({ color: 0x2c1a10, roughness: 0.5, metalness: 0.1 });
+            const bookColors = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f, 0x9b59b6, 0x16a085, 0xe67e22];
+
+            const backwall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 0.04), shelfWoodMat); backwall.position.set(0, 1.2, -0.18); shelf.add(backwall);
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat); leftWall.position.set(-0.78, 1.2, 0); shelf.add(leftWall);
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat); rightWall.position.set(0.78, 1.2, 0); shelf.add(rightWall);
+            const topBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.4), shelfWoodMat); topBoard.position.set(0, 2.38, 0); shelf.add(topBoard);
+            const bottomBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.4), shelfWoodMat); bottomBoard.position.set(0, 0.02, 0); shelf.add(bottomBoard);
+
+            const numShelves = 4; const shelfSpacing = 2.4 / (numShelves + 1);
+            for (let i = 1; i <= numShelves; i++) {
+                const h = i * shelfSpacing;
+                const board = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.03, 0.38), shelfWoodMat); board.position.set(0, h, 0); shelf.add(board);
+                let currentX = -0.7; const maxX = 0.7;    
+                while (currentX < maxX) {
+                    if (Math.random() > 0.15) {
+                        const bWidth = 0.03 + Math.random() * 0.04; const bHeight = 0.22 + Math.random() * 0.13; const bDepth = 0.22 + Math.random() * 0.05;  
+                        const bookMat = new THREE.MeshStandardMaterial({ color: bookColors[Math.floor(Math.random() * bookColors.length)], roughness: 0.6 });
+                        const book = new THREE.Mesh(new THREE.BoxGeometry(bWidth, bHeight, bDepth), bookMat);
+                        book.position.set(currentX + bWidth / 2, h + 0.015 + bHeight / 2, 0.05);
+                        if (Math.random() > 0.85 && currentX < maxX - 0.1) { book.rotation.z = -0.25 - Math.random() * 0.15; book.position.y -= 0.02; currentX += bWidth + 0.08; } 
+                        else { currentX += bWidth + 0.01; }
+                        shelf.add(book);
+                    } else { currentX += 0.05 + Math.random() * 0.1; }
+                }
+            }
+            return shelf;
+        }
+        officeGroup.add(createShelf(-2.5, -4.7)); 
+        officeGroup.add(createShelf(-0.8, -4.7)); 
+
         // 2. Bürostuhl
         const chair = new THREE.Group();
         chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; 
@@ -369,89 +529,6 @@
         const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.55), plasticMat); seat.position.y = 0.43; chair.add(seat);
         const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), plasticMat); backrest.position.set(0, 0.73, -0.25); backrest.rotation.x = -0.1; chair.add(backrest);
         officeGroup.add(chair);
-
-        // 3. DAS NEUE HOCHWERTIGE 3D BÜCHERREGAL MIT ECHTEN BÜCHERN
-        function createShelf(x, z) {
-            const shelf = new THREE.Group();
-            shelf.position.set(x, 0, z);
-
-            const shelfWoodMat = new THREE.MeshStandardMaterial({ 
-                color: 0x2c1a10, 
-                roughness: 0.5,
-                metalness: 0.1 
-            });
-            const bookColors = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f, 0x9b59b6, 0x16a085, 0xe67e22];
-
-            // Rückwand
-            const backwall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 0.04), shelfWoodMat);
-            backwall.position.set(0, 1.2, -0.18);
-            shelf.add(backwall);
-
-            // Seitenwände
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat);
-            leftWall.position.set(-0.78, 1.2, 0);
-            shelf.add(leftWall);
-
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat);
-            rightWall.position.set(0.78, 1.2, 0);
-            shelf.add(rightWall);
-
-            // Deckel und Boden
-            const topBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.4), shelfWoodMat);
-            topBoard.position.set(0, 2.38, 0);
-            shelf.add(topBoard);
-
-            const bottomBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.4), shelfWoodMat);
-            bottomBoard.position.set(0, 0.02, 0);
-            shelf.add(bottomBoard);
-
-            // Mittlere Regalböden & Bücher
-            const numShelves = 4;
-            const shelfSpacing = 2.4 / (numShelves + 1);
-
-            for (let i = 1; i <= numShelves; i++) {
-                const h = i * shelfSpacing;
-                
-                const board = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.03, 0.38), shelfWoodMat);
-                board.position.set(0, h, 0);
-                shelf.add(board);
-
-                let currentX = -0.7; 
-                const maxX = 0.7;    
-
-                while (currentX < maxX) {
-                    if (Math.random() > 0.15) {
-                        const bWidth = 0.03 + Math.random() * 0.04;  
-                        const bHeight = 0.22 + Math.random() * 0.13; 
-                        const bDepth = 0.22 + Math.random() * 0.05;  
-
-                        const bookMat = new THREE.MeshStandardMaterial({
-                            color: bookColors[Math.floor(Math.random() * bookColors.length)],
-                            roughness: 0.6
-                        });
-
-                        const bookGeo = new THREE.BoxGeometry(bWidth, bHeight, bDepth);
-                        const book = new THREE.Mesh(bookGeo, bookMat);
-                        book.position.set(currentX + bWidth / 2, h + 0.015 + bHeight / 2, 0.05);
-
-                        // Realistischer Kipp-Effekt für manche Bücher
-                        if (Math.random() > 0.85 && currentX < maxX - 0.1) {
-                            book.rotation.z = -0.25 - Math.random() * 0.15; 
-                            book.position.y -= 0.02; 
-                            currentX += bWidth + 0.08; 
-                        } else {
-                            currentX += bWidth + 0.01; 
-                        }
-                        shelf.add(book);
-                    } else {
-                        currentX += 0.05 + Math.random() * 0.1; 
-                    }
-                }
-            }
-            return shelf;
-        }
-        officeGroup.add(createShelf(-2.5, -4.7)); 
-        officeGroup.add(createShelf(-0.8, -4.7)); 
 
         // 4. Aktenschränke
         function createCabinet(x, z, rot) {
@@ -524,7 +601,7 @@
         // --- 5. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false; let isGameWon = false; let activeExhibitNearMe = null; let isNearDoor = false; let modePlacement = false; const playerInventory = []; 
         function toggleInventory() {
-            if (isGameWon) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
+            if (isGameWon || isDocumentOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
             if (isInventoryOpen) { overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; renderInventoryUI(); } 
             else { overlay.classList.remove('open'); modePlacement = false; }
         }
@@ -542,7 +619,10 @@
             }
         }
         function triggerInteraction() {
-            if (isGameWon) return; if (isNearDoor) { toggleDoor(); return; }
+            if (isGameWon) return;
+            if (isDocumentOpen) { closeDocument(); return; } // Schließen bei Interaktionstaste
+            if (activeDocumentNearMe !== null) { openDocument(activeDocumentNearMe); return; }
+            if (isNearDoor) { toggleDoor(); return; }
             if (activeExhibitNearMe !== null && !isInventoryOpen) {
                 if (activeExhibitNearMe.currentNumber !== null) { playerInventory.push(activeExhibitNearMe.currentNumber); activeExhibitNearMe.currentNumber = null; updateExhibitVisual(activeExhibitNearMe); } 
                 else { modePlacement = true; toggleInventory(); }
@@ -556,21 +636,27 @@
 
         // --- 6. STEUERUNGS-SYSTEM ---
         let cameraAngleH = 0; let cameraAngleV = 0.3; let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
-        window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+        window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
         window.addEventListener('mouseup', () => isMouseDown = false);
         window.addEventListener('mousemove', (e) => {
-            if (!isMouseDown || isInventoryOpen || isGameWon) return;
+            if (!isMouseDown || isInventoryOpen || isGameWon || isDocumentOpen) return;
             cameraAngleH += (e.clientX - previousMousePosition.x) * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + (e.clientY - previousMousePosition.y) * 0.005));
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
-        window.addEventListener('keydown', (e) => { if (isGameWon) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } if (!isInventoryOpen && e.key in keys) keys[e.key] = true; });
+        window.addEventListener('keydown', (e) => { 
+            if (isGameWon) return; 
+            if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } 
+            if (isDocumentOpen) return; // Blockiere Bewegung bei offenem Zettel
+            if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
+            if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
+        });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
         let touchStartPos = { x: 0, y: 0 }; let touchVelocity = { x: 0, z: 0 }; let isTouching = false;
-        window.addEventListener('touchstart', (e) => { if(isInventoryOpen || isGameWon || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isTouching = true; touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY; });
+        window.addEventListener('touchstart', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isTouching = true; touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY; });
         window.addEventListener('touchmove', (e) => {
-            if (!isTouching || isInventoryOpen || isGameWon) return;
+            if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen) return;
             let diffX = e.touches[0].clientX - touchStartPos.x; let diffY = e.touches[0].clientY - touchStartPos.y;
             cameraAngleH += diffX * 0.0003; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
             let forward = Math.max(-1, Math.min(1, -diffY * 0.01));
@@ -582,7 +668,7 @@
         const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
-            if (isInventoryOpen || isGameWon) return;
+            if (isInventoryOpen || isGameWon || isDocumentOpen) return;
             doorGroup.rotation.y += (doorTargetAngle - doorGroup.rotation.y) * 0.1;
 
             let moveX = 0; let moveZ = 0;
@@ -631,17 +717,43 @@
                 leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8; leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8;
             }
 
-            // Trigger-Checks
+            // TRIGGER- & ENTFERNUNGS-CHECKS
+            let playerPos3D = new THREE.Vector3(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
             let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
             let distToDoor = playerPos2D.distanceTo(new THREE.Vector3(ROOM_SIZE / 2, 0, 0));
             const promptBtn = document.getElementById('interaction-prompt');
 
-            if (distToDoor < 2.2) {
-                isNearDoor = true; activeExhibitNearMe = null; promptBtn.style.display = 'block';
+            // 1. Check: Befindet sich der Spieler nahe an einem Zettel auf dem Tisch?
+            let closestPaper = null;
+            let minPaperDist = Infinity;
+            
+            paperMeshes.forEach(pObj => {
+                let pPos = pObj.getWorldPos();
+                let dist = playerPos3D.distanceTo(pPos);
+                if(dist < minPaperDist) {
+                    minPaperDist = dist;
+                    closestPaper = pObj;
+                }
+            });
+
+            if (minPaperDist < 2.0) {
+                activeDocumentNearMe = closestPaper;
+                activeExhibitNearMe = null;
+                isNearDoor = false;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`;
+                promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; // Lila Farbton für Dokumente
+                promptBtn.style.borderColor = "#9b59b6";
+            } 
+            // 2. Check: Ist der Spieler stattdessen an der Tür?
+            else if (distToDoor < 2.2) {
+                isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; promptBtn.style.display = 'block';
                 promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)";
                 promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
-            } else {
-                isNearDoor = false; let closest = null; let minDist = Infinity;
+            } 
+            // 3. Check: Ist der Spieler an den Gemälden/Exponaten?
+            else {
+                isNearDoor = false; activeDocumentNearMe = null; let closest = null; let minDist = Infinity;
                 for(let ex of exhibits) { let dist = playerPos2D.distanceTo(ex.position); if (dist < minDist) { minDist = dist; closest = ex; } }
 
                 if (minDist < 2.5) {
@@ -668,3 +780,5 @@
     </script>
 </body>
 </html>
+
+```
