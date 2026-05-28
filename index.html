@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum - Das Kuratorenbüro</title>
+    <title>3D Mathe-Museum - Die Eingangshalle</title>
     <style>
         body {
             margin: 0;
@@ -254,8 +254,8 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Kuratorenbüro v9.3</h1>
-        <p>Die Zwischenwände wurden korrigiert – kein Röntgenblick in den Hauptraum mehr möglich!</p>
+        <h1>🏛️ Mathe-Museum v10.0</h1>
+        <p>Erkunde die neue Eingangshalle mit Ticketschaltern, Bänken und Getränkeautomaten!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile<br>
@@ -314,10 +314,11 @@
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. RAUM-SETUP ---
+        // --- 2. RAUM-DIMENTIONEN ---
         const ROOM_SIZE = 24; 
         const BLOCK_SIZE = 8;
         const SUB_ROOM_SIZE = 10; 
+        const LOBBY_SIZE = 12; // Größe der neuen Eingangshalle
         const DOOR_HEIGHT = 2.8; 
         const DOOR_WIDTH = 2.2;  
         
@@ -334,9 +335,18 @@
         subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0);
         subFloor.receiveShadow = true; scene.add(subFloor);
 
+        // NEU: Boden für Eingangshalle (Lobby) hinter dem Hauptraum (Z-Richtung positiv)
+        const lobbyFloorGeo = new THREE.PlaneGeometry(LOBBY_SIZE, LOBBY_SIZE);
+        const lobbyFloorMat = new THREE.MeshStandardMaterial({ color: 0x221f28, roughness: 0.5 });
+        const lobbyFloor = new THREE.Mesh(lobbyFloorGeo, lobbyFloorMat);
+        lobbyFloor.rotation.x = -Math.PI / 2;
+        lobbyFloor.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
+        lobbyFloor.receiveShadow = true; scene.add(lobbyFloor);
+
         // Grids
         const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x333344); grid.position.y = 0.01; scene.add(grid);
         const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0x718093, 0x2f3640); subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.01, 0); scene.add(subGrid);
+        const lobbyGrid = new THREE.GridHelper(LOBBY_SIZE, LOBBY_SIZE, 0xa84a9f, 0x443342); lobbyGrid.position.set(0, 0.01, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGrid);
 
         // Prozedurale Marmor-Textur
         function createMarbleTexture() {
@@ -348,40 +358,43 @@
             return new THREE.CanvasTexture(canvas);
         }
         const marbleTexture = createMarbleTexture();
-        
-        // Standard-Wandmaterial (einseitig für Außenwände)
         const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
+        const partitionWallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05, side: THREE.DoubleSide });
         
-        // NEU: Zweiseitiges Material für die Trennwände zwischen den Räumen, damit man von innen nicht durchschauen kann!
-        const partitionWallMat = new THREE.MeshStandardMaterial({ 
-            map: marbleTexture, 
-            roughness: 0.2, 
-            metalness: 0.05,
-            side: THREE.DoubleSide 
-        });
-        
-        // Außenwände Hauptraum
+        // Wände Hauptraum
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
         const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
-        const frontWall = new THREE.Mesh(wallGeo, wallMat); frontWall.position.set(0, 3, ROOM_SIZE/2); frontWall.rotation.y = Math.PI; scene.add(frontWall);
+        
+        // Frontwand des Hauptraums aufgeteilt, um Durchgang zur Lobby zu ermöglichen (Breite des Durchgangs: 4 Einheiten)
+        const frontWallSegLen = (ROOM_SIZE - 4) / 2;
+        const frontWallSegGeo = new THREE.PlaneGeometry(frontWallSegLen, 6);
+        const frontWallLeft = new THREE.Mesh(frontWallSegGeo, partitionWallMat); frontWallLeft.position.set(-ROOM_SIZE/2 + frontWallSegLen/2, 3, ROOM_SIZE/2); frontWallLeft.rotation.y = Math.PI; scene.add(frontWallLeft);
+        const frontWallRight = new THREE.Mesh(frontWallSegGeo, partitionWallMat); frontWallRight.position.set(ROOM_SIZE/2 - frontWallSegLen/2, 3, ROOM_SIZE/2); frontWallRight.rotation.y = Math.PI; scene.add(frontWallRight);
+        const frontWallLintel = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), partitionWallMat); frontWallLintel.position.set(0, 5, ROOM_SIZE/2); frontWallLintel.rotation.y = Math.PI; scene.add(frontWallLintel);
 
-        // Trennwände & Sturz (Jetzt mit partitionWallMat -> DoubleSide)
+        // Trennwände zum Büro
         const lintel = new THREE.Mesh(new THREE.PlaneGeometry(DOOR_WIDTH, 6 - DOOR_HEIGHT), partitionWallMat); lintel.position.set(ROOM_SIZE/2, DOOR_HEIGHT + (6 - DOOR_HEIGHT)/2, 0); lintel.rotation.y = -Math.PI/2; scene.add(lintel);
         const sideWallLength = (ROOM_SIZE - DOOR_WIDTH) / 2; const rightWallSegGeo = new THREE.PlaneGeometry(sideWallLength, 6);
         const rightWallSeg1 = new THREE.Mesh(rightWallSegGeo, partitionWallMat); rightWallSeg1.position.set(ROOM_SIZE/2, 3, -ROOM_SIZE/4 - DOOR_WIDTH/4); rightWallSeg1.rotation.y = -Math.PI/2; scene.add(rightWallSeg1);
         const rightWallSeg2 = new THREE.Mesh(rightWallSegGeo, partitionWallMat); rightWallSeg2.position.set(ROOM_SIZE/2, 3, ROOM_SIZE/4 + DOOR_WIDTH/4); rightWallSeg2.rotation.y = -Math.PI/2; scene.add(rightWallSeg2);
 
-        // Nebenraum-Wände (Büro)
+        // Büro-Wände
         const subWallGeoH = new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6);
         const subBackWall = new THREE.Mesh(subWallGeoH, wallMat); subBackWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, -SUB_ROOM_SIZE/2); scene.add(subBackWall);
         const subFrontWall = new THREE.Mesh(subWallGeoH, wallMat); subFrontWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, SUB_ROOM_SIZE/2); subFrontWall.rotation.y = Math.PI; scene.add(subFrontWall);
         const subRightWall = new THREE.Mesh(new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6), wallMat); subRightWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE, 3, 0); subRightWall.rotation.y = -Math.PI/2; scene.add(subRightWall);
 
+        // NEU: Wände für die Eingangshalle (Lobby)
+        const lobbyWallGeoW = new THREE.PlaneGeometry(LOBBY_SIZE, 6);
+        const lobbyBackWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyBackWall.position.set(0, 3, ROOM_SIZE/2 + LOBBY_SIZE); lobbyBackWall.rotation.y = Math.PI; scene.add(lobbyBackWall);
+        const lobbyLeftWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyLeftWall.position.set(-LOBBY_SIZE/2, 3, ROOM_SIZE/2 + LOBBY_SIZE/2); lobbyLeftWall.rotation.y = Math.PI/2; scene.add(lobbyLeftWall);
+        const lobbyRightWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyRightWall.position.set(LOBBY_SIZE/2, 3, ROOM_SIZE/2 + LOBBY_SIZE/2); lobbyRightWall.rotation.y = -Math.PI/2; scene.add(lobbyRightWall);
+
         // Center-Block im Hauptraum
         const centerBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK_SIZE, 6, BLOCK_SIZE), wallMat); centerBlock.position.set(0, 3, 0); scene.add(centerBlock);
 
-        // --- 2B. TÜR ---
+        // --- 2B. TÜR (BÜRO) ---
         function createDoorTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 512; const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, 256, 512); ctx.fillStyle = '#1a252f'; ctx.fillRect(20, 20, 216, 210); ctx.fillRect(20, 250, 216, 240);
@@ -405,161 +418,135 @@
             const ctx = doorTexture.image.getContext('2d'); ctx.fillStyle = isDoorOpen ? '#2ed573' : '#e74c3c'; ctx.fillRect(20, 235, 20, 10); doorTexture.needsUpdate = true;
         }
 
-        // --- 2C. BÜRO-EINRICHTUNG (MÖBEL & DEKO) ---
-        const officeGroup = new THREE.Group();
-        officeGroup.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); 
-        scene.add(officeGroup);
-
+        // --- 2C. BÜRO-EINRICHTUNG ---
+        const officeGroup = new THREE.Group(); officeGroup.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); scene.add(officeGroup);
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); 
         const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); 
         const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.1 }); 
 
-        // 1. Schreibtisch
-        const desk = new THREE.Group();
-        desk.position.set(0, 0, 0); 
-        const tabletop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 1.2), woodMat); tabletop.position.y = 0.76; desk.add(tabletop);
+        const desk = new THREE.Group(); const tabletop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 1.2), woodMat); tabletop.position.y = 0.76; desk.add(tabletop);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.5 });
         const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg1.position.set(-1.1, 0.38, 0); desk.add(leg1);
-        const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg2.position.set(1.1, 0.38, 0); desk.add(leg2);
-        officeGroup.add(desk);
+        const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg2.position.set(1.1, 0.38, 0); desk.add(leg2); officeGroup.add(desk);
 
-        // Monitor & Lampe
         const monitor = new THREE.Group(); monitor.position.set(0, 0.8, -0.3);
         const stand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.1), plasticMat); stand.position.y = 0.15; monitor.add(stand);
         const screen = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), plasticMat); screen.position.y = 0.4; monitor.add(screen);
-        const display = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.46), new THREE.MeshBasicMaterial({ color: 0x00a8ff })); display.position.set(0, 0.4, 0.026); monitor.add(display);
-        desk.add(monitor);
+        const display = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.46), new THREE.MeshBasicMaterial({ color: 0x00a8ff })); display.position.set(0, 0.4, 0.026); monitor.add(display); desk.add(monitor);
 
         const deskLamp = new THREE.Group(); deskLamp.position.set(-0.8, 0.8, -0.2);
         const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.02), chromeMat); deskLamp.add(lampBase);
         const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.4), chromeMat); lampArm.position.set(0, 0.2, 0); lampArm.rotation.z = 0.2; deskLamp.add(lampArm);
-        const lampHead = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.1), plasticMat); lampHead.position.set(0.08, 0.4, 0); lampHead.rotation.z = -0.5; deskLamp.add(lampHead);
-        desk.add(deskLamp);
+        const lampHead = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.1), plasticMat); lampHead.position.set(0.08, 0.4, 0); lampHead.rotation.z = -0.5; deskLamp.add(lampHead); desk.add(deskLamp);
 
-        // Zettel auf dem Tisch
         const papers = [
-            { 
-                title: "📜 Tagebucheintrag des Kurators", 
-                content: "Tag 42 im mathematischen Exil:\nDie KI verhält sich seltsam. Sie weigert sich, die Exponate in einer chaotischen Reihenfolge anzuzeigen. Ordnung ist ihr oberstes Gebot.\n\nIch habe versucht, die Bilder zu sabotieren, aber das System setzt alles zurück, sobald die natürliche Zahlenfolge von 1 bis 5 hergestellt ist. Ich muss vorsichtig sein...",
-                offsetX: 0.5, offsetZ: 0.2, rotY: 0.2
-            },
-            { 
-                title: "📋 Labornotiz: Systemfehler #04", 
-                content: "ACHTUNG - Kritischer Fehler in der Galerie-Matrix!\n\nDie Hauptwand registriert fehlerhafte Zustände. Falls die Schilder verrückt spielen, hilft nur ein händischer Reset.\n\nRegel für den Neustart:\nDas kleinste Glied steht immer links am Anfang. Die Energie fließt lückenlos aufsteigend nach rechts weg. (1... 2... 3...)",
-                offsetX: -0.4, offsetZ: 0.3, rotY: -0.4
-            },
-            { 
-                title: "✉️ Ungelesener Brief", 
-                content: "Lieber Kollege,\n\nich habe das Büro wie besprochen abgeschlossen. Der Code für die Magnetschranke ist prozedural verschlüsselt.\n\nFalls du feststeckst: Schau dich einfach im Raum um. Die Möbel verbergen keine Geheimnisse, aber der Geist des Museums verlangt nach absoluter, mathematischer Symmetrie.\n\n- Dr. Alpha",
-                offsetX: 0.2, offsetZ: -0.2, rotY: 0.5
-            }
+            { title: "📜 Tagebucheintrag des Kurators", content: "Tag 42 im mathematischen Exil:\nDie KI verhält sich seltsam. Sie weigert sich, die Exponate in einer chaotischen Reihenfolge anzuzeigen. Ordnung ist ihr oberstes Gebot.\n\nIch habe versucht, die Bilder zu sabotieren, aber das System setzt alles zurück, sobald die natürliche Zahlenfolge von 1 bis 5 hergestellt ist. Ich muss vorsichtig sein...", offsetX: 0.5, offsetZ: 0.2, rotY: 0.2 },
+            { title: "📋 Labornotiz: Systemfehler #04", content: "ACHTUNG - Kritischer Fehler in der Galerie-Matrix!\n\nDie Hauptwand registriert fehlerhafte Zustände. Falls die Schilder verrückt spielen, hilft nur ein händischer Reset.\n\nRegel für den Neustart:\nDas kleinste Glied steht immer links am Anfang. Die Energie fließt lückenlos aufsteigend nach rechts weg. (1... 2... 3...)", offsetX: -0.4, offsetZ: 0.3, rotY: -0.4 },
+            { title: "✉️ Ungelesener Brief", content: "Lieber Kollege,\n\nich habe das Büro wie besprochen abgeschlossen. Der Code für die Magnetschranke ist prozedural verschlüsselt.\n\nFalls du feststeckst: Schau dich einfach im Raum um. Die Möbel verbergen keine Geheimnisse, aber der Geist des Museums verlangt nach absoluter, mathematischer Symmetrie.\n\n- Dr. Alpha", offsetX: 0.2, offsetZ: -0.2, rotY: 0.5 }
         ];
-
-        const paperMeshes = [];
-        const paperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
-        const paperGeo = new THREE.BoxGeometry(0.24, 0.005, 0.32); 
-
-        papers.forEach((pData, idx) => {
-            const paperMesh = new THREE.Mesh(paperGeo, paperMat);
-            paperMesh.position.set(pData.offsetX, 0.805, pData.offsetZ);
-            paperMesh.rotation.y = pData.rotY;
-            desk.add(paperMesh);
-            
-            paperMeshes.push({
-                mesh: paperMesh,
-                title: pData.title,
-                content: pData.content,
-                getWorldPos: function() {
-                    let target = new THREE.Vector3();
-                    return paperMesh.getWorldPosition(target);
-                }
-            });
+        const paperMeshes = []; const paperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }); const paperGeo = new THREE.BoxGeometry(0.24, 0.005, 0.32);
+        papers.forEach((pData) => {
+            const paperMesh = new THREE.Mesh(paperGeo, paperMat); paperMesh.position.set(pData.offsetX, 0.805, pData.offsetZ); paperMesh.rotation.y = pData.rotY; desk.add(paperMesh);
+            paperMeshes.push({ mesh: paperMesh, title: pData.title, content: pData.content, getWorldPos: function() { let target = new THREE.Vector3(); return paperMesh.getWorldPosition(target); } });
         });
 
-        let activeDocumentNearMe = null;
-        let isDocumentOpen = false;
+        let activeDocumentNearMe = null; let isDocumentOpen = false;
+        function openDocument(doc) { isDocumentOpen = true; const overlay = document.getElementById('document-overlay'); document.getElementById('doc-title').innerText = doc.title; document.getElementById('doc-content').innerText = doc.content; overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; }
+        function closeDocument() { isDocumentOpen = false; document.getElementById('document-overlay').classList.remove('open'); }
 
-        function openDocument(doc) {
-            isDocumentOpen = true;
-            const overlay = document.getElementById('document-overlay');
-            document.getElementById('doc-title').innerText = doc.title;
-            document.getElementById('doc-content').innerText = doc.content;
-            overlay.classList.add('open');
-            for (let key in keys) keys[key] = false;
-            touchVelocity.x = 0; touchVelocity.z = 0;
-        }
-
-        function closeDocument() {
-            isDocumentOpen = false;
-            document.getElementById('document-overlay').classList.remove('open');
-        }
-
-        // Bücherregale
         function createShelf(x, z) {
-            const shelf = new THREE.Group(); shelf.position.set(x, 0, z);
-            const shelfWoodMat = new THREE.MeshStandardMaterial({ color: 0x2c1a10, roughness: 0.5, metalness: 0.1 });
-            const bookColors = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f, 0x9b59b6, 0x16a085, 0xe67e22];
-
+            const shelf = new THREE.Group(); shelf.position.set(x, 0, z); const shelfWoodMat = new THREE.MeshStandardMaterial({ color: 0x2c1a10, roughness: 0.5 }); const bookColors = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f, 0x9b59b6];
             const backwall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 0.04), shelfWoodMat); backwall.position.set(0, 1.2, -0.18); shelf.add(backwall);
             const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat); leftWall.position.set(-0.78, 1.2, 0); shelf.add(leftWall);
             const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat); rightWall.position.set(0.78, 1.2, 0); shelf.add(rightWall);
-            const topBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.4), shelfWoodMat); topBoard.position.set(0, 2.38, 0); shelf.add(topBoard);
-            const bottomBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.4), shelfWoodMat); bottomBoard.position.set(0, 0.02, 0); shelf.add(bottomBoard);
-
-            const numShelves = 4; const shelfSpacing = 2.4 / (numShelves + 1);
-            for (let i = 1; i <= numShelves; i++) {
-                const h = i * shelfSpacing;
-                const board = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.03, 0.38), shelfWoodMat); board.position.set(0, h, 0); shelf.add(board);
-                let currentX = -0.7; const maxX = 0.7;    
-                while (currentX < maxX) {
+            for (let i = 1; i <= 4; i++) {
+                const h = i * 0.48; const board = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.03, 0.38), shelfWoodMat); board.position.set(0, h, 0); shelf.add(board); let cx = -0.7;
+                while (cx < 0.7) {
                     if (Math.random() > 0.15) {
-                        const bWidth = 0.03 + Math.random() * 0.04; const bHeight = 0.22 + Math.random() * 0.13; const bDepth = 0.22 + Math.random() * 0.05;  
-                        const bookMat = new THREE.MeshStandardMaterial({ color: bookColors[Math.floor(Math.random() * bookColors.length)], roughness: 0.6 });
-                        const book = new THREE.Mesh(new THREE.BoxGeometry(bWidth, bHeight, bDepth), bookMat);
-                        book.position.set(currentX + bWidth / 2, h + 0.015 + bHeight / 2, 0.05);
-                        if (Math.random() > 0.85 && currentX < maxX - 0.1) { book.rotation.z = -0.25 - Math.random() * 0.15; book.position.y -= 0.02; currentX += bWidth + 0.08; } 
-                        else { currentX += bWidth + 0.01; }
-                        shelf.add(book);
-                    } else { currentX += 0.05 + Math.random() * 0.1; }
+                        const bw = 0.03 + Math.random() * 0.04; const bh = 0.22 + Math.random() * 0.13;
+                        const book = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.24), new THREE.MeshStandardMaterial({ color: bookColors[Math.floor(Math.random() * bookColors.length)] }));
+                        book.position.set(cx + bw / 2, h + 0.015 + bh / 2, 0.05); cx += bw + 0.02; shelf.add(book);
+                    } else { cx += 0.08; }
                 }
-            }
-            return shelf;
+            } return shelf;
         }
-        officeGroup.add(createShelf(-2.5, -4.7)); 
-        officeGroup.add(createShelf(-0.8, -4.7)); 
+        officeGroup.add(createShelf(-2.5, -4.7)); officeGroup.add(createShelf(-0.8, -4.7)); 
 
-        // Bürostuhl
-        const chair = new THREE.Group();
-        chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; 
+        const chair = new THREE.Group(); chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; 
         const base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4), chromeMat); base.position.y = 0.2; chair.add(base);
         const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.55), plasticMat); seat.position.y = 0.43; chair.add(seat);
-        const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), plasticMat); backrest.position.set(0, 0.73, -0.25); backrest.rotation.x = -0.1; chair.add(backrest);
-        officeGroup.add(chair);
+        const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), plasticMat); backrest.position.set(0, 0.73, -0.25); chair.add(backrest); officeGroup.add(chair);
 
-        // Aktenschränke
         function createCabinet(x, z, rot) {
             const cab = new THREE.Group(); cab.position.set(x, 0, z); cab.rotation.y = rot;
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.4 })); body.position.y = 0.9; cab.add(body);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xdcdde1 })); body.position.y = 0.9; cab.add(body);
             for(let f=0.25; f<1.8; f+=0.42) {
-                const drawer = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.36, 0.02), new THREE.MeshStandardMaterial({ color: 0xb2bec3, roughness: 0.3 })); drawer.position.set(0, f, 0.26); cab.add(drawer);
+                const drawer = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.36, 0.02), new THREE.MeshStandardMaterial({ color: 0xb2bec3 })); drawer.position.set(0, f, 0.26); cab.add(drawer);
                 const handle = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.03), chromeMat); handle.position.set(0, f, 0.28); cab.add(handle);
-            }
-            return cab;
+            } return cab;
         }
-        officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2));
-        officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
+        officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2)); officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
 
-        // Zimmerpflanze
-        const plant = new THREE.Group(); plant.position.set(4.0, 0, 4.0);
-        const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })); pot.position.y = 0.3; plant.add(pot);
-        const plantMat = new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.9, flatShading: true });
-        for(let p=0; p<8; p++) {
-            const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.15, 1.2, 4), plantMat);
-            leaf.position.set((Math.random()-0.5)*0.2, 0.7, (Math.random()-0.5)*0.2);
-            leaf.rotation.set((Math.random()-0.5)*0.5, Math.random()*Math.PI, 0.3 + Math.random()*0.4);
-            plant.add(leaf);
+        // Zimmerpflanze Funktion (Wiederverwendbar)
+        function createPlant() {
+            const plant = new THREE.Group(); const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })); pot.position.y = 0.3; plant.add(pot);
+            const plantMat = new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.9, flatShading: true });
+            for(let p=0; p<8; p++) {
+                const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.15, 1.2, 4), plantMat); leaf.position.set((Math.random()-0.5)*0.2, 0.7, (Math.random()-0.5)*0.2); leaf.rotation.set((Math.random()-0.5)*0.5, Math.random()*Math.PI, 0.3 + Math.random()*0.4); plant.add(leaf);
+            } return plant;
         }
-        officeGroup.add(plant);
+        const plantBüro = createPlant(); plantBüro.position.set(4.0, 0, 4.0); officeGroup.add(plantBüro);
+
+        // --- NEU: EINRICHTUNG FÜR DIE LOBBY / EINGANGSHALLE ---
+        const lobbyGroup = new THREE.Group();
+        lobbyGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
+        scene.add(lobbyGroup);
+
+        const counterMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.4 });
+        const glassMat = new THREE.MeshStandardMaterial({ color: 0x00a8ff, transparent: true, opacity: 0.4, roughness: 0.1 });
+
+        // 1. Ticketschalter (Zwei Schalter nebeneinander an der Rückwand der Lobby)
+        function createTicketCounter(x) {
+            const counter = new THREE.Group(); counter.position.set(x, 0, LOBBY_SIZE / 2 - 1.2);
+            const base = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 0.8), counterMat); base.position.y = 0.55; counter.add(base);
+            const plate = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.05, 0.9), woodMat); plate.position.y = 1.12; counter.add(plate);
+            const glass = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.0, 0.04), glassMat); glass.position.set(0, 1.64, 0.2); counter.add(glass);
+            // Kleiner Kassenmonitor
+            const pc = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.1), plasticMat); pc.position.set(-0.2, 1.3, -0.1); pc.rotation.y = 0.2; counter.add(pc);
+            return counter;
+        }
+        lobbyGroup.add(createTicketCounter(-2.5));
+        lobbyGroup.add(createTicketCounter(2.5));
+
+        // 2. Getränkeautomaten (An den Seitenwänden)
+        function createVendingMachine(x, z, rotY) {
+            const vm = new THREE.Group(); vm.position.set(x, 0, z); vm.rotation.y = rotY;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.8), plasticMat); body.position.y = 1.1; vm.add(body);
+            const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.4), new THREE.MeshBasicMaterial({ color: 0x111122 })); glass.position.set(0, 1.2, 0.41); vm.add(glass);
+            // Leucht-Logo / Schacht
+            const slot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.1), chromeMat); slot.position.set(0, 0.25, 0.38); vm.add(slot);
+            const lightStrip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.2, 0.02), glowMat); lightStrip.position.set(0.45, 1.2, 0.41); vm.add(lightStrip);
+            return vm;
+        }
+        lobbyGroup.add(createVendingMachine(-LOBBY_SIZE / 2 + 0.5, 0, Math.PI / 2));
+        lobbyGroup.add(createVendingMachine(LOBBY_SIZE / 2 - 0.5, 1.5, -Math.PI / 2));
+
+        // 3. Sitzmöglichkeiten (Moderne Polsterbänke in der Mitte der Lobby)
+        function createLobbyBench(z) {
+            const bench = new THREE.Group(); bench.position.set(0, 0, z);
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 1.0), chromeMat); frame.position.y = 0.15; bench.add(frame);
+            const legA = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 1.0), chromeMat); legA.position.set(-1.4, 0.075, 0); bench.add(legA);
+            const legB = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 1.0), chromeMat); legB.position.set(1.4, 0.075, 0); bench.add(legB);
+            const cushion = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.3, 0.9), new THREE.MeshStandardMaterial({ color: 0x9b59b6, roughness: 0.8 })); cushion.position.y = 0.35; bench.add(cushion);
+            return bench;
+        }
+        lobbyGroup.add(createLobbyBench(-1.5));
+        lobbyGroup.add(createLobbyBench(1.5);)
+
+        // 4. Dekoration: Pflanzen für die Lobby-Ecken
+        const p1 = createPlant(); p1.position.set(-LOBBY_SIZE/2 + 0.8, 0, LOBBY_SIZE/2 - 0.8); lobbyGroup.add(p1);
+        const p2 = createPlant(); p2.position.set(LOBBY_SIZE/2 - 0.8, 0, LOBBY_SIZE/2 - 0.8); lobbyGroup.add(p2);
+
 
         // --- 3. EXPO-PLÄTZE ---
         const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
@@ -602,7 +589,10 @@
         const rightLegGroup = new THREE.Group(); rightLegGroup.position.set(0.13, 0.85, 0);
         const rightLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
         const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot); playerGroup.add(rightLegGroup);
-        playerGroup.position.set(0, 0, 7); scene.add(playerGroup);
+        
+        // Startpunkt des Charakters leicht nach hinten verschoben, damit er am Eingang der neuen Lobby startet!
+        playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2);
+        scene.add(playerGroup);
 
         // --- 5. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false; let isGameWon = false; let activeExhibitNearMe = null; let isNearDoor = false; let modePlacement = false; const playerInventory = []; 
@@ -637,7 +627,7 @@
         function checkWinCondition() { if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) { isGameWon = true; document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open'); } }
         function restartGame() {
             isGameWon = false; playerInventory.length = 0; const mixed = [4, 1, 5, 2, 3]; exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
-            playerGroup.position.set(0, 0, 7); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
+            playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
         }
 
         // --- 6. STEUERUNGS-SYSTEM ---
@@ -670,7 +660,7 @@
         });
         window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
 
-        // --- 7. GAME LOOP & ERWEITERTE KOLLISION ---
+        // --- 7. GAME LOOP & KOLLISIONSSYSTEM ---
         const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
@@ -690,27 +680,61 @@
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
                 let allowed = true;
 
-                if (nextX < ROOM_SIZE / 2 - playerRadius) {
+                // --- ERWEITERTES KOLLISIONSSYSTEM FÜR DREI RÄUME ---
+                
+                // 1. BEREICH: LOBBY / EINGANGSHALLE
+                if (nextZ > ROOM_SIZE / 2) {
+                    let maxLobbyX = LOBBY_SIZE / 2 - playerRadius;
+                    let maxLobbyZ = ROOM_SIZE / 2 + LOBBY_SIZE - playerRadius;
+                    
+                    // Außenwände Lobby
+                    if (nextX < -maxLobbyX || nextX > maxLobbyX || nextZ > maxLobbyZ) allowed = false;
+                    
+                    // Durchgangs-Barriere (Südwand des Hauptraums) links/rechts vom Durchgang
+                    if (nextZ < ROOM_SIZE / 2 + playerRadius && (nextX < -2 || nextX > 2)) allowed = false;
+                    
+                    // Kollision Ticketschalter (nahe Rückwand)
+                    if (nextZ > ROOM_SIZE / 2 + LOBBY_SIZE - 2.0) {
+                        if ((nextX > -3.8 && nextX < -1.2) || (nextX > 1.2 && nextX < 3.8)) allowed = false;
+                    }
+                    // Kollision Bänke in der Mitte
+                    if (nextX > -1.6 && nextX < 1.6) {
+                        if ((nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 - 2.1 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 - 0.9) ||
+                            (nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.9 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 2.1)) allowed = false;
+                    }
+                    // Kollision Getränkeautomaten (Seitenwände)
+                    if (nextX < -LOBBY_SIZE/2 + 1.0 && nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 - 0.7 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.7) allowed = false;
+                    if (nextX > LOBBY_SIZE/2 - 1.0 && nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.8 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 2.2) allowed = false;
+                }
+                // 2. BEREICH: BÜRO (RECHTS)
+                else if (nextX > ROOM_SIZE / 2 - playerRadius) {
+                    // Falls durch die Bürotür gewollt:
+                    if (nextX <= ROOM_SIZE / 2 + playerRadius) {
+                        if (nextZ < -DOOR_WIDTH / 2 + playerRadius || nextZ > DOOR_WIDTH / 2 - playerRadius) allowed = false;
+                        if (!isDoorOpen && nextX > ROOM_SIZE / 2 - playerRadius) allowed = false;
+                    } else {
+                        // Im Büro drin
+                        let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius;
+                        let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
+                        if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
+
+                        let relX = nextX - (ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2);
+                        if (relX > -1.3 && relX < 1.3 && nextZ > -0.7 && nextZ < 0.7) allowed = false; // Schreibtisch
+                        if (nextZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false; // Regale
+                        if (relX > 4.6 - 0.5 - playerRadius && nextZ > -2.8 && nextZ < 0.5) allowed = false; // Schränke
+                    }
+                } 
+                // 3. BEREICH: HAUPTRAUM
+                else {
                     let maxCoord = ROOM_SIZE / 2 - playerRadius;
-                    if (nextX < -maxCoord || nextZ < -maxCoord || nextZ > maxCoord) allowed = false;
+                    if (nextX < -maxCoord || nextZ < -maxCoord) allowed = false;
+                    
+                    // Südliche Wandgrenze zum Lobby-Durchgang hin
+                    if (nextZ > maxCoord && (nextX < -2 || nextX > 2)) allowed = false;
+                    
+                    // Center-Block
                     let blockBound = BLOCK_SIZE / 2 + playerRadius;
                     if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
-                } 
-                else if (nextX > ROOM_SIZE / 2 + playerRadius) {
-                    let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius;
-                    let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
-                    if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
-
-                    let relX = nextX - (ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2);
-                    let relZ = nextZ;
-
-                    if (relX > -1.3 && relX < 1.3 && relZ > -0.7 && relZ < 0.7) allowed = false;
-                    if (relZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false;
-                    if (relX > 4.6 - 0.5 - playerRadius && relZ > -2.8 && relZ < 0.5) allowed = false;
-                } 
-                else {
-                    if (nextZ < -DOOR_WIDTH / 2 + playerRadius || nextZ > DOOR_WIDTH / 2 - playerRadius) allowed = false;
-                    if (!isDoorOpen && nextX > ROOM_SIZE / 2 - playerRadius) allowed = false;
                 }
 
                 if (allowed) { playerGroup.position.x = nextX; playerGroup.position.z = nextZ; }
@@ -729,28 +753,17 @@
             let distToDoor = playerPos2D.distanceTo(new THREE.Vector3(ROOM_SIZE / 2, 0, 0));
             const promptBtn = document.getElementById('interaction-prompt');
 
-            let closestPaper = null;
-            let minPaperDist = Infinity;
-            
+            let closestPaper = null; let minPaperDist = Infinity;
             paperMeshes.forEach(pObj => {
-                let pPos = pObj.getWorldPos();
-                let dist = playerPos3D.distanceTo(pPos);
-                if(dist < minPaperDist) {
-                    minPaperDist = dist;
-                    closestPaper = pObj;
-                }
+                let pPos = pObj.getWorldPos(); let dist = playerPos3D.distanceTo(pPos);
+                if(dist < minPaperDist) { minPaperDist = dist; closestPaper = pObj; }
             });
 
             if (minPaperDist < 2.0) {
-                activeDocumentNearMe = closestPaper;
-                activeExhibitNearMe = null;
-                isNearDoor = false;
-                promptBtn.style.display = 'block';
-                promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`;
-                promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; 
-                promptBtn.style.borderColor = "#9b59b6";
+                activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; promptBtn.style.display = 'block';
+                promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`; promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; promptBtn.style.borderColor = "#9b59b6";
             } 
-            else if (distToDoor < 2.2) {
+            else if (distToDoor < 2.2 && playerGroup.position.x < ROOM_SIZE/2 + 0.5) {
                 isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; promptBtn.style.display = 'block';
                 promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)";
                 promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
@@ -759,7 +772,7 @@
                 isNearDoor = false; activeDocumentNearMe = null; let closest = null; let minDist = Infinity;
                 for(let ex of exhibits) { let dist = playerPos2D.distanceTo(ex.position); if (dist < minDist) { minDist = dist; closest = ex; } }
 
-                if (minDist < 2.5) {
+                if (minDist < 2.5 && playerGroup.position.z < ROOM_SIZE/2) {
                     activeExhibitNearMe = closest; promptBtn.style.display = 'block';
                     if(closest.currentNumber !== null) {
                         promptBtn.innerText = `👋 Bild (${closest.currentNumber}) einpacken`; promptBtn.style.background = "rgba(234, 32, 39, 0.85)"; promptBtn.style.borderColor = "#ff4757";
@@ -783,5 +796,3 @@
     </script>
 </body>
 </html>
-
-```
