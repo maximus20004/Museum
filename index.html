@@ -254,7 +254,7 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Mathe-Museum v10.3</h1>
+        <h1>🏛️ Mathe-Museum v10.4</h1>
         <p>Erkunde die neue Eingangshalle mit Ticketschaltern, Bänken und Getränkeautomaten!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
@@ -315,7 +315,7 @@
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. MATERIAL-DEFINITIONEN ---
+        // --- 2. MATERIAL- & PROZEDURALE TEXTUR-DEFINITIONEN ---
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); 
         const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); 
         const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.1 }); 
@@ -323,7 +323,7 @@
         const counterMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.4 });
         const glassMat = new THREE.MeshStandardMaterial({ color: 0x00a8ff, transparent: true, opacity: 0.4, roughness: 0.1 });
 
-        // Prozedurale Marmor-Textur
+        // Prozedurale Marmor-Textur für Wände
         function createMarbleTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
             const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8e8f0'; ctx.fillRect(0, 0, 512, 512);
@@ -336,7 +336,67 @@
         const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
         const partitionWallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05, side: THREE.DoubleSide });
 
-        // --- 3. RAUM-DIMENSIONEN ---
+        // Prozedurale Fischgrät-Parkett-Textur für das Büro
+        function createParquetTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#5c3a21'; ctx.fillRect(0, 0, 512, 512); // Grundton Holz
+            
+            // Planken zeichnen
+            const cols = 8; const rowH = 32;
+            for (let c = 0; c < cols; c++) {
+                let startX = c * 64;
+                for (let y = -32; y < 544; y += rowH) {
+                    // Leicht variierende Holztöne für Realismus
+                    let brightness = Math.floor(Math.random() * 25) - 12;
+                    ctx.fillStyle = `rgb(${92 + brightness}, ${58 + brightness}, ${33 + brightness})`;
+                    
+                    ctx.beginPath();
+                    if (c % 2 === 0) {
+                        ctx.moveTo(startX, y); ctx.lineTo(startX + 64, y + 32);
+                        ctx.lineTo(startX + 64, y + 48); ctx.lineTo(startX, y + 16);
+                    } else {
+                        ctx.moveTo(startX, y + 32); ctx.lineTo(startX + 64, y);
+                        ctx.lineTo(startX + 64, y + 16); ctx.lineTo(startX, y + 48);
+                    }
+                    ctx.fill();
+                    
+                    // Fugen lines
+                    ctx.strokeStyle = 'rgba(40, 20, 5, 0.6)'; ctx.lineWidth = 1; ctx.stroke();
+                }
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(2, 2); return tex;
+        }
+
+        // Prozedurale Terrazzo-Fliesen-Textur für den Eingangsbereich
+        function createTerrazzoTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#d1d8e0'; ctx.fillRect(0, 0, 512, 512); // Heller Beton-Grund
+            
+            // Kleine Steinchen-Struktur (Terrazzo)
+            const colors = ['#778ca3', '#a5b1c2', '#4b6584', '#fed330', '#eb3b5a', '#ffffff'];
+            for(let i=0; i<800; i++) {
+                ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                ctx.beginPath();
+                let rx = Math.random() * 512; let ry = Math.random() * 512;
+                let rSize = 1 + Math.random() * 3;
+                ctx.arc(rx, ry, rSize, 0, Math.PI * 2); ctx.fill();
+            }
+            // Grob quadratisches Fliesenraster zeichnen
+            ctx.strokeStyle = 'rgba(100, 110, 120, 0.4)'; ctx.lineWidth = 2;
+            for(let g=0; g<=512; g+=128) {
+                ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, 512); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, g); ctx.lineTo(512, g); ctx.stroke();
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(3, 3); return tex;
+        }
+
+        // --- 3. RAUM-DIMENSIONEN & BÖDEN ---
         const ROOM_SIZE = 24; 
         const BLOCK_SIZE = 8;
         const SUB_ROOM_SIZE = 10; 
@@ -344,31 +404,32 @@
         const DOOR_HEIGHT = 2.8; 
         const DOOR_WIDTH = 2.2;  
         
-        // Böden
+        // Boden 1: Hauptraum (Dunkler Museums-Stahlplatten-Style)
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1a26, roughness: 0.6 });
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x14141f, roughness: 0.5, metalness: 0.2 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 
+        // Boden 2: Büro des Kurators (Edles Holz-Fischgrätparkett)
         const subFloorGeo = new THREE.PlaneGeometry(SUB_ROOM_SIZE, SUB_ROOM_SIZE);
-        const subFloorMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.8 }); 
+        const subFloorMat = new THREE.MeshStandardMaterial({ map: createParquetTexture(), roughness: 0.3, metalness: 0.1 }); 
         const subFloor = new THREE.Mesh(subFloorGeo, subFloorMat);
         subFloor.rotation.x = -Math.PI / 2;
         subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0);
         subFloor.receiveShadow = true; scene.add(subFloor);
 
-        // Boden für Eingangshalle (Lobby)
+        // Boden 3: Eingangshalle / Lobby (Moderner, heller Terrazzo-Fliesenboden)
         const lobbyFloorGeo = new THREE.PlaneGeometry(LOBBY_SIZE, LOBBY_SIZE);
-        const lobbyFloorMat = new THREE.MeshStandardMaterial({ color: 0x1f1c24, roughness: 0.5 });
+        const lobbyFloorMat = new THREE.MeshStandardMaterial({ map: createTerrazzoTexture(), roughness: 0.2, metalness: 0.05 });
         const lobbyFloor = new THREE.Mesh(lobbyFloorGeo, lobbyFloorMat);
         lobbyFloor.rotation.x = -Math.PI / 2;
         lobbyFloor.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
         lobbyFloor.receiveShadow = true; scene.add(lobbyFloor);
 
-        // Grids
-        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x333344); grid.position.y = 0.01; scene.add(grid);
-        const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0x718093, 0x2f3640); subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.01, 0); scene.add(subGrid);
-        const lobbyGrid = new THREE.GridHelper(LOBBY_SIZE, LOBBY_SIZE, 0xa84a9f, 0x443342); lobbyGrid.position.set(0, 0.01, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGrid);
+        // Grids (leicht angehoben, damit sie sichtbar bleiben, falls gewünscht - farblich angepasst)
+        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x222233); grid.position.y = 0.005; scene.add(grid);
+        const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0xfa8231, 0x3e2723); subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.005, 0); scene.add(subGrid);
+        const lobbyGrid = new THREE.GridHelper(LOBBY_SIZE, LOBBY_SIZE, 0xa84a9f, 0x443342); lobbyGrid.position.set(0, 0.005, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGrid);
 
         // Wände Hauptraum
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
@@ -457,7 +518,7 @@
         });
 
         let activeDocumentNearMe = null; let isDocumentOpen = false;
-        function openDocument(doc) { isDocumentOpen = true; const overlay = document.getElementById('document-overlay'); document.getElementById('doc-title').innerText = doc.title; document.getElementById('doc-content').innerText = doc.content; overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; }
+        function openDocument(doc) { isDocumentOpen = true; const overlay = document.getElementById('document-overlay'); document.getElementById('doc-title').innerText = doc.title; document.getElementById('doc-content').innerText = doc.content; overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; openDocumentUI(); }
         function closeDocument() { isDocumentOpen = false; document.getElementById('document-overlay').classList.remove('open'); }
 
         function createShelf(x, z) {
@@ -493,14 +554,13 @@
         }
         officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2)); officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
 
-        // MÜLLEIMER STATT ZIMMERPFLANZE
+        // MÜLLEIMER IM BÜRO
         const trashCanGroup = new THREE.Group(); trashCanGroup.position.set(4.0, 0, 4.0);
         const binMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.4, metalness: 0.6 });
         const binBody = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.55, 12), binMat); binBody.position.y = 0.275; trashCanGroup.add(binBody);
         const binRim = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.03, 12), chromeMat); binRim.position.y = 0.54; trashCanGroup.add(binRim);
         officeGroup.add(trashCanGroup);
 
-        // Mülleimer-Zustand
         const trashCanData = {
             hasPaper: true,
             title: "🗑️ Zerknüllter Zettel",
@@ -562,9 +622,6 @@
             return bench;
         }
         lobbyGroup.add(createLobbyBench(-1.5)); lobbyGroup.add(createLobbyBench(1.5));
-
-        const p1 = new THREE.Group(); // Leerplatzhalter für Pflanzen-Variable
-        const p2 = new THREE.Group();
 
         // --- 7. EXPO-PLÄTZE ---
         const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
@@ -634,7 +691,6 @@
                         slot.onclick = () => { if(modePlacement && activeExhibitNearMe !== null) { playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = itemVal; updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition(); } };
                     } else {
                         slot.innerHTML = `<div class="slot-icon">${itemVal.icon}</div><span>${itemVal.name}</span>`;
-                        // Falls es ein lesbares Dokument im Inventar ist, kann man es anklicken
                         if (itemVal.isReadable) {
                             slot.onclick = () => { toggleInventory(); openDocument({ title: itemVal.name, content: itemVal.content }); };
                         }
@@ -650,7 +706,6 @@
             if (activeDocumentNearMe !== null) { openDocument(activeDocumentNearMe); return; }
             if (isNearDoor) { toggleDoor(); return; }
             
-            // Interaktion mit Mülleimer
             if (activeTrashNearMe !== null) {
                 if (trashCanData.hasPaper) {
                     trashCanData.hasPaper = false;
@@ -665,7 +720,6 @@
                 return;
             }
 
-            // Interaktion mit Verkaufsautomaten
             if (activeVendingNearMe !== null) {
                 if (activeVendingNearMe.hasMoney) {
                     activeVendingNearMe.hasMoney = false;
@@ -777,7 +831,7 @@
                         if (relX > -1.3 && relX < 1.3 && nextZ > -0.7 && nextZ < 0.7) allowed = false; 
                         if (nextZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false; 
                         if (relX > 4.6 - 0.5 - playerRadius && nextZ > -2.8 && nextZ < 0.5) allowed = false; 
-                        if (relX > 4.0 - 0.3 && relX < 4.0 + 0.3 && nextZ > 4.0 - 0.3 && nextZ < 4.0 + 0.3) allowed = false; // Mülleimer-Kollision
+                        if (relX > 4.0 - 0.3 && relX < 4.0 + 0.3 && nextZ > 4.0 - 0.3 && nextZ < 4.0 + 0.3) allowed = false; 
                     }
                 } 
                 // HAUPTRAUM
@@ -806,14 +860,12 @@
             let distToTrash = playerPos2D.distanceTo(trashCanData.getWorldPos());
             const promptBtn = document.getElementById('interaction-prompt');
 
-            // 1. Check: Dokumente / Zettel im Büro
             let closestPaper = null; let minPaperDist = Infinity;
             paperMeshes.forEach(pObj => {
                 let pPos = pObj.getWorldPos(); let dist = playerPos3D.distanceTo(pPos);
                 if(dist < minPaperDist) { minPaperDist = dist; closestPaper = pObj; }
             });
 
-            // 2. Check: Automaten in Lobby
             let closestVending = null; let minVendingDist = Infinity;
             vendingMachines.forEach(vm => {
                 let vPos = vm.getWorldPos(); let dist = playerPos2D.distanceTo(vPos);
