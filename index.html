@@ -254,7 +254,7 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Mathe-Museum v10.0</h1>
+        <h1>🏛️ Mathe-Museum v10.1</h1>
         <p>Erkunde die neue Eingangshalle mit Ticketschaltern, Bänken und Getränkeautomaten!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
@@ -314,11 +314,32 @@
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. RAUM-DIMENTIONEN ---
+        // --- 2. MATERIAL-DEFINITIONEN (Zuerst laden!) ---
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); 
+        const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); 
+        const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.1 }); 
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff }); 
+        const counterMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.4 });
+        const glassMat = new THREE.MeshStandardMaterial({ color: 0x00a8ff, transparent: true, opacity: 0.4, roughness: 0.1 });
+
+        // Prozedurale Marmor-Textur
+        function createMarbleTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8e8f0'; ctx.fillRect(0, 0, 512, 512);
+            for (let i = 0; i < 20; i++) { ctx.fillStyle = `rgba(220, 220, 230, ${Math.random() * 0.3})`; ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 200, Math.random() * 200); }
+            ctx.strokeStyle = 'rgba(150, 150, 165, 0.25)'; ctx.lineWidth = 1.5;
+            for (let j = 0; j < 8; j++) { ctx.beginPath(); let x = Math.random() * 512; let y = 0; ctx.moveTo(x, y); while (y < 512) { x += (Math.random() - 0.5) * 45; y += Math.random() * 40 + 10; ctx.lineTo(x, y); } ctx.stroke(); }
+            return new THREE.CanvasTexture(canvas);
+        }
+        const marbleTexture = createMarbleTexture();
+        const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
+        const partitionWallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05, side: THREE.DoubleSide });
+
+        // --- 3. RAUM-DIMENSIONEN ---
         const ROOM_SIZE = 24; 
         const BLOCK_SIZE = 8;
         const SUB_ROOM_SIZE = 10; 
-        const LOBBY_SIZE = 12; // Größe der neuen Eingangshalle
+        const LOBBY_SIZE = 12; 
         const DOOR_HEIGHT = 2.8; 
         const DOOR_WIDTH = 2.2;  
         
@@ -335,9 +356,9 @@
         subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0);
         subFloor.receiveShadow = true; scene.add(subFloor);
 
-        // NEU: Boden für Eingangshalle (Lobby) hinter dem Hauptraum (Z-Richtung positiv)
+        // Boden für Eingangshalle (Lobby)
         const lobbyFloorGeo = new THREE.PlaneGeometry(LOBBY_SIZE, LOBBY_SIZE);
-        const lobbyFloorMat = new THREE.MeshStandardMaterial({ color: 0x221f28, roughness: 0.5 });
+        const lobbyFloorMat = new THREE.MeshStandardMaterial({ color: 0x1f1c24, roughness: 0.5 });
         const lobbyFloor = new THREE.Mesh(lobbyFloorGeo, lobbyFloorMat);
         lobbyFloor.rotation.x = -Math.PI / 2;
         lobbyFloor.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
@@ -348,25 +369,12 @@
         const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0x718093, 0x2f3640); subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.01, 0); scene.add(subGrid);
         const lobbyGrid = new THREE.GridHelper(LOBBY_SIZE, LOBBY_SIZE, 0xa84a9f, 0x443342); lobbyGrid.position.set(0, 0.01, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGrid);
 
-        // Prozedurale Marmor-Textur
-        function createMarbleTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
-            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8e8f0'; ctx.fillRect(0, 0, 512, 512);
-            for (let i = 0; i < 20; i++) { ctx.fillStyle = `rgba(220, 220, 230, ${Math.random() * 0.3})`; ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 200, Math.random() * 200); }
-            ctx.strokeStyle = 'rgba(150, 150, 165, 0.25)'; ctx.lineWidth = 1.5;
-            for (let j = 0; j < 8; j++) { ctx.beginPath(); let x = Math.random() * 512; let y = 0; ctx.moveTo(x, y); while (y < 512) { x += (Math.random() - 0.5) * 45; y += Math.random() * 40 + 10; ctx.lineTo(x, y); } ctx.stroke(); }
-            return new THREE.CanvasTexture(canvas);
-        }
-        const marbleTexture = createMarbleTexture();
-        const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
-        const partitionWallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05, side: THREE.DoubleSide });
-        
         // Wände Hauptraum
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
         const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
         
-        // Frontwand des Hauptraums aufgeteilt, um Durchgang zur Lobby zu ermöglichen (Breite des Durchgangs: 4 Einheiten)
+        // Frontwand des Hauptraums aufgeteilt für Lobby-Durchgang (Breite: 4)
         const frontWallSegLen = (ROOM_SIZE - 4) / 2;
         const frontWallSegGeo = new THREE.PlaneGeometry(frontWallSegLen, 6);
         const frontWallLeft = new THREE.Mesh(frontWallSegGeo, partitionWallMat); frontWallLeft.position.set(-ROOM_SIZE/2 + frontWallSegLen/2, 3, ROOM_SIZE/2); frontWallLeft.rotation.y = Math.PI; scene.add(frontWallLeft);
@@ -385,7 +393,7 @@
         const subFrontWall = new THREE.Mesh(subWallGeoH, wallMat); subFrontWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, SUB_ROOM_SIZE/2); subFrontWall.rotation.y = Math.PI; scene.add(subFrontWall);
         const subRightWall = new THREE.Mesh(new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6), wallMat); subRightWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE, 3, 0); subRightWall.rotation.y = -Math.PI/2; scene.add(subRightWall);
 
-        // NEU: Wände für die Eingangshalle (Lobby)
+        // Wände für die Eingangshalle (Lobby)
         const lobbyWallGeoW = new THREE.PlaneGeometry(LOBBY_SIZE, 6);
         const lobbyBackWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyBackWall.position.set(0, 3, ROOM_SIZE/2 + LOBBY_SIZE); lobbyBackWall.rotation.y = Math.PI; scene.add(lobbyBackWall);
         const lobbyLeftWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyLeftWall.position.set(-LOBBY_SIZE/2, 3, ROOM_SIZE/2 + LOBBY_SIZE/2); lobbyLeftWall.rotation.y = Math.PI/2; scene.add(lobbyLeftWall);
@@ -394,7 +402,7 @@
         // Center-Block im Hauptraum
         const centerBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK_SIZE, 6, BLOCK_SIZE), wallMat); centerBlock.position.set(0, 3, 0); scene.add(centerBlock);
 
-        // --- 2B. TÜR (BÜRO) ---
+        // --- 4. TÜR (BÜRO) ---
         function createDoorTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 512; const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, 256, 512); ctx.fillStyle = '#1a252f'; ctx.fillRect(20, 20, 216, 210); ctx.fillRect(20, 250, 216, 240);
@@ -418,11 +426,8 @@
             const ctx = doorTexture.image.getContext('2d'); ctx.fillStyle = isDoorOpen ? '#2ed573' : '#e74c3c'; ctx.fillRect(20, 235, 20, 10); doorTexture.needsUpdate = true;
         }
 
-        // --- 2C. BÜRO-EINRICHTUNG ---
+        // --- 5. BÜRO-EINRICHTUNG ---
         const officeGroup = new THREE.Group(); officeGroup.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); scene.add(officeGroup);
-        const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); 
-        const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); 
-        const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.1 }); 
 
         const desk = new THREE.Group(); const tabletop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 1.2), woodMat); tabletop.position.y = 0.76; desk.add(tabletop);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.5 });
@@ -487,7 +492,6 @@
         }
         officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2)); officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
 
-        // Zimmerpflanze Funktion (Wiederverwendbar)
         function createPlant() {
             const plant = new THREE.Group(); const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })); pot.position.y = 0.3; plant.add(pot);
             const plantMat = new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.9, flatShading: true });
@@ -497,41 +501,36 @@
         }
         const plantBüro = createPlant(); plantBüro.position.set(4.0, 0, 4.0); officeGroup.add(plantBüro);
 
-        // --- NEU: EINRICHTUNG FÜR DIE LOBBY / EINGANGSHALLE ---
+        // --- 6. EINRICHTUNG FÜR DIE LOBBY / EINGANGSHALLE ---
         const lobbyGroup = new THREE.Group();
         lobbyGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
         scene.add(lobbyGroup);
 
-        const counterMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.4 });
-        const glassMat = new THREE.MeshStandardMaterial({ color: 0x00a8ff, transparent: true, opacity: 0.4, roughness: 0.1 });
-
-        // 1. Ticketschalter (Zwei Schalter nebeneinander an der Rückwand der Lobby)
+        // Ticketschalter
         function createTicketCounter(x) {
             const counter = new THREE.Group(); counter.position.set(x, 0, LOBBY_SIZE / 2 - 1.2);
-            const base = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 0.8), counterMat); base.position.y = 0.55; counter.add(base);
+            const cBase = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 0.8), counterMat); cBase.position.y = 0.55; counter.add(cBase);
             const plate = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.05, 0.9), woodMat); plate.position.y = 1.12; counter.add(plate);
             const glass = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.0, 0.04), glassMat); glass.position.set(0, 1.64, 0.2); counter.add(glass);
-            // Kleiner Kassenmonitor
             const pc = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.1), plasticMat); pc.position.set(-0.2, 1.3, -0.1); pc.rotation.y = 0.2; counter.add(pc);
             return counter;
         }
         lobbyGroup.add(createTicketCounter(-2.5));
         lobbyGroup.add(createTicketCounter(2.5));
 
-        // 2. Getränkeautomaten (An den Seitenwänden)
+        // Getränkeautomaten
         function createVendingMachine(x, z, rotY) {
             const vm = new THREE.Group(); vm.position.set(x, 0, z); vm.rotation.y = rotY;
             const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.8), plasticMat); body.position.y = 1.1; vm.add(body);
-            const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.4), new THREE.MeshBasicMaterial({ color: 0x111122 })); glass.position.set(0, 1.2, 0.41); vm.add(glass);
-            // Leucht-Logo / Schacht
+            const vGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.4), new THREE.MeshBasicMaterial({ color: 0x111122 })); vGlass.position.set(0, 1.2, 0.41); vm.add(vGlass);
             const slot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.1), chromeMat); slot.position.set(0, 0.25, 0.38); vm.add(slot);
-            const lightStrip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.2, 0.02), glowMat); lightStrip.position.set(0.45, 1.2, 0.41); vm.add(lightStrip);
+            const lightStrip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.02), glowMat); lightStrip.position.set(0.42, 1.2, 0.41); vm.add(lightStrip);
             return vm;
         }
         lobbyGroup.add(createVendingMachine(-LOBBY_SIZE / 2 + 0.5, 0, Math.PI / 2));
         lobbyGroup.add(createVendingMachine(LOBBY_SIZE / 2 - 0.5, 1.5, -Math.PI / 2));
 
-        // 3. Sitzmöglichkeiten (Moderne Polsterbänke in der Mitte der Lobby)
+        // Polsterbänke
         function createLobbyBench(z) {
             const bench = new THREE.Group(); bench.position.set(0, 0, z);
             const frame = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 1.0), chromeMat); frame.position.y = 0.15; bench.add(frame);
@@ -541,14 +540,14 @@
             return bench;
         }
         lobbyGroup.add(createLobbyBench(-1.5));
-        lobbyGroup.add(createLobbyBench(1.5);)
+        lobbyGroup.add(createLobbyBench(1.5));
 
-        // 4. Dekoration: Pflanzen für die Lobby-Ecken
+        // Pflanzen
         const p1 = createPlant(); p1.position.set(-LOBBY_SIZE/2 + 0.8, 0, LOBBY_SIZE/2 - 0.8); lobbyGroup.add(p1);
         const p2 = createPlant(); p2.position.set(LOBBY_SIZE/2 - 0.8, 0, LOBBY_SIZE/2 - 0.8); lobbyGroup.add(p2);
 
 
-        // --- 3. EXPO-PLÄTZE ---
+        // --- 7. EXPO-PLÄTZE ---
         const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
         function createNumberTexture(number) {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d');
@@ -571,11 +570,11 @@
             }
         }
 
-        // --- 4. AVATAR ---
+        // --- 8. AVATAR ---
         const playerGroup = new THREE.Group();
         const metalMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.2, metalness: 0.8 });
         const armorMat = new THREE.MeshStandardMaterial({ color: 0x2e3192, roughness: 0.3 });
-        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff }); const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
+        const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
         const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8), jointMat); pelvis.position.y = 0.85; playerGroup.add(pelvis);
         const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6), armorMat); torso.position.y = 1.2; playerGroup.add(torso);
         const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glowMat); core.position.set(0, 1.3, 0.21); playerGroup.add(core);
@@ -590,11 +589,11 @@
         const rightLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
         const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot); playerGroup.add(rightLegGroup);
         
-        // Startpunkt des Charakters leicht nach hinten verschoben, damit er am Eingang der neuen Lobby startet!
+        // Startplatzierung in der Lobby
         playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2);
         scene.add(playerGroup);
 
-        // --- 5. INTERAKTIONS- & INVENTARLOGIK ---
+        // --- 9. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false; let isGameWon = false; let activeExhibitNearMe = null; let isNearDoor = false; let modePlacement = false; const playerInventory = []; 
         function toggleInventory() {
             if (isGameWon || isDocumentOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
@@ -630,7 +629,7 @@
             playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
         }
 
-        // --- 6. STEUERUNGS-SYSTEM ---
+        // --- 10. STEUERUNGS-SYSTEM ---
         let cameraAngleH = 0; let cameraAngleV = 0.3; let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
         window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
         window.addEventListener('mouseup', () => isMouseDown = false);
@@ -660,7 +659,7 @@
         });
         window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
 
-        // --- 7. GAME LOOP & KOLLISIONSSYSTEM ---
+        // --- 11. GAME LOOP & KOLLISIONSSYSTEM ---
         const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
@@ -679,60 +678,47 @@
                 let nextX = playerGroup.position.x + (moveX / length) * moveSpeed;
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
                 let allowed = true;
-
-                // --- ERWEITERTES KOLLISIONSSYSTEM FÜR DREI RÄUME ---
                 
                 // 1. BEREICH: LOBBY / EINGANGSHALLE
                 if (nextZ > ROOM_SIZE / 2) {
                     let maxLobbyX = LOBBY_SIZE / 2 - playerRadius;
                     let maxLobbyZ = ROOM_SIZE / 2 + LOBBY_SIZE - playerRadius;
                     
-                    // Außenwände Lobby
                     if (nextX < -maxLobbyX || nextX > maxLobbyX || nextZ > maxLobbyZ) allowed = false;
-                    
-                    // Durchgangs-Barriere (Südwand des Hauptraums) links/rechts vom Durchgang
                     if (nextZ < ROOM_SIZE / 2 + playerRadius && (nextX < -2 || nextX > 2)) allowed = false;
                     
-                    // Kollision Ticketschalter (nahe Rückwand)
                     if (nextZ > ROOM_SIZE / 2 + LOBBY_SIZE - 2.0) {
                         if ((nextX > -3.8 && nextX < -1.2) || (nextX > 1.2 && nextX < 3.8)) allowed = false;
                     }
-                    // Kollision Bänke in der Mitte
                     if (nextX > -1.6 && nextX < 1.6) {
                         if ((nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 - 2.1 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 - 0.9) ||
                             (nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.9 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 2.1)) allowed = false;
                     }
-                    // Kollision Getränkeautomaten (Seitenwände)
                     if (nextX < -LOBBY_SIZE/2 + 1.0 && nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 - 0.7 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.7) allowed = false;
                     if (nextX > LOBBY_SIZE/2 - 1.0 && nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.8 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 2.2) allowed = false;
                 }
                 // 2. BEREICH: BÜRO (RECHTS)
                 else if (nextX > ROOM_SIZE / 2 - playerRadius) {
-                    // Falls durch die Bürotür gewollt:
                     if (nextX <= ROOM_SIZE / 2 + playerRadius) {
                         if (nextZ < -DOOR_WIDTH / 2 + playerRadius || nextZ > DOOR_WIDTH / 2 - playerRadius) allowed = false;
                         if (!isDoorOpen && nextX > ROOM_SIZE / 2 - playerRadius) allowed = false;
                     } else {
-                        // Im Büro drin
                         let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius;
                         let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
                         if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
 
                         let relX = nextX - (ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2);
-                        if (relX > -1.3 && relX < 1.3 && nextZ > -0.7 && nextZ < 0.7) allowed = false; // Schreibtisch
-                        if (nextZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false; // Regale
-                        if (relX > 4.6 - 0.5 - playerRadius && nextZ > -2.8 && nextZ < 0.5) allowed = false; // Schränke
+                        if (relX > -1.3 && relX < 1.3 && nextZ > -0.7 && nextZ < 0.7) allowed = false; 
+                        if (nextZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false; 
+                        if (relX > 4.6 - 0.5 - playerRadius && nextZ > -2.8 && nextZ < 0.5) allowed = false; 
                     }
                 } 
                 // 3. BEREICH: HAUPTRAUM
                 else {
                     let maxCoord = ROOM_SIZE / 2 - playerRadius;
                     if (nextX < -maxCoord || nextZ < -maxCoord) allowed = false;
-                    
-                    // Südliche Wandgrenze zum Lobby-Durchgang hin
                     if (nextZ > maxCoord && (nextX < -2 || nextX > 2)) allowed = false;
                     
-                    // Center-Block
                     let blockBound = BLOCK_SIZE / 2 + playerRadius;
                     if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
                 }
