@@ -254,7 +254,7 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Mathe-Museum v10.1</h1>
+        <h1>🏛️ Mathe-Museum v10.2</h1>
         <p>Erkunde die neue Eingangshalle mit Ticketschaltern, Bänken und Getränkeautomaten!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
@@ -314,7 +314,7 @@
         light.castShadow = true;
         scene.add(light);
 
-        // --- 2. MATERIAL-DEFINITIONEN (Zuerst laden!) ---
+        // --- 2. MATERIAL-DEFINITIONEN ---
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); 
         const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); 
         const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.1 }); 
@@ -374,7 +374,7 @@
         const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
         
-        // Frontwand des Hauptraums aufgeteilt für Lobby-Durchgang (Breite: 4)
+        // Frontwand des Hauptraums aufgeteilt für Lobby-Durchgang
         const frontWallSegLen = (ROOM_SIZE - 4) / 2;
         const frontWallSegGeo = new THREE.PlaneGeometry(frontWallSegLen, 6);
         const frontWallLeft = new THREE.Mesh(frontWallSegGeo, partitionWallMat); frontWallLeft.position.set(-ROOM_SIZE/2 + frontWallSegLen/2, 3, ROOM_SIZE/2); frontWallLeft.rotation.y = Math.PI; scene.add(frontWallLeft);
@@ -518,17 +518,46 @@
         lobbyGroup.add(createTicketCounter(-2.5));
         lobbyGroup.add(createTicketCounter(2.5));
 
-        // Getränkeautomaten
-        function createVendingMachine(x, z, rotY) {
+        // Getränkeautomaten-Verwaltung für Interaktionen
+        const vendingMachines = [];
+
+        function createVendingMachine(id, x, z, rotY, givesMoney) {
             const vm = new THREE.Group(); vm.position.set(x, 0, z); vm.rotation.y = rotY;
             const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.8), plasticMat); body.position.y = 1.1; vm.add(body);
-            const vGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.4), new THREE.MeshBasicMaterial({ color: 0x111122 })); vGlass.position.set(0, 1.2, 0.41); vm.add(vGlass);
+            const vGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.4), new THREE.MeshBasicMaterial({ color: 0x050510 })); vGlass.position.set(0, 1.2, 0.41); vm.add(vGlass);
             const slot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.1), chromeMat); slot.position.set(0, 0.25, 0.38); vm.add(slot);
             const lightStrip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.02), glowMat); lightStrip.position.set(0.42, 1.2, 0.41); vm.add(lightStrip);
-            return vm;
+
+            // Getränkedosen hinzufügen (3 Regalebenen, je 4 Dosen)
+            const drinkColors = [0xe74c3c, 0x2ecc71, 0xf1c40f, 0xe67e22];
+            const canGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.14, 6);
+            for (let row = 0; row < 3; row++) {
+                let rowY = 0.75 + row * 0.35;
+                // Regalboden
+                const shelfPlate = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.01, 0.3), chromeMat); shelfPlate.position.set(0, rowY, 0.22); vm.add(shelfPlate);
+                for (let col = 0; col < 4; col++) {
+                    let colX = -0.3 + col * 0.2;
+                    let cMat = new THREE.MeshStandardMaterial({ color: drinkColors[(row + col) % drinkColors.length], roughness: 0.3, metalness: 0.6 });
+                    const drinkCan = new THREE.Mesh(canGeo, cMat);
+                    drinkCan.position.set(colX, rowY + 0.07, 0.25);
+                    vm.add(drinkCan);
+                }
+            }
+
+            lobbyGroup.add(vm);
+
+            // Für Distanzprüfung im Gameloop registrieren
+            vendingMachines.push({
+                id: id,
+                givesMoney: givesMoney,
+                hasMoney: givesMoney,
+                getWorldPos: function() { let target = new THREE.Vector3(); return vm.getWorldPosition(target); }
+            });
         }
-        lobbyGroup.add(createVendingMachine(-LOBBY_SIZE / 2 + 0.5, 0, Math.PI / 2));
-        lobbyGroup.add(createVendingMachine(LOBBY_SIZE / 2 - 0.5, 1.5, -Math.PI / 2));
+        
+        // Linker Automat (ID 1, Standard), Rechter Automat (ID 2, hält Restgeld)
+        createVendingMachine(1, -LOBBY_SIZE / 2 + 0.5, 0, Math.PI / 2, false);
+        createVendingMachine(2, LOBBY_SIZE / 2 - 0.5, 1.5, -Math.PI / 2, true);
 
         // Polsterbänke
         function createLobbyBench(z) {
@@ -545,7 +574,6 @@
         // Pflanzen
         const p1 = createPlant(); p1.position.set(-LOBBY_SIZE/2 + 0.8, 0, LOBBY_SIZE/2 - 0.8); lobbyGroup.add(p1);
         const p2 = createPlant(); p2.position.set(LOBBY_SIZE/2 - 0.8, 0, LOBBY_SIZE/2 - 0.8); lobbyGroup.add(p2);
-
 
         // --- 7. EXPO-PLÄTZE ---
         const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
@@ -594,7 +622,10 @@
         scene.add(playerGroup);
 
         // --- 9. INTERAKTIONS- & INVENTARLOGIK ---
-        let isInventoryOpen = false; let isGameWon = false; let activeExhibitNearMe = null; let isNearDoor = false; let modePlacement = false; const playerInventory = []; 
+        let isInventoryOpen = false; let isGameWon = false; 
+        let activeExhibitNearMe = null; let isNearDoor = false; let activeVendingNearMe = null;
+        let modePlacement = false; const playerInventory = []; 
+
         function toggleInventory() {
             if (isGameWon || isDocumentOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
             if (isInventoryOpen) { overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; renderInventoryUI(); } 
@@ -606,9 +637,14 @@
             for(let i = 0; i < 6; i++) {
                 const slot = document.createElement('div'); slot.className = 'inventory-slot';
                 if(playerInventory[i] !== undefined) {
-                    const numberVal = playerInventory[i]; slot.className = 'inventory-slot filled selectable';
-                    slot.innerHTML = `<div class="slot-icon">${numberVal}</div><span>Bild-Zahl</span>`;
-                    slot.onclick = () => { if(modePlacement && activeExhibitNearMe !== null) { playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = numberVal; updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition(); } };
+                    const itemVal = playerInventory[i]; slot.className = 'inventory-slot filled selectable';
+                    if (typeof itemVal === 'number') {
+                        slot.innerHTML = `<div class="slot-icon">${itemVal}</div><span>Bild-Zahl</span>`;
+                        slot.onclick = () => { if(modePlacement && activeExhibitNearMe !== null) { playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = itemVal; updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition(); } };
+                    } else {
+                        // Für Nicht-Zahlen-Items wie Münzen
+                        slot.innerHTML = `<div class="slot-icon">${itemVal.icon}</div><span>${itemVal.name}</span>`;
+                    }
                 } else { slot.innerHTML = `<div class="slot-icon">🔒</div><span>Leer</span>`; }
                 gridContainer.appendChild(slot);
             }
@@ -618,6 +654,25 @@
             if (isDocumentOpen) { closeDocument(); return; } 
             if (activeDocumentNearMe !== null) { openDocument(activeDocumentNearMe); return; }
             if (isNearDoor) { toggleDoor(); return; }
+            
+            // Interaktion mit Verkaufsautomaten
+            if (activeVendingNearMe !== null) {
+                if (activeVendingNearMe.hasMoney) {
+                    activeVendingNearMe.hasMoney = false;
+                    playerInventory.push({ name: "Wechselgeld", icon: "🪙" });
+                    openDocument({
+                        title: "🎰 Münzfach untersucht",
+                        content: "Oh, im Münzfach liegt noch etwas Restgeld!\n\nDu nimmst die glänzenden Münzen an dich.\n(Gegenstand 'Wechselgeld' erhalten)"
+                    });
+                } else {
+                    openDocument({
+                        title: "🥤 Automat",
+                        content: "Ein Getränkeautomat.\nDie Dosen im Inneren leuchten kühl hinter der Scheibe, aber du hast gerade keinen Durst."
+                    });
+                }
+                return;
+            }
+
             if (activeExhibitNearMe !== null && !isInventoryOpen) {
                 if (activeExhibitNearMe.currentNumber !== null) { playerInventory.push(activeExhibitNearMe.currentNumber); activeExhibitNearMe.currentNumber = null; updateExhibitVisual(activeExhibitNearMe); } 
                 else { modePlacement = true; toggleInventory(); }
@@ -626,6 +681,7 @@
         function checkWinCondition() { if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) { isGameWon = true; document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open'); } }
         function restartGame() {
             isGameWon = false; playerInventory.length = 0; const mixed = [4, 1, 5, 2, 3]; exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
+            vendingMachines.forEach(vm => { if (vm.givesMoney) vm.hasMoney = true; });
             playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
         }
 
@@ -739,23 +795,36 @@
             let distToDoor = playerPos2D.distanceTo(new THREE.Vector3(ROOM_SIZE / 2, 0, 0));
             const promptBtn = document.getElementById('interaction-prompt');
 
+            // 1. Check: Dokumente / Zettel im Büro
             let closestPaper = null; let minPaperDist = Infinity;
             paperMeshes.forEach(pObj => {
                 let pPos = pObj.getWorldPos(); let dist = playerPos3D.distanceTo(pPos);
                 if(dist < minPaperDist) { minPaperDist = dist; closestPaper = pObj; }
             });
 
+            // 2. Check: Getränkeautomaten in der Lobby
+            let closestVending = null; let minVendingDist = Infinity;
+            vendingMachines.forEach(vm => {
+                let vPos = vm.getWorldPos(); let dist = playerPos2D.distanceTo(vPos);
+                if(dist < minVendingDist) { minVendingDist = dist; closestVending = vm; }
+            });
+
             if (minPaperDist < 2.0) {
-                activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; promptBtn.style.display = 'block';
+                activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; promptBtn.style.display = 'block';
                 promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`; promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; promptBtn.style.borderColor = "#9b59b6";
             } 
             else if (distToDoor < 2.2 && playerGroup.position.x < ROOM_SIZE/2 + 0.5) {
-                isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; promptBtn.style.display = 'block';
+                isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; activeVendingNearMe = null; promptBtn.style.display = 'block';
                 promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)";
                 promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
             } 
+            else if (minVendingDist < 2.0) {
+                activeVendingNearMe = closestVending; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; promptBtn.style.display = 'block';
+                promptBtn.innerText = "🎰 Automat untersuchen (R)";
+                promptBtn.style.background = "rgba(230, 126, 34, 0.85)"; promptBtn.style.borderColor = "#e67e22";
+            }
             else {
-                isNearDoor = false; activeDocumentNearMe = null; let closest = null; let minDist = Infinity;
+                isNearDoor = false; activeDocumentNearMe = null; activeVendingNearMe = null; let closest = null; let minDist = Infinity;
                 for(let ex of exhibits) { let dist = playerPos2D.distanceTo(ex.position); if (dist < minDist) { minDist = dist; closest = ex; } }
 
                 if (minDist < 2.5 && playerGroup.position.z < ROOM_SIZE/2) {
