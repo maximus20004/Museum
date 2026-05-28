@@ -147,7 +147,6 @@
             cursor: pointer;
         }
 
-        /* --- NEU: Zettel-Overlay-Stile --- */
         #document-overlay {
             position: absolute;
             top: 0;
@@ -169,7 +168,7 @@
             pointer-events: auto;
         }
         .document-box {
-            background: #f4edd2; /* Helles Pergamentpapier */
+            background: #f4edd2; 
             color: #2c3e50;
             border: 8px double #8e44ad;
             border-radius: 4px;
@@ -194,7 +193,7 @@
         .document-box p {
             font-size: 1.1rem;
             line-height: 1.6;
-            white-space: pre-line; /* Behält Zeilenumbrüche bei */
+            white-space: pre-line; 
         }
         .document-close-hint {
             margin-top: 30px;
@@ -255,8 +254,8 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Kuratorenbüro v9.2</h1>
-        <p>Erkunde das voll eingerichtete Büro und lies die geheimen Notizen auf dem Schreibtisch!</p>
+        <h1>🏛️ Kuratorenbüro v9.3</h1>
+        <p>Die Zwischenwände wurden korrigiert – kein Röntgenblick in den Hauptraum mehr möglich!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile<br>
@@ -349,7 +348,17 @@
             return new THREE.CanvasTexture(canvas);
         }
         const marbleTexture = createMarbleTexture();
+        
+        // Standard-Wandmaterial (einseitig für Außenwände)
         const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
+        
+        // NEU: Zweiseitiges Material für die Trennwände zwischen den Räumen, damit man von innen nicht durchschauen kann!
+        const partitionWallMat = new THREE.MeshStandardMaterial({ 
+            map: marbleTexture, 
+            roughness: 0.2, 
+            metalness: 0.05,
+            side: THREE.DoubleSide 
+        });
         
         // Außenwände Hauptraum
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
@@ -357,11 +366,11 @@
         const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
         const frontWall = new THREE.Mesh(wallGeo, wallMat); frontWall.position.set(0, 3, ROOM_SIZE/2); frontWall.rotation.y = Math.PI; scene.add(frontWall);
 
-        // Trennwände & Sturz
-        const lintel = new THREE.Mesh(new THREE.PlaneGeometry(DOOR_WIDTH, 6 - DOOR_HEIGHT), wallMat); lintel.position.set(ROOM_SIZE/2, DOOR_HEIGHT + (6 - DOOR_HEIGHT)/2, 0); lintel.rotation.y = -Math.PI/2; scene.add(lintel);
+        // Trennwände & Sturz (Jetzt mit partitionWallMat -> DoubleSide)
+        const lintel = new THREE.Mesh(new THREE.PlaneGeometry(DOOR_WIDTH, 6 - DOOR_HEIGHT), partitionWallMat); lintel.position.set(ROOM_SIZE/2, DOOR_HEIGHT + (6 - DOOR_HEIGHT)/2, 0); lintel.rotation.y = -Math.PI/2; scene.add(lintel);
         const sideWallLength = (ROOM_SIZE - DOOR_WIDTH) / 2; const rightWallSegGeo = new THREE.PlaneGeometry(sideWallLength, 6);
-        const rightWallSeg1 = new THREE.Mesh(rightWallSegGeo, wallMat); rightWallSeg1.position.set(ROOM_SIZE/2, 3, -ROOM_SIZE/4 - DOOR_WIDTH/4); rightWallSeg1.rotation.y = -Math.PI/2; scene.add(rightWallSeg1);
-        const rightWallSeg2 = new THREE.Mesh(rightWallSegGeo, wallMat); rightWallSeg2.position.set(ROOM_SIZE/2, 3, ROOM_SIZE/4 + DOOR_WIDTH/4); rightWallSeg2.rotation.y = -Math.PI/2; scene.add(rightWallSeg2);
+        const rightWallSeg1 = new THREE.Mesh(rightWallSegGeo, partitionWallMat); rightWallSeg1.position.set(ROOM_SIZE/2, 3, -ROOM_SIZE/4 - DOOR_WIDTH/4); rightWallSeg1.rotation.y = -Math.PI/2; scene.add(rightWallSeg1);
+        const rightWallSeg2 = new THREE.Mesh(rightWallSegGeo, partitionWallMat); rightWallSeg2.position.set(ROOM_SIZE/2, 3, ROOM_SIZE/4 + DOOR_WIDTH/4); rightWallSeg2.rotation.y = -Math.PI/2; scene.add(rightWallSeg2);
 
         // Nebenraum-Wände (Büro)
         const subWallGeoH = new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6);
@@ -427,7 +436,7 @@
         const lampHead = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.1), plasticMat); lampHead.position.set(0.08, 0.4, 0); lampHead.rotation.z = -0.5; deskLamp.add(lampHead);
         desk.add(deskLamp);
 
-        // --- NEU: INTERAKTIVE ZETTEL AUF DEM SCHREIBTISCH ---
+        // Zettel auf dem Tisch
         const papers = [
             { 
                 title: "📜 Tagebucheintrag des Kurators", 
@@ -448,16 +457,14 @@
 
         const paperMeshes = [];
         const paperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
-        const paperGeo = new THREE.BoxGeometry(0.24, 0.005, 0.32); // A4 Proportionen im Raum
+        const paperGeo = new THREE.BoxGeometry(0.24, 0.005, 0.32); 
 
         papers.forEach((pData, idx) => {
             const paperMesh = new THREE.Mesh(paperGeo, paperMat);
-            // Auf der Tischplatte (Y = 0.8) platzieren
             paperMesh.position.set(pData.offsetX, 0.805, pData.offsetZ);
             paperMesh.rotation.y = pData.rotY;
             desk.add(paperMesh);
             
-            // Weltkoordinaten für Entfernungsberechnung speichern
             paperMeshes.push({
                 mesh: paperMesh,
                 title: pData.title,
@@ -478,7 +485,6 @@
             document.getElementById('doc-title').innerText = doc.title;
             document.getElementById('doc-content').innerText = doc.content;
             overlay.classList.add('open');
-            // Stoppe Bewegung
             for (let key in keys) keys[key] = false;
             touchVelocity.x = 0; touchVelocity.z = 0;
         }
@@ -488,7 +494,7 @@
             document.getElementById('document-overlay').classList.remove('open');
         }
 
-        // 3. Bücherregale 
+        // Bücherregale
         function createShelf(x, z) {
             const shelf = new THREE.Group(); shelf.position.set(x, 0, z);
             const shelfWoodMat = new THREE.MeshStandardMaterial({ color: 0x2c1a10, roughness: 0.5, metalness: 0.1 });
@@ -522,7 +528,7 @@
         officeGroup.add(createShelf(-2.5, -4.7)); 
         officeGroup.add(createShelf(-0.8, -4.7)); 
 
-        // 2. Bürostuhl
+        // Bürostuhl
         const chair = new THREE.Group();
         chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; 
         const base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4), chromeMat); base.position.y = 0.2; chair.add(base);
@@ -530,7 +536,7 @@
         const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), plasticMat); backrest.position.set(0, 0.73, -0.25); backrest.rotation.x = -0.1; chair.add(backrest);
         officeGroup.add(chair);
 
-        // 4. Aktenschränke
+        // Aktenschränke
         function createCabinet(x, z, rot) {
             const cab = new THREE.Group(); cab.position.set(x, 0, z); cab.rotation.y = rot;
             const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.4 })); body.position.y = 0.9; cab.add(body);
@@ -543,7 +549,7 @@
         officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2));
         officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
 
-        // 5. Zimmerpflanze
+        // Zimmerpflanze
         const plant = new THREE.Group(); plant.position.set(4.0, 0, 4.0);
         const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })); pot.position.y = 0.3; plant.add(pot);
         const plantMat = new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.9, flatShading: true });
@@ -620,7 +626,7 @@
         }
         function triggerInteraction() {
             if (isGameWon) return;
-            if (isDocumentOpen) { closeDocument(); return; } // Schließen bei Interaktionstaste
+            if (isDocumentOpen) { closeDocument(); return; } 
             if (activeDocumentNearMe !== null) { openDocument(activeDocumentNearMe); return; }
             if (isNearDoor) { toggleDoor(); return; }
             if (activeExhibitNearMe !== null && !isInventoryOpen) {
@@ -647,7 +653,7 @@
         window.addEventListener('keydown', (e) => { 
             if (isGameWon) return; 
             if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } 
-            if (isDocumentOpen) return; // Blockiere Bewegung bei offenem Zettel
+            if (isDocumentOpen) return; 
             if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
             if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
         });
@@ -723,7 +729,6 @@
             let distToDoor = playerPos2D.distanceTo(new THREE.Vector3(ROOM_SIZE / 2, 0, 0));
             const promptBtn = document.getElementById('interaction-prompt');
 
-            // 1. Check: Befindet sich der Spieler nahe an einem Zettel auf dem Tisch?
             let closestPaper = null;
             let minPaperDist = Infinity;
             
@@ -742,16 +747,14 @@
                 isNearDoor = false;
                 promptBtn.style.display = 'block';
                 promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`;
-                promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; // Lila Farbton für Dokumente
+                promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; 
                 promptBtn.style.borderColor = "#9b59b6";
             } 
-            // 2. Check: Ist der Spieler stattdessen an der Tür?
             else if (distToDoor < 2.2) {
                 isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; promptBtn.style.display = 'block';
                 promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)";
                 promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
             } 
-            // 3. Check: Ist der Spieler an den Gemälden/Exponaten?
             else {
                 isNearDoor = false; activeDocumentNearMe = null; let closest = null; let minDist = Infinity;
                 for(let ex of exhibits) { let dist = playerPos2D.distanceTo(ex.position); if (dist < minDist) { minDist = dist; closest = ex; } }
