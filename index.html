@@ -254,8 +254,8 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Mathe-Museum v10.4</h1>
-        <p>Erkunde die neue Eingangshalle mit Ticketschaltern, Bänken und Getränkeautomaten!</p>
+        <h1>🏛️ Mathe-Museum v10.5</h1>
+        <p>Erkunde die Räume mit ihren individuellen, detailreichen Böden!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile<br>
@@ -340,14 +340,12 @@
         function createParquetTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#5c3a21'; ctx.fillRect(0, 0, 512, 512); // Grundton Holz
+            ctx.fillStyle = '#5c3a21'; ctx.fillRect(0, 0, 512, 512);
             
-            // Planken zeichnen
             const cols = 8; const rowH = 32;
             for (let c = 0; c < cols; c++) {
                 let startX = c * 64;
                 for (let y = -32; y < 544; y += rowH) {
-                    // Leicht variierende Holztöne für Realismus
                     let brightness = Math.floor(Math.random() * 25) - 12;
                     ctx.fillStyle = `rgb(${92 + brightness}, ${58 + brightness}, ${33 + brightness})`;
                     
@@ -360,8 +358,6 @@
                         ctx.lineTo(startX + 64, y + 16); ctx.lineTo(startX, y + 48);
                     }
                     ctx.fill();
-                    
-                    // Fugen lines
                     ctx.strokeStyle = 'rgba(40, 20, 5, 0.6)'; ctx.lineWidth = 1; ctx.stroke();
                 }
             }
@@ -374,9 +370,8 @@
         function createTerrazzoTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#d1d8e0'; ctx.fillRect(0, 0, 512, 512); // Heller Beton-Grund
+            ctx.fillStyle = '#d1d8e0'; ctx.fillRect(0, 0, 512, 512);
             
-            // Kleine Steinchen-Struktur (Terrazzo)
             const colors = ['#778ca3', '#a5b1c2', '#4b6584', '#fed330', '#eb3b5a', '#ffffff'];
             for(let i=0; i<800; i++) {
                 ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
@@ -385,7 +380,6 @@
                 let rSize = 1 + Math.random() * 3;
                 ctx.arc(rx, ry, rSize, 0, Math.PI * 2); ctx.fill();
             }
-            // Grob quadratisches Fliesenraster zeichnen
             ctx.strokeStyle = 'rgba(100, 110, 120, 0.4)'; ctx.lineWidth = 2;
             for(let g=0; g<=512; g+=128) {
                 ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, 512); ctx.stroke();
@@ -396,6 +390,26 @@
             tex.repeat.set(3, 3); return tex;
         }
 
+        // Prozedurale Rote Teppich-Textur für den Hauptraum
+        function createCarpetTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#800020'; // Edles Weinrot
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Stofffasern durch feines Rauschen simulieren
+            for (let i = 0; i < 80000; i++) {
+                let x = Math.random() * 512;
+                let y = Math.random() * 512;
+                let noise = Math.floor(Math.random() * 30) - 15; 
+                ctx.fillStyle = `rgb(${128 + noise}, ${0 + Math.max(0, noise)}, ${32 + noise})`;
+                ctx.fillRect(x, y, 1.5, 1.5);
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(4, 4); return tex;
+        }
+
         // --- 3. RAUM-DIMENSIONEN & BÖDEN ---
         const ROOM_SIZE = 24; 
         const BLOCK_SIZE = 8;
@@ -404,9 +418,9 @@
         const DOOR_HEIGHT = 2.8; 
         const DOOR_WIDTH = 2.2;  
         
-        // Boden 1: Hauptraum (Dunkler Museums-Stahlplatten-Style)
+        // Boden 1: Hauptraum (Edler roter Teppichboden)
         const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x14141f, roughness: 0.5, metalness: 0.2 });
+        const floorMat = new THREE.MeshStandardMaterial({ map: createCarpetTexture(), roughness: 0.9, metalness: 0.0 });
         const floor = new THREE.Mesh(floorGeo, floorMat);
         floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 
@@ -426,8 +440,8 @@
         lobbyFloor.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
         lobbyFloor.receiveShadow = true; scene.add(lobbyFloor);
 
-        // Grids (leicht angehoben, damit sie sichtbar bleiben, falls gewünscht - farblich angepasst)
-        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0x4a90e2, 0x222233); grid.position.y = 0.005; scene.add(grid);
+        // Grids (Visuelle Hilfslinien)
+        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0xd42426, 0x4a1114); grid.position.y = 0.005; scene.add(grid);
         const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0xfa8231, 0x3e2723); subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.005, 0); scene.add(subGrid);
         const lobbyGrid = new THREE.GridHelper(LOBBY_SIZE, LOBBY_SIZE, 0xa84a9f, 0x443342); lobbyGrid.position.set(0, 0.005, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGrid);
 
@@ -518,7 +532,7 @@
         });
 
         let activeDocumentNearMe = null; let isDocumentOpen = false;
-        function openDocument(doc) { isDocumentOpen = true; const overlay = document.getElementById('document-overlay'); document.getElementById('doc-title').innerText = doc.title; document.getElementById('doc-content').innerText = doc.content; overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; openDocumentUI(); }
+        function openDocument(doc) { isDocumentOpen = true; const overlay = document.getElementById('document-overlay'); document.getElementById('doc-title').innerText = doc.title; document.getElementById('doc-content').innerText = doc.content; overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; }
         function closeDocument() { isDocumentOpen = false; document.getElementById('document-overlay').classList.remove('open'); }
 
         function createShelf(x, z) {
@@ -554,7 +568,6 @@
         }
         officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2)); officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
 
-        // MÜLLEIMER IM BÜRO
         const trashCanGroup = new THREE.Group(); trashCanGroup.position.set(4.0, 0, 4.0);
         const binMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.4, metalness: 0.6 });
         const binBody = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.55, 12), binMat); binBody.position.y = 0.275; trashCanGroup.add(binBody);
@@ -574,7 +587,6 @@
         lobbyGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
         scene.add(lobbyGroup);
 
-        // Ticketschalter
         function createTicketCounter(x) {
             const counter = new THREE.Group(); counter.position.set(x, 0, LOBBY_SIZE / 2 - 1.2);
             const cBase = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 0.8), counterMat); cBase.position.y = 0.55; counter.add(cBase);
@@ -586,7 +598,6 @@
         lobbyGroup.add(createTicketCounter(-2.5));
         lobbyGroup.add(createTicketCounter(2.5));
 
-        // Getränkeautomaten
         const vendingMachines = [];
         function createVendingMachine(id, x, z, rotY, givesMoney) {
             const vm = new THREE.Group(); vm.position.set(x, 0, z); vm.rotation.y = rotY;
@@ -612,7 +623,6 @@
         createVendingMachine(1, -LOBBY_SIZE / 2 + 0.5, 0, Math.PI / 2, false);
         createVendingMachine(2, LOBBY_SIZE / 2 - 0.5, 1.5, -Math.PI / 2, true);
 
-        // Polsterbänke
         function createLobbyBench(z) {
             const bench = new THREE.Group(); bench.position.set(0, 0, z);
             const frame = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 1.0), chromeMat); frame.position.y = 0.15; bench.add(frame);
