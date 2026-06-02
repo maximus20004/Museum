@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum - Die Eingangshalle</title>
+    <title>3D Mathe-Museum - Die Eingangshalle & Shop</title>
     <style>
         body {
             margin: 0;
@@ -254,12 +254,12 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Mathe-Museum v10.5</h1>
-        <p>Erkunde die Räume mit ihren individuellen, detailreichen Böden!</p>
+        <h1>🏛️ Mathe-Museum v11.0</h1>
+        <p>Erkunde die Räume inklusive des neuen Museumsshops mit Spieleautomat!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile<br>
-            • Interagieren / Lesen / Tür: R<br>
+            • Interagieren / Lesen / Spiele: R<br>
             • Rucksack öffnen: E<br>
             <br>
             📱 TABLET-STEUERUNG:<br>
@@ -322,6 +322,7 @@
         const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff }); 
         const counterMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.4 });
         const glassMat = new THREE.MeshStandardMaterial({ color: 0x00a8ff, transparent: true, opacity: 0.4, roughness: 0.1 });
+        const arcadeNeonMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
 
         // Prozedurale Marmor-Textur für Wände
         function createMarbleTexture() {
@@ -341,14 +342,12 @@
             const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#5c3a21'; ctx.fillRect(0, 0, 512, 512);
-            
             const cols = 8; const rowH = 32;
             for (let c = 0; c < cols; c++) {
                 let startX = c * 64;
                 for (let y = -32; y < 544; y += rowH) {
                     let brightness = Math.floor(Math.random() * 25) - 12;
                     ctx.fillStyle = `rgb(${92 + brightness}, ${58 + brightness}, ${33 + brightness})`;
-                    
                     ctx.beginPath();
                     if (c % 2 === 0) {
                         ctx.moveTo(startX, y); ctx.lineTo(startX + 64, y + 32);
@@ -357,13 +356,10 @@
                         ctx.moveTo(startX, y + 32); ctx.lineTo(startX + 64, y);
                         ctx.lineTo(startX + 64, y + 16); ctx.lineTo(startX, y + 48);
                     }
-                    ctx.fill();
-                    ctx.strokeStyle = 'rgba(40, 20, 5, 0.6)'; ctx.lineWidth = 1; ctx.stroke();
+                    ctx.fill(); ctx.strokeStyle = 'rgba(40, 20, 5, 0.6)'; ctx.lineWidth = 1; ctx.stroke();
                 }
             }
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
-            tex.repeat.set(2, 2); return tex;
+            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2, 2); return tex;
         }
 
         // Prozedurale Terrazzo-Fliesen-Textur für den Eingangsbereich
@@ -371,13 +367,10 @@
             const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#d1d8e0'; ctx.fillRect(0, 0, 512, 512);
-            
             const colors = ['#778ca3', '#a5b1c2', '#4b6584', '#fed330', '#eb3b5a', '#ffffff'];
             for(let i=0; i<800; i++) {
                 ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-                ctx.beginPath();
-                let rx = Math.random() * 512; let ry = Math.random() * 512;
-                let rSize = 1 + Math.random() * 3;
+                ctx.beginPath(); let rx = Math.random() * 512; let ry = Math.random() * 512; let rSize = 1 + Math.random() * 3;
                 ctx.arc(rx, ry, rSize, 0, Math.PI * 2); ctx.fill();
             }
             ctx.strokeStyle = 'rgba(100, 110, 120, 0.4)'; ctx.lineWidth = 2;
@@ -385,29 +378,30 @@
                 ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, 512); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0, g); ctx.lineTo(512, g); ctx.stroke();
             }
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
-            tex.repeat.set(3, 3); return tex;
+            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(3, 3); return tex;
         }
 
         // Prozedurale Rote Teppich-Textur für den Hauptraum
         function createCarpetTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#800020'; // Edles Weinrot
-            ctx.fillRect(0, 0, 512, 512);
-            
-            // Stofffasern durch feines Rauschen simulieren
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#800020'; ctx.fillRect(0, 0, 512, 512);
             for (let i = 0; i < 80000; i++) {
-                let x = Math.random() * 512;
-                let y = Math.random() * 512;
-                let noise = Math.floor(Math.random() * 30) - 15; 
-                ctx.fillStyle = `rgb(${128 + noise}, ${0 + Math.max(0, noise)}, ${32 + noise})`;
-                ctx.fillRect(x, y, 1.5, 1.5);
+                let x = Math.random() * 512; let y = Math.random() * 512; let noise = Math.floor(Math.random() * 30) - 15; 
+                ctx.fillStyle = `rgb(${128 + noise}, ${0 + Math.max(0, noise)}, ${32 + noise})`; ctx.fillRect(x, y, 1.5, 1.5);
             }
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
-            tex.repeat.set(4, 4); return tex;
+            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(4, 4); return tex;
+        }
+
+        // Prozedurale PVC-Bodentextur für den Shop (Helles Beige mit feinen Sprenkeln)
+        function createShopFloorTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#f5f0e1'; ctx.fillRect(0, 0, 256, 256);
+            for(let i=0; i<3000; i++) {
+                let x = Math.random() * 256; let y = Math.random() * 256;
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(180, 160, 140, 0.2)' : 'rgba(255, 255, 255, 0.6)';
+                ctx.fillRect(x, y, 2, 2);
+            }
+            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2, 2); return tex;
         }
 
         // --- 3. RAUM-DIMENSIONEN & BÖDEN ---
@@ -415,6 +409,7 @@
         const BLOCK_SIZE = 8;
         const SUB_ROOM_SIZE = 10; 
         const LOBBY_SIZE = 12; 
+        const SHOP_SIZE = 10; // Größe des neuen Museumsshops
         const DOOR_HEIGHT = 2.8; 
         const DOOR_WIDTH = 2.2;  
         
@@ -428,23 +423,29 @@
         const subFloorGeo = new THREE.PlaneGeometry(SUB_ROOM_SIZE, SUB_ROOM_SIZE);
         const subFloorMat = new THREE.MeshStandardMaterial({ map: createParquetTexture(), roughness: 0.3, metalness: 0.1 }); 
         const subFloor = new THREE.Mesh(subFloorGeo, subFloorMat);
-        subFloor.rotation.x = -Math.PI / 2;
-        subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0);
-        subFloor.receiveShadow = true; scene.add(subFloor);
+        subFloor.rotation.x = -Math.PI / 2; subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); subFloor.receiveShadow = true; scene.add(subFloor);
 
         // Boden 3: Eingangshalle / Lobby (Moderner, heller Terrazzo-Fliesenboden)
         const lobbyFloorGeo = new THREE.PlaneGeometry(LOBBY_SIZE, LOBBY_SIZE);
         const lobbyFloorMat = new THREE.MeshStandardMaterial({ map: createTerrazzoTexture(), roughness: 0.2, metalness: 0.05 });
         const lobbyFloor = new THREE.Mesh(lobbyFloorGeo, lobbyFloorMat);
-        lobbyFloor.rotation.x = -Math.PI / 2;
-        lobbyFloor.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
-        lobbyFloor.receiveShadow = true; scene.add(lobbyFloor);
+        lobbyFloor.rotation.x = -Math.PI / 2; lobbyFloor.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2); lobbyFloor.receiveShadow = true; scene.add(lobbyFloor);
+
+        // Boden 4: Museumsshop (Heller PVC/Linoleum-Boden)
+        const shopFloorGeo = new THREE.PlaneGeometry(SHOP_SIZE, SHOP_SIZE);
+        const shopFloorMat = new THREE.MeshStandardMaterial({ map: createShopFloorTexture(), roughness: 0.5, metalness: 0.0 });
+        const shopFloor = new THREE.Mesh(shopFloorGeo, shopFloorMat);
+        shopFloor.rotation.x = -Math.PI / 2;
+        shopFloor.position.set(-LOBBY_SIZE / 2 - SHOP_SIZE / 2, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
+        shopFloor.receiveShadow = true; scene.add(shopFloor);
 
         // Grids (Visuelle Hilfslinien)
         const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0xd42426, 0x4a1114); grid.position.y = 0.005; scene.add(grid);
         const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0xfa8231, 0x3e2723); subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.005, 0); scene.add(subGrid);
         const lobbyGrid = new THREE.GridHelper(LOBBY_SIZE, LOBBY_SIZE, 0xa84a9f, 0x443342); lobbyGrid.position.set(0, 0.005, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGrid);
+        const shopGrid = new THREE.GridHelper(SHOP_SIZE, SHOP_SIZE, 0x00ffcc, 0x113e35); shopGrid.position.set(-LOBBY_SIZE / 2 - SHOP_SIZE / 2, 0.005, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(shopGrid);
 
+        // --- 4. WÄNDE-STRUKTUR ---
         // Wände Hauptraum
         const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
         const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
@@ -469,16 +470,30 @@
         const subFrontWall = new THREE.Mesh(subWallGeoH, wallMat); subFrontWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, SUB_ROOM_SIZE/2); subFrontWall.rotation.y = Math.PI; scene.add(subFrontWall);
         const subRightWall = new THREE.Mesh(new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6), wallMat); subRightWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE, 3, 0); subRightWall.rotation.y = -Math.PI/2; scene.add(subRightWall);
 
-        // Wände für die Eingangshalle (Lobby)
+        // Wände für die Eingangshalle (Lobby) - Linke Seite geöffnet für den Shop-Durchgang!
         const lobbyWallGeoW = new THREE.PlaneGeometry(LOBBY_SIZE, 6);
         const lobbyBackWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyBackWall.position.set(0, 3, ROOM_SIZE/2 + LOBBY_SIZE); lobbyBackWall.rotation.y = Math.PI; scene.add(lobbyBackWall);
-        const lobbyLeftWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyLeftWall.position.set(-LOBBY_SIZE/2, 3, ROOM_SIZE/2 + LOBBY_SIZE/2); lobbyLeftWall.rotation.y = Math.PI/2; scene.add(lobbyLeftWall);
         const lobbyRightWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyRightWall.position.set(LOBBY_SIZE/2, 3, ROOM_SIZE/2 + LOBBY_SIZE/2); lobbyRightWall.rotation.y = -Math.PI/2; scene.add(lobbyRightWall);
+        
+        // Linke Lobbywand aufgeteilt (Vorne und hinten ein Segment, Mitte offen für den Shop)
+        const lobbyLeftSegGeo = new THREE.PlaneGeometry(4, 6);
+        const lobbyLeftWallBack = new THREE.Mesh(lobbyLeftSegGeo, partitionWallMat); lobbyLeftWallBack.position.set(-LOBBY_SIZE/2, 3, ROOM_SIZE/2 + 2); lobbyLeftWallBack.rotation.y = Math.PI/2; scene.add(lobbyLeftWallBack);
+        const lobbyLeftWallFront = new THREE.Mesh(lobbyLeftSegGeo, partitionWallMat); lobbyLeftWallFront.position.set(-LOBBY_SIZE/2, 3, ROOM_SIZE/2 + LOBBY_SIZE - 2); lobbyLeftWallFront.rotation.y = Math.PI/2; scene.add(lobbyLeftWallFront);
+        const lobbyLeftLintel = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), partitionWallMat); lobbyLeftLintel.position.set(-LOBBY_SIZE/2, 5, ROOM_SIZE/2 + LOBBY_SIZE/2); lobbyLeftLintel.rotation.y = Math.PI/2; scene.add(lobbyLeftLintel);
+
+        // Wände für den neuen Museumsshop
+        const shopWallGeo = new THREE.PlaneGeometry(SHOP_SIZE, 6);
+        const shopXCenter = -LOBBY_SIZE / 2 - SHOP_SIZE / 2;
+        const shopZCenter = ROOM_SIZE / 2 + LOBBY_SIZE / 2;
+
+        const shopLeftWall = new THREE.Mesh(shopWallGeo, wallMat); shopLeftWall.position.set(shopXCenter - SHOP_SIZE/2, 3, shopZCenter); shopLeftWall.rotation.y = Math.PI/2; scene.add(shopLeftWall);
+        const shopBackWall = new THREE.Mesh(shopWallGeo, wallMat); shopBackWall.position.set(shopXCenter, 3, shopZCenter - SHOP_SIZE/2); scene.add(shopBackWall);
+        const shopFrontWall = new THREE.Mesh(shopWallGeo, wallMat); shopFrontWall.position.set(shopXCenter, 3, shopZCenter + SHOP_SIZE/2); shopFrontWall.rotation.y = Math.PI; scene.add(shopFrontWall);
 
         // Center-Block im Hauptraum
         const centerBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK_SIZE, 6, BLOCK_SIZE), wallMat); centerBlock.position.set(0, 3, 0); scene.add(centerBlock);
 
-        // --- 4. TÜR (BÜRO) ---
+        // --- 5. TÜR (BÜRO) ---
         function createDoorTexture() {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 512; const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, 256, 512); ctx.fillStyle = '#1a252f'; ctx.fillRect(20, 20, 216, 210); ctx.fillRect(20, 250, 216, 240);
@@ -502,9 +517,8 @@
             const ctx = doorTexture.image.getContext('2d'); ctx.fillStyle = isDoorOpen ? '#2ed573' : '#e74c3c'; ctx.fillRect(20, 235, 20, 10); doorTexture.needsUpdate = true;
         }
 
-        // --- 5. BÜRO-EINRICHTUNG ---
+        // --- 6. BÜRO-EINRICHTUNG ---
         const officeGroup = new THREE.Group(); officeGroup.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); scene.add(officeGroup);
-
         const desk = new THREE.Group(); const tabletop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 1.2), woodMat); tabletop.position.y = 0.76; desk.add(tabletop);
         const legMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.5 });
         const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg1.position.set(-1.1, 0.38, 0); desk.add(leg1);
@@ -575,17 +589,14 @@
         officeGroup.add(trashCanGroup);
 
         const trashCanData = {
-            hasPaper: true,
-            title: "🗑️ Zerknüllter Zettel",
+            hasPaper: true, title: "🗑️ Zerknüllter Zettel",
             content: "🔒 GEHEIMES MEMO AN DEN DIRETTORE:\n\nIch habe herausgefunden, wie die KI-Sperre der Bilderwand überbrückt werden kann!\n\nFalls die Exponate durcheinandergeraten sind und du die Reihenfolge (1-2-3-4-5) nicht weißt, suche nach den Originalplatten im Archiv. \n\nMerke dir gut: Jedes Bild besitzt ein exaktes Gegengewicht. Sobald die Wand die lückenlose Reihe spürt, entriegelt sich das System vollautomatisch.",
             getWorldPos: function() { let target = new THREE.Vector3(); return trashCanGroup.getWorldPosition(target); }
         };
         let activeTrashNearMe = null;
 
-        // --- 6. EINRICHTUNG FÜR DIE LOBBY / EINGANGSHALLE ---
-        const lobbyGroup = new THREE.Group();
-        lobbyGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2);
-        scene.add(lobbyGroup);
+        // --- 7. EINRICHTUNG FÜR DIE LOBBY / EINGANGSHALLE ---
+        const lobbyGroup = new THREE.Group(); lobbyGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGroup);
 
         function createTicketCounter(x) {
             const counter = new THREE.Group(); counter.position.set(x, 0, LOBBY_SIZE / 2 - 1.2);
@@ -595,8 +606,7 @@
             const pc = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.1), plasticMat); pc.position.set(-0.2, 1.3, -0.1); pc.rotation.y = 0.2; counter.add(pc);
             return counter;
         }
-        lobbyGroup.add(createTicketCounter(-2.5));
-        lobbyGroup.add(createTicketCounter(2.5));
+        lobbyGroup.add(createTicketCounter(-2.5)); lobbyGroup.add(createTicketCounter(2.5));
 
         const vendingMachines = [];
         function createVendingMachine(id, x, z, rotY, givesMoney) {
@@ -605,20 +615,15 @@
             const vGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.4), new THREE.MeshBasicMaterial({ color: 0x050510 })); vGlass.position.set(0, 1.2, 0.41); vm.add(vGlass);
             const slot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.1), chromeMat); slot.position.set(0, 0.25, 0.38); vm.add(slot);
             const lightStrip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.02), glowMat); lightStrip.position.set(0.42, 1.2, 0.41); vm.add(lightStrip);
-
-            const drinkColors = [0xe74c3c, 0x2ecc71, 0xf1c40f, 0xe67e22];
-            const canGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.14, 6);
+            const drinkColors = [0xe74c3c, 0x2ecc71, 0xf1c40f, 0xe67e22]; const canGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.14, 6);
             for (let row = 0; row < 3; row++) {
-                let rowY = 0.75 + row * 0.35;
-                const shelfPlate = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.01, 0.3), chromeMat); shelfPlate.position.set(0, rowY, 0.22); vm.add(shelfPlate);
+                let rowY = 0.75 + row * 0.35; const shelfPlate = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.01, 0.3), chromeMat); shelfPlate.position.set(0, rowY, 0.22); vm.add(shelfPlate);
                 for (let col = 0; col < 4; col++) {
-                    let colX = -0.3 + col * 0.2;
-                    let cMat = new THREE.MeshStandardMaterial({ color: drinkColors[(row + col) % drinkColors.length], roughness: 0.3, metalness: 0.6 });
+                    let colX = -0.3 + col * 0.2; let cMat = new THREE.MeshStandardMaterial({ color: drinkColors[(row + col) % drinkColors.length], roughness: 0.3, metalness: 0.6 });
                     const drinkCan = new THREE.Mesh(canGeo, cMat); drinkCan.position.set(colX, rowY + 0.07, 0.25); vm.add(drinkCan);
                 }
             }
-            lobbyGroup.add(vm);
-            vendingMachines.push({ id: id, givesMoney: givesMoney, hasMoney: givesMoney, getWorldPos: function() { let target = new THREE.Vector3(); return vm.getWorldPosition(target); } });
+            lobbyGroup.add(vm); vendingMachines.push({ id: id, givesMoney: givesMoney, hasMoney: givesMoney, getWorldPos: function() { let target = new THREE.Vector3(); return vm.getWorldPosition(target); } });
         }
         createVendingMachine(1, -LOBBY_SIZE / 2 + 0.5, 0, Math.PI / 2, false);
         createVendingMachine(2, LOBBY_SIZE / 2 - 0.5, 1.5, -Math.PI / 2, true);
@@ -633,7 +638,91 @@
         }
         lobbyGroup.add(createLobbyBench(-1.5)); lobbyGroup.add(createLobbyBench(1.5));
 
-        // --- 7. EXPO-PLÄTZE ---
+        // --- 8. EINRICHTUNG FÜR DEN MUSEUMSSHOP ---
+        const shopGroup = new THREE.Group();
+        shopGroup.position.set(shopXCenter, 0, shopZCenter);
+        scene.add(shopGroup);
+
+        // Shop-Regale mit mathematischen Souvenirs (Geometrische Körper)
+        function createShopShelf(x, z, rotY) {
+            const shelf = new THREE.Group(); shelf.position.set(x, 0, z); shelf.rotation.y = rotY;
+            const sMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+            const back = new THREE.Mesh(new THREE.BoxGeometry(2.0, 2.2, 0.05), sMat); back.position.y = 1.1; shelf.add(back);
+            for(let i=1; i<=3; i++) {
+                const board = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 0.35), sMat); board.position.set(0, i * 0.55, 0.16); shelf.add(board);
+                
+                // Kleine Geometrie-Exponate in die Regale stellen
+                if(i === 1) {
+                    const cubeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+                    const cubeMesh = new THREE.Mesh(cubeGeo, new THREE.MeshStandardMaterial({ color: 0x2ed573 })); cubeMesh.position.set(-0.4, i * 0.55 + 0.1, 0.16); shelf.add(cubeMesh);
+                } else if(i === 2) {
+                    const coneGeo = new THREE.ConeGeometry(0.1, 0.2, 8);
+                    const coneMesh = new THREE.Mesh(coneGeo, new THREE.MeshStandardMaterial({ color: 0xff4757 })); coneMesh.position.set(0.3, i * 0.55 + 0.1, 0.16); shelf.add(coneMesh);
+                } else {
+                    const sphereGeo = new THREE.SphereGeometry(0.09, 8, 8);
+                    const sphereMesh = new THREE.Mesh(sphereGeo, new THREE.MeshStandardMaterial({ color: 0xffa502 })); sphereMesh.position.set(0, i * 0.55 + 0.1, 0.16); shelf.add(sphereMesh);
+                }
+            } return shelf;
+        }
+        shopGroup.add(createShopShelf(0, -SHOP_SIZE/2 + 0.1, 0)); // Hintere Wand
+        shopGroup.add(createShopShelf(2.5, -SHOP_SIZE/2 + 0.1, 0)); 
+
+        // Verkaufs-Tresen im Shop
+        const shopCounter = new THREE.Group(); shopCounter.position.set(1.5, 0, 1.5);
+        const scBase = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.6), new THREE.MeshStandardMaterial({ color: 0x34495e })); scBase.position.y = 0.5; shopCounter.add(scBase);
+        const scPlate = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.04, 0.65), woodMat); scPlate.position.y = 1.02; shopCounter.add(scPlate);
+        
+        // Postkarten-Drehständer neben dem Tresen
+        const cardStand = new THREE.Group(); cardStand.position.set(-1.0, 0, 0);
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.6), chromeMat); pole.position.y = 0.8; cardStand.add(pole);
+        const basePod = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.04), plasticMat); basePod.position.y = 0.02; cardStand.add(basePod);
+        const cardsBody = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 0.35), new THREE.MeshStandardMaterial({ color: 0xffffff })); cardsBody.position.y = 1.1; cardStand.add(cardsBody);
+        shopCounter.add(cardStand); shopGroup.add(shopCounter);
+
+        // --- RETRO-SPIELEAUTOMAT (ARCADE CABINET) ---
+        const arcadeCabinet = new THREE.Group();
+        arcadeCabinet.position.set(-SHOP_SIZE/2 + 0.8, 0, SHOP_SIZE/2 - 0.8);
+        arcadeCabinet.rotation.y = Math.PI / 4; // Schräg in die Ecke gestellt
+        
+        // Gehäuse-Teile
+        const cabColor = new THREE.MeshStandardMaterial({ color: 0x11141a, roughness: 0.5 });
+        const sideL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.0, 0.7), cabColor); sideL.position.set(-0.4, 1.0, 0); arcadeCabinet.add(sideL);
+        const sideR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.0, 0.7), cabColor); sideR.position.set(0.4, 1.0, 0); arcadeCabinet.add(sideR);
+        const backPanel = new THREE.Mesh(new THREE.BoxGeometry(0.76, 2.0, 0.04), cabColor); backPanel.position.set(0, 1.0, -0.33); arcadeCabinet.add(backPanel);
+        
+        // Kontroll-Panel (Münzpult)
+        const ctrlPanel = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.15, 0.3), new THREE.MeshStandardMaterial({ color: 0x222f3e })); ctrlPanel.position.set(0, 0.95, 0.15); arcadeCabinet.add(ctrlPanel);
+        const joystick = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.1), chromeMat); joystick.position.set(-0.15, 1.06, 0.15); joystick.rotation.x = 0.2; arcadeCabinet.add(joystick);
+        const joyKnob = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff4757 })); joyKnob.position.set(-0.17, 1.12, 0.17); arcadeCabinet.add(joyKnob);
+        
+        // Leuchtender Arcade-Bildschirm
+        const screenBox = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.5, 0.04), plasticMat); screenBox.position.set(0, 1.35, -0.05); screenBox.rotation.x = -0.25; arcadeCabinet.add(screenBox);
+        
+        // Canvas-Textur für das Retro-Spiel (z.B. Pong / Mathe-Spiel-Grafik)
+        function createArcadeScreenTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 192; const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, 256, 192);
+            ctx.fillStyle = '#00ffcc'; ctx.font = 'bold 20px monospace'; ctx.fillText('MATH INVADERS', 45, 45);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(20, 100, 12, 35); ctx.fillRect(220, 80, 12, 35); // Schläger
+            ctx.fillStyle = '#ff9f43'; ctx.fillRect(120, 95, 8, 8); // Ball
+            ctx.fillStyle = '#00ffcc'; ctx.font = '14px monospace'; ctx.fillText('SCORE: 9999', 80, 160);
+            return new THREE.CanvasTexture(canvas);
+        }
+        const arcadeScreenGeo = new THREE.PlaneGeometry(0.72, 0.46);
+        const arcadeScreenMat = new THREE.MeshBasicMaterial({ map: createArcadeScreenTexture() });
+        const arcadeScreen = new THREE.Mesh(arcadeScreenGeo, arcadeScreenMat); arcadeScreen.position.set(0, 1.36, -0.02); arcadeScreen.rotation.x = -0.25; arcadeCabinet.add(arcadeScreen);
+
+        // Top-Leuchte (Marquee)
+        const marquee = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.15, 0.2), arcadeNeonMat); marquee.position.set(0, 1.85, 0.1); arcadeCabinet.add(marquee);
+        shopGroup.add(arcadeCabinet);
+
+        const arcadeGameData = {
+            title: "🕹️ Retro-Automaten 'Math Invaders'",
+            content: "Du wirfst eine Münze ein...\n\nDer Bildschirm flackert wild! Auf dem Display erscheint ein Highscore-Menü:\n\n1. ANONYMUS - 99.999 Pkt\n2. DER_KURATOR - 84.200 Pkt\n3. DR_ALPHA - 12.500 Pkt\n\nUnter dem Gehäuse klebt ein vergilbter Zettel für die Techniker:\n'Falls das Matrix-System der Bilderwand hängt, hilft kein Reboot des Hauptrechners. Die KI reagiert ausschließlich auf die physikalische Präsenz der fünf Zahlenplatten am Nord-Flügel!'",
+        };
+        let activeArcadeNearMe = null;
+
+        // --- 9. EXPO-PLÄTZE ---
         const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
         function createNumberTexture(number) {
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d');
@@ -656,7 +745,7 @@
             }
         }
 
-        // --- 8. AVATAR ---
+        // --- 10. AVATAR ---
         const playerGroup = new THREE.Group();
         const metalMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.2, metalness: 0.8 });
         const armorMat = new THREE.MeshStandardMaterial({ color: 0x2e3192, roughness: 0.3 });
@@ -675,10 +764,9 @@
         const rightLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
         const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot); playerGroup.add(rightLegGroup);
         
-        playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2);
-        scene.add(playerGroup);
+        playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); scene.add(playerGroup);
 
-        // --- 9. INTERAKTIONS- & INVENTARLOGIK ---
+        // --- 11. INTERAKTIONS- & INVENTARLOGIK ---
         let isInventoryOpen = false; let isGameWon = false; 
         let activeExhibitNearMe = null; let isNearDoor = false; let activeVendingNearMe = null;
         let modePlacement = false; const playerInventory = []; 
@@ -701,9 +789,7 @@
                         slot.onclick = () => { if(modePlacement && activeExhibitNearMe !== null) { playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = itemVal; updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition(); } };
                     } else {
                         slot.innerHTML = `<div class="slot-icon">${itemVal.icon}</div><span>${itemVal.name}</span>`;
-                        if (itemVal.isReadable) {
-                            slot.onclick = () => { toggleInventory(); openDocument({ title: itemVal.name, content: itemVal.content }); };
-                        }
+                        if (itemVal.isReadable) { slot.onclick = () => { toggleInventory(); openDocument({ title: itemVal.name, content: itemVal.content }); }; }
                     }
                 } else { slot.innerHTML = `<div class="slot-icon">🔒</div><span>Leer</span>`; }
                 gridContainer.appendChild(slot);
@@ -711,39 +797,24 @@
         }
 
         function triggerInteraction() {
-            if (isGameWon) return;
-            if (isDocumentOpen) { closeDocument(); return; } 
+            if (isGameWon) return; if (isDocumentOpen) { closeDocument(); return; } 
             if (activeDocumentNearMe !== null) { openDocument(activeDocumentNearMe); return; }
             if (isNearDoor) { toggleDoor(); return; }
+            if (activeArcadeNearMe !== null) { openDocument({ title: arcadeGameData.title, content: arcadeGameData.content }); return; }
             
             if (activeTrashNearMe !== null) {
                 if (trashCanData.hasPaper) {
-                    trashCanData.hasPaper = false;
-                    playerInventory.push({ name: trashCanData.title, icon: "📄", isReadable: true, content: trashCanData.content });
-                    openDocument({
-                        title: "🗑️ Mülleimer durchsucht",
-                        content: "Du wühlst im Mülleimer des Kurators...\n\nZwischen alten Kaffeefiltern findest du einen zerknüllten Zettel!\n\n(Du packst den Zettel in deinen Rucksack. Du kannst ihn im Inventar öffnen.)"
-                    });
-                } else {
-                    openDocument({ title: "🗑️ Mülleimer", content: "Der Mülleimer ist leer." });
-                }
+                    trashCanData.hasPaper = false; playerInventory.push({ name: trashCanData.title, icon: "📄", isReadable: true, content: trashCanData.content });
+                    openDocument({ title: "🗑️ Mülleimer durchsucht", content: "Du wühlst im Mülleimer des Kurators...\n\nZwischen alten Kaffeefiltern findest du einen zerknüllten Zettel!\n\n(Du packst den Zettel in deinen Rucksack. Du kannst ihn im Inventar öffnen.)" });
+                } else { openDocument({ title: "🗑️ Mülleimer", content: "Der Mülleimer ist leer." }); }
                 return;
             }
 
             if (activeVendingNearMe !== null) {
                 if (activeVendingNearMe.hasMoney) {
-                    activeVendingNearMe.hasMoney = false;
-                    playerInventory.push({ name: "Wechselgeld", icon: "🪙", isReadable: false });
-                    openDocument({
-                        title: "🎰 Münzfach untersucht",
-                        content: "Oh, im Münzfach liegt noch etwas Restgeld!\n\nDu nimmst die glänzenden Münzen an dich.\n(Gegenstand 'Wechselgeld' erhalten)"
-                    });
-                } else {
-                    openDocument({
-                        title: "🥤 Automat",
-                        content: "Ein Getränkeautomat.\nDie Dosen im Inneren leuchten kühl hinter der Scheibe, aber du hast gerade keinen Durst."
-                    });
-                }
+                    activeVendingNearMe.hasMoney = false; playerInventory.push({ name: "Wechselgeld", icon: "🪙", isReadable: false });
+                    openDocument({ title: "🎰 Münzfach untersucht", content: "Oh, im Münzfach liegt noch etwas Restgeld!\n\nDu nimmst die glänzenden Münzen an dich.\n(Gegenstand 'Wechselgeld' erhalten)" });
+                } else { openDocument({ title: "🥤 Automat", content: "Ein Getränkeautomat.\nDie Dosen im Inneren leuchten kühl hinter der Scheibe, aber du hast gerade keinen Durst." }); }
                 return;
             }
 
@@ -756,12 +827,11 @@
         function checkWinCondition() { if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) { isGameWon = true; document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open'); } }
         function restartGame() {
             isGameWon = false; playerInventory.length = 0; const mixed = [4, 1, 5, 2, 3]; exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
-            vendingMachines.forEach(vm => { if (vm.givesMoney) vm.hasMoney = true; });
-            trashCanData.hasPaper = true;
+            vendingMachines.forEach(vm => { if (vm.givesMoney) vm.hasMoney = true; }); trashCanData.hasPaper = true;
             playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
         }
 
-        // --- 10. STEUERUNGS-SYSTEM ---
+        // --- 12. STEUERUNGS-SYSTEM ---
         let cameraAngleH = 0; let cameraAngleV = 0.3; let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
         window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
         window.addEventListener('mouseup', () => isMouseDown = false);
@@ -772,10 +842,8 @@
         });
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         window.addEventListener('keydown', (e) => { 
-            if (isGameWon) return; 
-            if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } 
-            if (isDocumentOpen) return; 
-            if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
+            if (isGameWon) return; if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } 
+            if (isDocumentOpen) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
             if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
         });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
@@ -791,7 +859,7 @@
         });
         window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
 
-        // --- 11. GAME LOOP & KOLLISIONSSYSTEM ---
+        // --- 13. GAME LOOP & KOLLISIONSSYSTEM ---
         const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
@@ -811,11 +879,29 @@
                 let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
                 let allowed = true;
                 
-                // LOBBY
-                if (nextZ > ROOM_SIZE / 2) {
+                // SHOP-BEREICH (KOLLISION)
+                if (nextX < -LOBBY_SIZE / 2) {
+                    let minShopX = shopXCenter - SHOP_SIZE / 2 + playerRadius;
+                    let maxShopZ = shopZCenter + SHOP_SIZE / 2 - playerRadius;
+                    let minShopZ = shopZCenter - SHOP_SIZE / 2 + playerRadius;
+                    
+                    if (nextX < minShopX || nextZ > maxShopZ || nextZ < minShopZ) allowed = false;
+                    // Durchgangs-Validierung zur Lobby
+                    if (nextX > -LOBBY_SIZE/2 - playerRadius && (nextZ < ROOM_SIZE/2 + 4 || nextZ > ROOM_SIZE/2 + LOBBY_SIZE - 4)) allowed = false;
+                    
+                    // Shop-Innere Objekte (Regale & Tresen)
+                    if (nextZ < shopZCenter - SHOP_SIZE/2 + 0.55 + playerRadius) allowed = false; // Hintere Regale
+                    let relShopX = nextX - shopXCenter;
+                    let relShopZ = nextZ - shopZCenter;
+                    if (relShopX > 1.5 - 0.9 && relShopX < 1.5 + 0.9 && relShopZ > 1.5 - 0.4 && relShopZ < 1.5 + 0.4) allowed = false; // Tresen
+                    if (nextX < shopXCenter - SHOP_SIZE/2 + 1.5 && nextZ > shopZCenter + SHOP_SIZE/2 - 1.5) allowed = false; // Automat in Ecke
+                }
+                // LOBBY-BEREICH
+                else if (nextZ > ROOM_SIZE / 2) {
                     let maxLobbyX = LOBBY_SIZE / 2 - playerRadius;
                     let maxLobbyZ = ROOM_SIZE / 2 + LOBBY_SIZE - playerRadius;
-                    if (nextX < -maxLobbyX || nextX > maxLobbyX || nextZ > maxLobbyZ) allowed = false;
+                    if (nextX > maxLobbyX || nextZ > maxLobbyZ) allowed = false;
+                    if (nextX < -maxLobbyX && (nextZ < ROOM_SIZE/2 + 4 || nextZ > ROOM_SIZE/2 + LOBBY_SIZE - 4)) allowed = false; // Wandtrennung außer Durchgang
                     if (nextZ < ROOM_SIZE / 2 + playerRadius && (nextX < -2 || nextX > 2)) allowed = false;
                     if (nextZ > ROOM_SIZE / 2 + LOBBY_SIZE - 2.0) {
                         if ((nextX > -3.8 && nextX < -1.2) || (nextX > 1.2 && nextX < 3.8)) allowed = false;
@@ -836,7 +922,6 @@
                         let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius;
                         let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
                         if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
-
                         let relX = nextX - (ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2);
                         if (relX > -1.3 && relX < 1.3 && nextZ > -0.7 && nextZ < 0.7) allowed = false; 
                         if (nextZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false; 
@@ -859,15 +944,18 @@
                 let time = Date.now() * 0.01;
                 leftLegGroup.rotation.x = Math.sin(time) * 0.6; rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
                 leftArm.rotation.x = -Math.sin(time) * 0.4; rightArm.rotation.x = Math.sin(time) * 0.4;
-            } else {
-                leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8; leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8;
-            }
+            } else { leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8; leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8; }
 
             // TRIGGER- & ENTFERNUNGS-CHECKS
             let playerPos3D = new THREE.Vector3(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
             let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
             let distToDoor = playerPos2D.distanceTo(new THREE.Vector3(ROOM_SIZE / 2, 0, 0));
             let distToTrash = playerPos2D.distanceTo(trashCanData.getWorldPos());
+            
+            // Distanz zum Arcade-Automaten berechnen
+            let arcadeWorldPos = new THREE.Vector3(); arcadeCabinet.getWorldPosition(arcadeWorldPos);
+            let distToArcade = playerPos2D.distanceTo(new THREE.Vector3(arcadeWorldPos.x, 0, arcadeWorldPos.z));
+
             const promptBtn = document.getElementById('interaction-prompt');
 
             let closestPaper = null; let minPaperDist = Infinity;
@@ -883,25 +971,27 @@
             });
 
             if (minPaperDist < 2.0) {
-                activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; promptBtn.style.display = 'block';
+                activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
                 promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`; promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; promptBtn.style.borderColor = "#9b59b6";
             } 
             else if (distToTrash < 1.8) {
-                activeTrashNearMe = trashCanData; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; promptBtn.style.display = 'block';
+                activeTrashNearMe = trashCanData; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
                 promptBtn.innerText = "🗑️ Mülleimer untersuchen (R)"; promptBtn.style.background = "rgba(44, 62, 80, 0.85)"; promptBtn.style.borderColor = "#7f8c8d";
             }
             else if (distToDoor < 2.2 && playerGroup.position.x < ROOM_SIZE/2 + 0.5) {
-                isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; promptBtn.style.display = 'block';
-                promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)";
-                promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
+                isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
+                promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)"; promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
             } 
+            else if (distToArcade < 1.8) {
+                activeArcadeNearMe = arcadeCabinet; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; promptBtn.style.display = 'block';
+                promptBtn.innerText = "🕹️ Automat spielen (R)"; promptBtn.style.background = "rgba(0, 168, 255, 0.85)"; promptBtn.style.borderColor = "#00a8ff";
+            }
             else if (minVendingDist < 2.0) {
-                activeVendingNearMe = closestVending; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeTrashNearMe = null; promptBtn.style.display = 'block';
-                promptBtn.innerText = "🎰 Automat untersuchen (R)";
-                promptBtn.style.background = "rgba(230, 126, 34, 0.85)"; promptBtn.style.borderColor = "#e67e22";
+                activeVendingNearMe = closestVending; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
+                promptBtn.innerText = "🎰 Automat untersuchen (R)"; promptBtn.style.background = "rgba(230, 126, 34, 0.85)"; promptBtn.style.borderColor = "#e67e22";
             }
             else {
-                isNearDoor = false; activeDocumentNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; let closest = null; let minDist = Infinity;
+                isNearDoor = false; activeDocumentNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; let closest = null; let minDist = Infinity;
                 for(let ex of exhibits) { let dist = playerPos2D.distanceTo(ex.position); if (dist < minDist) { minDist = dist; closest = ex; } }
 
                 if (minDist < 2.5 && playerGroup.position.z < ROOM_SIZE/2) {
