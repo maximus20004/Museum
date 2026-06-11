@@ -313,7 +313,8 @@
             <h2>✨ GEOMETRY MEMORY ✨</h2>
             <div class="arcade-stats">Versuche: <span id="arcade-moves">0</span> | Paare: <span id="arcade-pairs">0/8</span></div>
             
-            <div class="memory-grid" id="arcade-memory-grid"></div>
+            <div class="memory-grid" id="arcade-memory-grid">
+                </div>
 
             <div id="arcade-win-message">🎉 GEWONNEN! Ticket erhalten!</div>
             <button class="close-btn" style="background:#ff4757; width:100%; margin-top:5px;" onclick="closeArcadeGame()">Spiel Verlassen</button>
@@ -486,7 +487,7 @@
         const monitor = new THREE.Group(); monitor.position.set(0, 0.8, -0.3);
         const stand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.1), plasticMat); stand.position.y = 0.15; monitor.add(stand);
         const screen = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), plasticMat); screen.position.y = 0.4; monitor.add(screen);
-        const display = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.46), new THREE.MeshBasicMaterial({ color: 0x00a8ff })); display.position.set(0, 0.4, 0.026); monitor.add(display); desk.add(monitor); officeGroup.add(desk);
+        const display = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.46), new THREE.MeshBasicMaterial({ color: 0x00a8ff })); display.position.set(0, 0.4, 0.026); monitor.add(display); desk.add(monitor);
 
         const deskLamp = new THREE.Group(); deskLamp.position.set(-0.8, 0.8, -0.2);
         const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.02), chromeMat); deskLamp.add(lampBase);
@@ -505,386 +506,506 @@
         });
 
         let activeDocumentNearMe = null; let isDocumentOpen = false;
-        function openDocument(doc) { 
-            isDocumentOpen = true; 
-            const overlay = document.getElementById('document-overlay'); 
-            document.getElementById('doc-title').innerText = doc.title; 
-            document.getElementById('doc-content').innerText = doc.content; 
-            overlay.classList.add('open'); 
-            for (let key in keys) keys[key] = false; 
-            touchVelocity.x = 0; 
-            touchVelocity.z = 0;
+        function openDocument(doc) { isDocumentOpen = true; const overlay = document.getElementById('document-overlay'); document.getElementById('doc-title').innerText = doc.title; document.getElementById('doc-content').innerText = doc.content; overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; }
+        function closeDocument() { isDocumentOpen = false; document.getElementById('document-overlay').classList.remove('open'); }
+
+        function createShelf(x, z) {
+            const shelf = new THREE.Group(); shelf.position.set(x, 0, z); const shelfWoodMat = new THREE.MeshStandardMaterial({ color: 0x2c1a10, roughness: 0.5 }); const bookColors = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f, 0x9b59b6];
+            const backwall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 0.04), shelfWoodMat); backwall.position.set(0, 1.2, -0.18); shelf.add(backwall);
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat); leftWall.position.set(-0.78, 1.2, 0); shelf.add(leftWall);
+            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat); rightWall.position.set(0.78, 1.2, 0); shelf.add(rightWall);
+            for (let i = 1; i <= 4; i++) {
+                const h = i * 0.48; const board = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.03, 0.38), shelfWoodMat); board.position.set(0, h, 0); shelf.add(board); let cx = -0.7;
+                while (cx < 0.7) {
+                    if (Math.random() > 0.15) {
+                        const bw = 0.03 + Math.random() * 0.04; const bh = 0.22 + Math.random() * 0.13;
+                        const book = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.24), new THREE.MeshStandardMaterial({ color: bookColors[Math.floor(Math.random() * bookColors.length)] }));
+                        book.position.set(cx + bw / 2, h + 0.015 + bh / 2, 0.05); cx += bw + 0.02; shelf.add(book);
+                    } else { cx += 0.08; }
+                }
+            } return shelf;
         }
+        officeGroup.add(createShelf(-2.5, -4.7)); officeGroup.add(createShelf(-0.8, -4.7)); 
 
-        function closeDocument() {
-            isDocumentOpen = false;
-            document.getElementById('document-overlay').classList.remove('open');
+        const chair = new THREE.Group(); chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; 
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4), chromeMat); base.position.y = 0.2; chair.add(base);
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.55), plasticMat); seat.position.y = 0.43; chair.add(seat);
+        const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), plasticMat); backrest.position.set(0, 0.73, -0.25); chair.add(backrest); officeGroup.add(chair);
+
+        function createCabinet(x, z, rot) {
+            const cab = new THREE.Group(); cab.position.set(x, 0, z); cab.rotation.y = rot;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xdcdde1 })); body.position.y = 0.9; cab.add(body);
+            for(let f=0.25; f<1.8; f+=0.42) {
+                const drawer = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.36, 0.02), new THREE.MeshStandardMaterial({ color: 0xb2bec3 })); drawer.position.set(0, f, 0.26); cab.add(drawer);
+                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.03), chromeMat); handle.position.set(0, f, 0.28); cab.add(handle);
+            } return cab;
         }
+        officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2)); officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
 
-        // --- 7. ZAHLEN-EXPONATE AN DER WAND (ZENTRALER AUTOMAT) ---
-        const initialOrder = [2, 5, 1, 4, 3];
-        let currentOrder = [...initialOrder];
-        const exhibitGroup = new THREE.Group();
-        exhibitGroup.position.set(0, 0.01, 0); 
-        scene.add(exhibitGroup);
+        const trashCanGroup = new THREE.Group(); trashCanGroup.position.set(4.0, 0, 4.0);
+        const binMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.4, metalness: 0.6 });
+        const binBody = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.55, 12), binMat); binBody.position.y = 0.275; trashCanGroup.add(binBody);
+        const binRim = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.03, 12), chromeMat); binRim.position.y = 0.54; trashCanGroup.add(binRim);
+        officeGroup.add(trashCanGroup);
 
-        const exhibits = [];
-        const textureLoader = new THREE.TextureLoader();
+        const trashCanData = {
+            hasPaper: true, title: "🗑️ Zerknüllter Zettel",
+            content: "🔒 GEHEIMES MEMO AN DEN DIRETTORE:\n\nIch habe herausgefunden, wie die KI-Sperre der Bilderwand überbrückt werden kann!\n\nFalls die Exponate durcheinandergeraten sind und du die Reihenfolge (1-2-3-4-5) nicht weißt, suche nach den Originalplatten im Archiv. \n\nMerke dir gut: Jedes Bild besitzt ein exaktes Gegengewicht. Sobald die Wand die lückenlose Reihe spürt, entriegelt sich das System vollautomatisch.",
+            getWorldPos: function() { let target = new THREE.Vector3(); return trashCanGroup.getWorldPosition(target); }
+        };
+        let activeTrashNearMe = null;
 
-        function createNumberTexture(num) {
-            // Hier klinken wir dein hochgeladenes Bild für die Nummer 4 ein
-            if (num === 4) {
-                return textureLoader.load('120px-Shuffle004Winking.png', (tex) => {
-                    tex.wrapS = THREE.RepeatWrapping;
-                    tex.repeat.x = -1; // Horizontal spiegeln, falls es von hinten gerendert wird
-                    tex.needsUpdate = true;
-                });
+        // --- 7. EINRICHTUNG FÜR DIE LOBBY / EINGANGSHALLE ---
+        const lobbyGroup = new THREE.Group(); lobbyGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGroup);
+
+        function createTicketCounter(x) {
+            const counter = new THREE.Group(); counter.position.set(x, 0, LOBBY_SIZE / 2 - 1.2);
+            const cBase = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 0.8), counterMat); cBase.position.y = 0.55; counter.add(cBase);
+            const plate = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.05, 0.9), woodMat); plate.position.y = 1.12; counter.add(plate);
+            const glass = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.0, 0.04), glassMat); glass.position.set(0, 1.64, 0.2); counter.add(glass);
+            const pc = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.1), plasticMat); pc.position.set(-0.2, 1.3, -0.1); pc.rotation.y = 0.2; counter.add(pc);
+            return counter;
+        }
+        lobbyGroup.add(createTicketCounter(-2.5)); lobbyGroup.add(createTicketCounter(2.5));
+
+        const vendingMachines = [];
+        function createVendingMachine(id, x, z, rotY, givesMoney) {
+            const vm = new THREE.Group(); vm.position.set(x, 0, z); vm.rotation.y = rotY;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.8), plasticMat); body.position.y = 1.1; vm.add(body);
+            const vGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.4), new THREE.MeshBasicMaterial({ color: 0x050510 })); vGlass.position.set(0, 1.2, 0.41); vm.add(vGlass);
+            const slot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.1), chromeMat); slot.position.set(0, 0.25, 0.38); vm.add(slot);
+            const lightStrip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.02), glowMat); lightStrip.position.set(0.42, 1.2, 0.41); vm.add(lightStrip);
+            const drinkColors = [0xe74c3c, 0x2ecc71, 0xf1c40f, 0xe67e22]; const canGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.14, 6);
+            for (let row = 0; row < 3; row++) {
+                let rowY = 0.75 + row * 0.35; const shelfPlate = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.01, 0.3), chromeMat); shelfPlate.position.set(0, rowY, 0.22); vm.add(shelfPlate);
+                for (let col = 0; col < 4; col++) {
+                    let colX = -0.3 + col * 0.2; let cMat = new THREE.MeshStandardMaterial({ color: drinkColors[(row + col) % drinkColors.length], roughness: 0.3, metalness: 0.6 });
+                    const drinkCan = new THREE.Mesh(canGeo, cMat); drinkCan.position.set(colX, rowY + 0.07, 0.25); vm.add(drinkCan);
+                }
             }
-            
-            // Standard-Canvas-Zahlen für 1, 2, 3, 5
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#222'; ctx.fillRect(0, 0, 256, 256);
-            ctx.strokeStyle = '#4a90e2'; ctx.lineWidth = 10; ctx.strokeRect(10, 10, 236, 236);
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 120px sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(num, 128, 128);
-            return new THREE.CanvasTexture(canvas);
+            lobbyGroup.add(vm); vendingMachines.push({ id: id, givesMoney: givesMoney, hasMoney: givesMoney, getWorldPos: function() { let target = new THREE.Vector3(); return vm.getWorldPosition(target); } });
         }
+        createVendingMachine(1, LOBBY_SIZE / 2 - 0.6, -2.0, -Math.PI / 2, false);
+        createVendingMachine(2, LOBBY_SIZE / 2 - 0.6, 1.5, -Math.PI / 2, true);
 
-        // Erschaffe die interaktiven Schilder an der zentralen Blockwand (-Z Seite)
-        const boardY = 2.5; const startX = -3.2; const spacingX = 1.6;
-        for (let i = 0; i < 5; i++) {
-            const currentNum = currentOrder[i];
-            const displayGroup = new THREE.Group();
-            displayGroup.position.set(startX + i * spacingX, boardY, -BLOCK_SIZE / 2 - 0.02);
-            
-            const frame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.6, 0.05), plasticMat);
-            displayGroup.add(frame);
-            
-            const screenGeo = new THREE.PlaneGeometry(1.1, 1.5);
-            const screenMat = new THREE.MeshBasicMaterial({ map: createNumberTexture(currentNum) });
-            const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-            screenMesh.position.z = 0.03;
-            displayGroup.add(screenMesh);
-            
-            const btnGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16);
-            const btnMat = new THREE.MeshStandardMaterial({ color: 0xff4757, roughness: 0.2 });
-            const buttonMesh = new THREE.Mesh(btnGeo, btnMat);
-            buttonMesh.position.set(startX + i * spacingX, 1.0, -BLOCK_SIZE / 2 - 0.2);
-            buttonMesh.rotation.x = Math.PI / 2;
-            scene.add(buttonMesh);
-            
-            exhibitGroup.add(displayGroup);
-            exhibits.push({ index: i, group: displayGroup, screenMesh: screenMesh, buttonMesh: buttonMesh });
+        function createLobbyBench(z) {
+            const bench = new THREE.Group(); bench.position.set(0, 0, z);
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 1.0), chromeMat); frame.position.y = 0.15; bench.add(frame);
+            const legA = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 1.0), chromeMat); legA.position.set(-1.4, 0.075, 0); bench.add(legA);
+            const legB = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 1.0), chromeMat); legB.position.set(1.4, 0.075, 0); bench.add(legB);
+            const cushion = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.3, 0.9), new THREE.MeshStandardMaterial({ color: 0x9b59b6, roughness: 0.8 })); cushion.position.y = 0.35; bench.add(cushion);
+            return bench;
         }
+        lobbyGroup.add(createLobbyBench(-1.5)); lobbyGroup.add(createLobbyBench(1.5));
 
-        function updateExhibits() {
-            let win = true;
-            for (let i = 0; i < 5; i++) {
-                if (currentOrder[i] !== i + 1) win = false;
-                exhibits[i].screenMesh.material.map = createNumberTexture(currentOrder[i]);
-                exhibits[i].screenMesh.material.needsUpdate = true;
-            }
-            if (win) {
-                document.getElementById('win-overlay').classList.add('open');
-                for (let key in keys) keys[key] = false;
-            }
+        // --- 8. EINRICHTUNG MUSEUMSSHOP & AUTOMAT ---
+        const shopGroup = new THREE.Group(); shopGroup.position.set(shopXCenter, 0, shopZCenter); scene.add(shopGroup);
+
+        function createShopShelf(x, z, rotY) {
+            const shelf = new THREE.Group(); shelf.position.set(x, 0, z); shelf.rotation.y = rotY;
+            const sMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+            const back = new THREE.Mesh(new THREE.BoxGeometry(2.0, 2.2, 0.05), sMat); back.position.y = 1.1; shelf.add(back);
+            for(let i=1; i<=3; i++) {
+                const board = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 0.35), sMat); board.position.set(0, i * 0.55, 0.16); shelf.add(board);
+                if(i === 1) {
+                    const cubeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15); const cubeMesh = new THREE.Mesh(cubeGeo, new THREE.MeshStandardMaterial({ color: 0x2ed573 })); cubeMesh.position.set(-0.4, i * 0.55 + 0.1, 0.16); shelf.add(cubeMesh);
+                } else if(i === 2) {
+                    const coneGeo = new THREE.ConeGeometry(0.1, 0.2, 8); const coneMesh = new THREE.Mesh(coneGeo, new THREE.MeshStandardMaterial({ color: 0xff4757 })); coneMesh.position.set(0.3, i * 0.55 + 0.1, 0.16); shelf.add(coneMesh);
+                } else {
+                    const sphereGeo = new THREE.SphereGeometry(0.09, 8, 8); const sphereMesh = new THREE.Mesh(sphereGeo, new THREE.MeshStandardMaterial({ color: 0xffa502 })); sphereMesh.position.set(0, i * 0.55 + 0.1, 0.16); shelf.add(sphereMesh);
+                }
+            } return shelf;
         }
+        shopGroup.add(createShopShelf(0, -SHOP_SIZE/2 + 0.1, 0)); shopGroup.add(createShopShelf(2.5, -SHOP_SIZE/2 + 0.1, 0)); 
 
-        function swapExhibits(index) {
-            const nextIndex = (index + 1) % 5;
-            const temp = currentOrder[index];
-            currentOrder[index] = currentOrder[nextIndex];
-            currentOrder[nextIndex] = temp;
-            
-            // Kleine Button-Animation
-            const btn = exhibits[index].buttonMesh;
-            btn.position.z += 0.05;
-            setTimeout(() => { btn.position.z -= 0.05; }, 100);
-            
-            updateExhibits();
-        }
+        const shopCounter = new THREE.Group(); shopCounter.position.set(1.5, 0, 1.5);
+        const scBase = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.6), new THREE.MeshStandardMaterial({ color: 0x34495e })); scBase.position.y = 0.5; shopCounter.add(scBase);
+        const scPlate = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.04, 0.65), woodMat); scPlate.position.y = 1.02; shopCounter.add(scPlate);
+        const cardStand = new THREE.Group(); cardStand.position.set(-1.0, 0, 0);
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.6), chromeMat); pole.position.y = 0.8; cardStand.add(pole);
+        const basePod = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.04), plasticMat); basePod.position.y = 0.02; cardStand.add(basePod);
+        const cardsBody = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 0.35), new THREE.MeshStandardMaterial({ color: 0xffffff })); cardsBody.position.y = 1.1; cardStand.add(cardsBody);
+        shopCounter.add(cardStand); shopGroup.add(shopCounter);
 
-        function restartGame() {
-            currentOrder = [...initialOrder];
-            updateExhibits();
-            document.getElementById('win-overlay').classList.remove('open');
-        }
-
-        // --- 8. RETRO ARCADE MASCHINE IM SHOP ---
-        const arcadeGroup = new THREE.Group();
-        arcadeGroup.position.set(shopXCenter, 0, shopZCenter + SHOP_SIZE / 2 - 1);
-        arcadeGroup.rotation.y = Math.PI;
+        // SPIELEAUTOMAT
+        const arcadeCabinet = new THREE.Group(); arcadeCabinet.position.set(-SHOP_SIZE/2 + 0.5, 0, SHOP_SIZE/2 - 1.5); arcadeCabinet.rotation.y = Math.PI / 2; 
+        const cabColor = new THREE.MeshStandardMaterial({ color: 0x11141a, roughness: 0.5 });
+        const sideL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.0, 0.7), cabColor); sideL.position.set(-0.4, 1.0, 0); arcadeCabinet.add(sideL);
+        const sideR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.0, 0.7), cabColor); sideR.position.set(0.4, 1.0, 0); arcadeCabinet.add(sideR);
+        const backPanel = new THREE.Mesh(new THREE.BoxGeometry(0.76, 2.0, 0.04), cabColor); backPanel.position.set(0, 1.0, -0.33); arcadeCabinet.add(backPanel);
+        const ctrlPanel = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.15, 0.3), new THREE.MeshStandardMaterial({ color: 0x222f3e })); ctrlPanel.position.set(0, 0.95, 0.15); arcadeCabinet.add(ctrlPanel);
+        const joystick = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.1), chromeMat); joystick.position.set(-0.15, 1.06, 0.15); joystick.rotation.x = 0.2; arcadeCabinet.add(joystick);
+        const joyKnob = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff4757 })); joyKnob.position.set(-0.17, 1.12, 0.17); arcadeCabinet.add(joyKnob);
+        const screenBox = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.5, 0.04), plasticMat); screenBox.position.set(0, 1.35, -0.05); screenBox.rotation.x = -0.25; arcadeCabinet.add(screenBox);
         
-        const cabinetBase = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 1.2), woodMat); cabinetBase.position.y = 0.5; arcadeGroup.add(cabinetBase);
-        const cabinetTop = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 0.8), woodMat); cabinetTop.position.set(0, 1.6, -0.2); arcadeGroup.add(cabinetTop);
-        const marquee = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.2, 0.1), arcadeNeonMat); marquee.position.set(0, 2.1, 0.15); arcadeGroup.add(marquee);
-        const controlPanel = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.1, 0.4), plasticMat); controlPanel.position.set(0, 1.05, 0.3); controlPanel.rotation.x = 0.1; arcadeGroup.add(controlPanel);
-        const joystick = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.15), chromeMat); joystick.position.set(-0.3, 1.15, 0.3); arcadeGroup.add(joystick);
-        const arcadeScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.8), glassMat); arcadeScreen.position.set(0, 1.5, 0.12); arcadeScreen.rotation.x = -0.15; arcadeGroup.add(arcadeScreen);
-        scene.add(arcadeGroup);
+        function createArcadeScreenTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 192; const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, 256, 192); ctx.fillStyle = '#00ffcc'; ctx.font = 'bold 18px monospace'; ctx.fillText('GEOMETRY MEMORY', 15, 45);
+            ctx.fillStyle = '#ffffff'; ctx.font = '14px monospace'; ctx.fillText('DRÜCKE R ZUM STARTEN', 20, 110); return new THREE.CanvasTexture(canvas);
+        }
+        const arcadeScreenGeo = new THREE.PlaneGeometry(0.72, 0.46); const arcadeScreenMat = new THREE.MeshBasicMaterial({ map: createArcadeScreenTexture() });
+        const arcadeScreen = new THREE.Mesh(arcadeScreenGeo, arcadeScreenMat); arcadeScreen.position.set(0, 1.36, -0.02); arcadeScreen.rotation.x = -0.25; arcadeCabinet.add(arcadeScreen);
+        const marquee = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.15, 0.2), arcadeNeonMat); marquee.position.set(0, 1.85, 0.1); arcadeCabinet.add(marquee);
+        shopGroup.add(arcadeCabinet);
 
-        // --- 9. INVENTAR & AUTOMATEN LOGIK (UI TRIGER) ---
-        let inventory = ["🎫 Eintrittsticket", "🗝️ Alter Schlüssel"];
-        let isInventoryOpen = false;
-        let isArcadeOpen = false;
+        let activeArcadeNearMe = null;
+        let isArcadeOverlayOpen = false;
 
-        function toggleInventory() {
-            isInventoryOpen = !isInventoryOpen;
-            const overlay = document.getElementById('inventory-overlay');
-            if (isInventoryOpen) {
-                overlay.classList.add('open');
-                const grid = document.getElementById('inventory-grid');
-                grid.innerHTML = "";
-                inventory.forEach(item => {
-                    const slot = document.createElement('div');
-                    slot.classList.add('inventory-slot');
-                    slot.innerHTML = `<div class="slot-icon">${item.split(" ")[0]}</div><div>${item.split(" ")[1]}</div>`;
-                    grid.appendChild(slot);
-                });
-                for (let key in keys) keys[key] = false;
+        // --- 8B. AUTOMATEN MINIGAME-LOGIK (MEMORY 4X4) ---
+        const memorySymbols = ['▲', '■', '⬢', '★', '𝚺', '𝛑', '∞', '√'];
+        let memoryDeck = []; let selectedCards = []; let matchedPairsCount = 0; let arcadeMovesCount = 0; let lockBoard = false;
+        let hasWonTicketBefore = false;
+
+        function initMemoryGame() {
+            memoryDeck = [...memorySymbols, ...memorySymbols];
+            // Karten mischen
+            memoryDeck.sort(() => Math.random() - 0.5);
+            
+            matchedPairsCount = 0; arcadeMovesCount = 0; selectedCards = []; lockBoard = false;
+            document.getElementById('arcade-moves').innerText = '0';
+            document.getElementById('arcade-pairs').innerText = '0/8';
+            document.getElementById('arcade-win-message').style.display = 'none';
+
+            const gridContainer = document.getElementById('arcade-memory-grid');
+            gridContainer.innerHTML = '';
+
+            memoryDeck.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.symbol = symbol;
+                card.dataset.index = index;
+                card.innerText = '❓'; // Rückseiten-Symbol
+                card.onclick = () => flipMemoryCard(card);
+                gridContainer.appendChild(card);
+            });
+        }
+
+        function flipMemoryCard(card) {
+            if (lockBoard || card.classList.contains('revealed') || card.classList.contains('matched')) return;
+
+            card.classList.add('revealed');
+            card.innerText = card.dataset.symbol;
+            selectedCards.push(card);
+
+            if (selectedCards.length === 2) {
+                arcadeMovesCount++;
+                document.getElementById('arcade-moves').innerText = arcadeMovesCount;
+                checkMemoryMatch();
+            }
+        }
+
+        function checkMemoryMatch() {
+            let [card1, card2] = selectedCards;
+            let isMatch = card1.dataset.symbol === card2.dataset.symbol;
+
+            if (isMatch) {
+                card1.classList.add('matched'); card2.classList.add('matched');
+                matchedPairsCount++;
+                document.getElementById('arcade-pairs').innerText = `${matchedPairsCount}/8`;
+                selectedCards = [];
+                if (matchedPairsCount === 8) {
+                    document.getElementById('arcade-win-message').style.display = 'block';
+                    if(!hasWonTicketBefore) {
+                        hasWonTicketBefore = true;
+                        playerInventory.push({ name: "🎫 Goldenes VIP-Ticket", icon: "🎫", isReadable: true, content: "Ein goldenes Ticket vom Arcade-Automaten!\nEs gewährt Eintritt in alle geheimen Archive des Mathe-Museums." });
+                    }
+                }
             } else {
-                overlay.classList.remove('open');
+                lockBoard = true;
+                setTimeout(() => {
+                    card1.classList.remove('revealed'); card1.innerText = '❓';
+                    card2.classList.remove('revealed'); card2.innerText = '❓';
+                    selectedCards = []; lockBoard = false;
+                }, 1000); // 1 Sekunde Bedenkzeit beim Fehlversuch
             }
         }
 
         function openArcadeGame() {
-            isArcadeOpen = true;
+            isArcadeOverlayOpen = true;
+            initMemoryGame();
             document.getElementById('arcade-overlay').classList.add('open');
-            initArcadeMemory();
-            for (let key in keys) keys[key] = false;
+            for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0;
         }
-        function closeArcadeGame() {
-            isArcadeOpen = false;
-            document.getElementById('arcade-overlay').classList.remove('open');
+        function closeArcadeGame() { isArcadeOverlayOpen = false; document.getElementById('arcade-overlay').classList.remove('open'); }
+
+        // --- 9. EXPO-PLÄTZE ---
+        const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
+        function createNumberTexture(number) {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#4a90e2'; ctx.fillRect(0, 0, 256, 256); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 216, 216);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 130px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(number, 128, 128); return new THREE.CanvasTexture(canvas);
+        }
+        for(let i=0; i<5; i++) {
+            const posX = -8 + i * 4; const posZ = -ROOM_SIZE/2 + 0.15; const group = new THREE.Group();
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 })); group.add(frame);
+            const emptySpace = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.9 })); emptySpace.position.z = 0.051; group.add(emptySpace);
+            group.position.set(posX, 3, posZ); scene.add(group); exhibits.push({ id: i, position: new THREE.Vector3(posX, 0, posZ), currentNumber: initialNumbers[i], posterMesh: null, groupRef: group });
+            updateExhibitVisual(exhibits[i]);
+        }
+        function updateExhibitVisual(exhibit) {
+            if(exhibit.posterMesh) { exhibit.groupRef.remove(exhibit.posterMesh); exhibit.posterMesh.geometry.dispose(); exhibit.posterMesh.material.dispose(); exhibit.posterMesh = null; }
+            if(exhibit.currentNumber !== null) {
+                const tex = createNumberTexture(exhibit.currentNumber); exhibit.posterMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), new THREE.MeshBasicMaterial({ map: tex }));
+                exhibit.posterMesh.position.z = 0.06; exhibit.groupRef.add(exhibit.posterMesh);
+            }
         }
 
-        // --- 10. ARCADE GEOMETRY MEMORY LOGIK ---
-        let arcadeCards = []; let flippedArcadeCards = []; let arcadeMoves = 0; let arcadePairsFound = 0;
-        const shapes = ['▲', '■', '◆', '●', '★', '⬢', '⧓', '▲', '■', '◆', '●', '★', '⬢', '⧓', '✖', '✖'];
-        
-        function initArcadeMemory() {
-            const grid = document.getElementById('arcade-memory-grid');
-            grid.innerHTML = ""; arcadeCards = []; flippedArcadeCards = []; arcadeMoves = 0; arcadePairsFound = 0;
-            document.getElementById('arcade-moves').innerText = "0";
-            document.getElementById('arcade-pairs').innerText = "0/8";
-            document.getElementById('arcade-win-message').style.display = 'none';
-            
-            const shuffled = [...shapes].sort(() => Math.random() - 0.5);
-            shuffled.forEach((shape, idx) => {
-                const card = document.createElement('div');
-                card.classList.add('memory-card');
-                card.innerText = shape;
-                card.dataset.id = idx;
-                card.onclick = () => {
-                    if (flippedArcadeCards.length >= 2 || card.classList.contains('revealed') || card.classList.contains('matched')) return;
-                    card.classList.add('revealed');
-                    flippedArcadeCards.push(card);
-                    if (flippedArcadeCards.length === 2) {
-                        arcadeMoves++;
-                        document.getElementById('arcade-moves').innerText = arcadeMoves;
-                        if (flippedArcadeCards[0].innerText === flippedArcadeCards[1].innerText) {
-                            flippedArcadeCards[0].classList.add('matched');
-                            flippedArcadeCards[1].classList.add('matched');
-                            flippedArcadeCards = [];
-                            arcadePairsFound++;
-                            document.getElementById('arcade-pairs').innerText = `${arcadePairsFound}/8`;
-                            if (arcadePairsFound === 8) {
-                                document.getElementById('arcade-win-message').style.display = 'block';
-                                if(!inventory.includes("🕹️ Master-Ticket")) inventory.push("🕹️ Master-Ticket");
-                            }
-                        } else {
-                            setTimeout(() => {
-                                flippedArcadeCards[0].classList.remove('revealed');
-                                flippedArcadeCards[1].classList.remove('revealed');
-                                flippedArcadeCards = [];
-                            }, 1000);
-                        }
+        // --- 10. AVATAR ---
+        const playerGroup = new THREE.Group();
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.2, metalness: 0.8 });
+        const armorMat = new THREE.MeshStandardMaterial({ color: 0x2e3192, roughness: 0.3 });
+        const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
+        const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8), jointMat); pelvis.position.y = 0.85; playerGroup.add(pelvis);
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6), armorMat); torso.position.y = 1.2; playerGroup.add(torso);
+        const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glowMat); core.position.set(0, 1.3, 0.21); playerGroup.add(core);
+        const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), metalMat); leftArm.position.set(-0.32, 1.15, 0); playerGroup.add(leftArm);
+        const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), metalMat); rightArm.position.set(0.32, 1.15, 0); playerGroup.add(rightArm);
+        const robotHead = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.24, 0.24), armorMat); robotHead.position.y = 1.66; playerGroup.add(robotHead);
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.03), glowMat); visor.position.set(0, 1.68, 0.12); playerGroup.add(visor);
+        const leftLegGroup = new THREE.Group(); leftLegGroup.position.set(-0.13, 0.85, 0);
+        const leftLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); leftLegMesh.position.y = -0.25; leftLegGroup.add(leftLegMesh);
+        const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); leftFoot.position.set(0, -0.5, 0.03); leftLegGroup.add(leftFoot); playerGroup.add(leftLegGroup);
+        const rightLegGroup = new THREE.Group(); rightLegGroup.position.set(0.13, 0.85, 0);
+        const rightLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
+        const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot); playerGroup.add(rightLegGroup);
+        playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); scene.add(playerGroup);
+
+        // --- 11. INTERAKTIONS- & INVENTARLOGIK ---
+        let isInventoryOpen = false; let isGameWon = false; 
+        let activeExhibitNearMe = null; let isNearDoor = false; let activeVendingNearMe = null;
+        let modePlacement = false; const playerInventory = []; 
+
+        function toggleInventory() {
+            if (isGameWon || isDocumentOpen || isArcadeOverlayOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
+            if (isInventoryOpen) { overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; renderInventoryUI(); } 
+            else { overlay.classList.remove('open'); modePlacement = false; }
+        }
+
+        function renderInventoryUI() {
+            const gridContainer = document.getElementById('inventory-grid'); gridContainer.innerHTML = '';
+            document.getElementById('inv-title').innerText = modePlacement ? "🖼️ Welches Bild aufhängen?" : "🎒 Dein Rucksack";
+            for(let i = 0; i < 6; i++) {
+                const slot = document.createElement('div'); slot.className = 'inventory-slot';
+                if(playerInventory[i] !== undefined) {
+                    const itemVal = playerInventory[i]; slot.className = 'inventory-slot filled selectable';
+                    if (typeof itemVal === 'number') {
+                        slot.innerHTML = `<div class="slot-icon">${itemVal}</div><span>Bild-Zahl</span>`;
+                        slot.onclick = () => { if(modePlacement && activeExhibitNearMe !== null) { playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = itemVal; updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition(); } };
+                    } else {
+                        slot.innerHTML = `<div class="slot-icon">${itemVal.icon}</div><span>${itemVal.name}</span>`;
+                        if (itemVal.isReadable) { slot.onclick = () => { toggleInventory(); openDocument({ title: itemVal.name, content: itemVal.content }); }; }
                     }
-                };
-                grid.appendChild(card);
-            });
-        }
-
-        // --- 11. PLAYER CONTROLS & PHYSICS ENGINE ---
-        const player = { pos: new THREE.Vector3(0, 1.7, 10), rotY: 0, rotX: 0, radius: 0.6 };
-        camera.position.copy(player.pos);
-
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
-        window.addEventListener('keydown', (e) => {
-            if (isInventoryOpen || isArcadeOpen || isDocumentOpen || currentOrder.every((v, i) => v === i + 1)) return;
-            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true;
-            if (e.key in keys) keys[e.key] = true;
-            if (e.key.toLowerCase() === 'e') toggleInventory();
-            if (e.key.toLowerCase() === 'r') triggerInteraction();
-        });
-        window.addEventListener('keyup', (e) => {
-            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false;
-            if (e.key in keys) keys[e.key] = false;
-        });
-
-        // Maus- & Touch-Steuerung
-        let isPointerLocked = false;
-        window.addEventListener('click', (e) => {
-            if (isInventoryOpen || isArcadeOpen || isDocumentOpen || e.target.id === 'inventory-btn' || e.target.id === 'interaction-prompt') return;
-            renderer.domElement.requestPointerLock();
-        });
-        document.addEventListener('pointerlockchange', () => { isPointerLocked = document.pointerLockElement === renderer.domElement; });
-        
-        window.addEventListener('mousemove', (e) => {
-            if (!isPointerLocked) return;
-            player.rotY -= e.movementX * 0.0025;
-            player.rotX -= e.movementY * 0.0025;
-            player.rotX = Math.max(-Math.PI / 2.4, Math.min(Math.PI / 2.4, player.rotX));
-        });
-
-        let touchStart = { x: 0, y: 0 }; let touchVelocity = { x: 0, z: 0 };
-        window.addEventListener('touchstart', (e) => {
-            if (isInventoryOpen || isArcadeOpen || isDocumentOpen) return;
-            touchStart.x = e.touches[0].clientX; touchStart.y = e.touches[0].clientY;
-        });
-        window.addEventListener('touchmove', (e) => {
-            if (isInventoryOpen || isArcadeOpen || isDocumentOpen) return;
-            const dx = e.touches[0].clientX - touchStart.x; const dy = e.touches[0].clientY - touchStart.y;
-            player.rotY -= dx * 0.005; player.rotX -= dy * 0.005;
-            player.rotX = Math.max(-Math.PI / 2.4, Math.min(Math.PI / 2.4, player.rotX));
-            touchVelocity.z = dy * 0.05; touchVelocity.x = -dx * 0.05;
-            touchStart.x = e.touches[0].clientX; touchStart.y = e.touches[0].clientY;
-        });
-        window.addEventListener('touchend', () => { touchVelocity.x = 0; touchVelocity.z = 0; });
-
-        // --- 12. RAYCASTING INTERACTION TRIGGER ---
-        let currentInteractiveAction = null;
-        function scanInteractions() {
-            if (isInventoryOpen || isArcadeOpen || isDocumentOpen) {
-                document.getElementById('interaction-prompt').style.display = 'none';
-                return;
-            }
-            
-            let promptText = null; currentInteractiveAction = null;
-            const pPos = player.pos;
-
-            // 1. Check Knöpfe an der Wand
-            for (let i = 0; i < 5; i++) {
-                let bPos = new THREE.Vector3(); exhibits[i].buttonMesh.getWorldPosition(bPos);
-                if (pPos.distanceTo(bPos) < 2.0) {
-                    promptText = `Schild ${i+1} tauschen (R)`;
-                    currentInteractiveAction = () => swapExhibits(i);
-                }
-            }
-            
-            // 2. Check Tür (Büro)
-            let dPos = new THREE.Vector3(ROOM_SIZE/2, 1.4, 0);
-            if (pPos.distanceTo(dPos) < 2.2) {
-                promptText = isDoorOpen ? "Tür schließen (R)" : "Bürotür öffnen (R)";
-                currentInteractiveAction = toggleDoor;
-            }
-
-            // 3. Check Dokumente auf dem Schreibtisch
-            paperMeshes.forEach(p => {
-                if (pPos.distanceTo(p.getWorldPos()) < 1.8) {
-                    promptText = `Berühren zum Lesen: ${p.title} (R)`;
-                    currentInteractiveAction = () => openDocument(p);
-                }
-            });
-
-            // 4. Check Retro-Arcade Automat
-            let aPos = new THREE.Vector3(); arcadeGroup.getWorldPosition(aPos);
-            if (pPos.distanceTo(aPos) < 2.2) {
-                promptText = "Arcade-Spiel starten (R)";
-                currentInteractiveAction = openArcadeGame;
-            }
-
-            const promptEl = document.getElementById('interaction-prompt');
-            if (promptText) {
-                promptEl.innerText = promptText; promptEl.style.display = 'block';
-            } else {
-                promptEl.style.display = 'none';
+                } else { slot.innerHTML = `<div class="slot-icon">🔒</div><span>Leer</span>`; }
+                gridContainer.appendChild(slot);
             }
         }
 
         function triggerInteraction() {
-            if (isDocumentOpen) { closeDocument(); return; }
-            if (currentInteractiveAction) currentInteractiveAction();
+            if (isGameWon) return; 
+            if (isArcadeOverlayOpen) { closeArcadeGame(); return; }
+            if (isDocumentOpen) { closeDocument(); return; } 
+            if (activeDocumentNearMe !== null) { openDocument(activeDocumentNearMe); return; }
+            if (isNearDoor) { toggleDoor(); return; }
+            if (activeArcadeNearMe !== null) { openArcadeGame(); return; } // Memory triggern!
+            
+            if (activeTrashNearMe !== null) {
+                if (trashCanData.hasPaper) {
+                    trashCanData.hasPaper = false; playerInventory.push({ name: trashCanData.title, icon: "📄", isReadable: true, content: trashCanData.content });
+                    openDocument({ title: "🗑️ Mülleimer durchsucht", content: "Du wühlst im Mülleimer des Kurators...\n\nZwischen alten Kaffeefiltern findest du einen zerknüllten Zettel!\n\n(Du packst den Zettel in deinen Rucksack.)" });
+                } else { openDocument({ title: "🗑️ Mülleimer", content: "Der Mülleimer ist leer." }); }
+                return;
+            }
+
+            if (activeVendingNearMe !== null) {
+                if (activeVendingNearMe.hasMoney) {
+                    activeVendingNearMe.hasMoney = false; playerInventory.push({ name: "Wechselgeld", icon: "🪙", isReadable: false });
+                    openDocument({ title: "🎰 Münzfach untersucht", content: "Oh, im Münzfach liegt noch etwas Restgeld!\n\nDu nimmst die Münzen an dich.\n(Gegenstand 'Wechselgeld' erhalten)" });
+                } else { openDocument({ title: "🥤 Automat", content: "Ein Getränkeautomat.\nDie Dosen im Inneren leuchten kühl hinter der Scheibe, aber du hast keinen Durst." }); }
+                return;
+            }
+
+            if (activeExhibitNearMe !== null && !isInventoryOpen) {
+                if (activeExhibitNearMe.currentNumber !== null) { playerInventory.push(activeExhibitNearMe.currentNumber); activeExhibitNearMe.currentNumber = null; updateExhibitVisual(activeExhibitNearMe); } 
+                else { modePlacement = true; toggleInventory(); }
+            }
         }
 
-        // --- 13. COLLISION SYSTEM & GAME LOOP ---
-        function checkCollisions(targetPos) {
-            const r = player.radius;
-            // Begrenzung Hauptraum
-            if (targetPos.z > -ROOM_SIZE/2+r && targetPos.z < ROOM_SIZE/2-r && targetPos.x > -ROOM_SIZE/2+r && targetPos.x < ROOM_SIZE/2-r) {
-                // Kollision Zentraler Block
-                if (targetPos.x > -BLOCK_SIZE/2-r && targetPos.x < BLOCK_SIZE/2+r && targetPos.z > -BLOCK_SIZE/2-r && targetPos.z < BLOCK_SIZE/2+r) return false;
-                return true;
-            }
-            // Übergang Büro
-            if (targetPos.x >= ROOM_SIZE/2-r && targetPos.z > -DOOR_WIDTH && targetPos.z < DOOR_WIDTH) {
-                if (!isDoorOpen && targetPos.x > ROOM_SIZE/2-0.2) return false; // Blockiert wenn Tür zu
-                if (targetPos.x < ROOM_SIZE/2 + SUB_ROOM_SIZE - r && targetPos.z > -SUB_ROOM_SIZE/2+r && targetPos.z < SUB_ROOM_SIZE/2-r) return true;
-            }
-            // Übergang Lobby
-            if (targetPos.z >= ROOM_SIZE/2-r && targetPos.x > -4 && targetPos.x < 4) {
-                if (targetPos.z < ROOM_SIZE/2 + LOBBY_SIZE - r && targetPos.x > -LOBBY_SIZE/2+r && targetPos.x < LOBBY_SIZE/2-r) {
-                    // Übergang Shop aus der Lobby heraus
-                    if (targetPos.x <= -LOBBY_SIZE/2+r && targetPos.z > ROOM_SIZE/2+2 && targetPos.z < ROOM_SIZE/2+LOBBY_SIZE-2) {
-                        if (targetPos.x > shopXCenter - SHOP_SIZE/2+r && targetPos.z > shopZCenter - SHOP_SIZE/2+r && targetPos.z < shopZCenter + SHOP_SIZE/2-r) return true;
-                    }
-                    return true;
-                }
-            }
-            return false;
+        function checkWinCondition() { if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) { isGameWon = true; document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open'); } }
+        function restartGame() {
+            isGameWon = false; playerInventory.length = 0; hasWonTicketBefore = false; const mixed = [4, 1, 5, 2, 3]; exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
+            vendingMachines.forEach(vm => { if (vm.givesMoney) vm.hasMoney = true; }); trashCanData.hasPaper = true;
+            playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
         }
 
-        const clock = new THREE.Clock();
-        function animate() {
-            requestAnimationFrame(animate);
-            const delta = clock.getDelta();
+        // --- 12. STEUERUNGS-SYSTEM ---
+        let cameraAngleH = 0; let cameraAngleV = 0.3; let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
+        window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+        window.addEventListener('mouseup', () => isMouseDown = false);
+        window.addEventListener('mousemove', (e) => {
+            if (!isMouseDown || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
+            cameraAngleH += (e.clientX - previousMousePosition.x) * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + (e.clientY - previousMousePosition.y) * 0.005));
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+        window.addEventListener('keydown', (e) => { 
+            if (isGameWon) return; if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } 
+            if (isDocumentOpen || isArcadeOverlayOpen) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
+            if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
+        });
+        window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
 
-            // Tür-Animations-Winkel interpolieren
+        let touchStartPos = { x: 0, y: 0 }; let touchVelocity = { x: 0, z: 0 }; let isTouching = false;
+        window.addEventListener('touchstart', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isTouching = true; touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY; });
+        window.addEventListener('touchmove', (e) => {
+            if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
+            let diffX = e.touches[0].clientX - touchStartPos.x; let diffY = e.touches[0].clientY - touchStartPos.y;
+            cameraAngleH += diffX * 0.0003; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
+            let forward = Math.max(-1, Math.min(1, -diffY * 0.01));
+            if (Math.abs(diffY) > 10) { touchVelocity.x = -Math.sin(cameraAngleH) * forward; touchVelocity.z = -Math.cos(cameraAngleH) * forward; } else { touchVelocity.x = 0; touchVelocity.z = 0; }
+        });
+        window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
+
+        // --- 13. GAME LOOP & KOLLISIONSSYSTEM ---
+        const moveSpeed = 0.08; const playerRadius = 0.4; 
+
+        function updateGame() {
+            if (isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
             doorGroup.rotation.y += (doorTargetAngle - doorGroup.rotation.y) * 0.1;
 
-            // Bewegung verarbeiten
             let moveX = 0; let moveZ = 0;
-            if (keys.w || keys.arrowup) moveZ -= 1;
-            if (keys.s || keys.arrowdown) moveZ += 1;
-            if (keys.a || keys.arrowleft) moveX -= 1;
-            if (keys.d || keys.arrowright) moveX += 1;
+            if (keys.w || keys.ArrowUp) { moveX -= Math.sin(cameraAngleH); moveZ -= Math.cos(cameraAngleH); }
+            if (keys.s || keys.ArrowDown) { moveX += Math.sin(cameraAngleH); moveZ += Math.cos(cameraAngleH); }
+            if (keys.a || keys.ArrowLeft) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
+            if (keys.d || keys.ArrowRight) { moveX += Math.sin(cameraAngleH + Math.PI/2); moveZ += Math.cos(cameraAngleH + Math.PI/2); }
+            if (isTouching) { moveX += touchVelocity.x; moveZ += touchVelocity.z; }
 
-            let moveVector = new THREE.Vector3(moveX, 0, moveZ).normalize();
-            moveVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotY);
+            if (moveX !== 0 || moveZ !== 0) {
+                let length = Math.sqrt(moveX * moveX + moveZ * moveZ);
+                let nextX = playerGroup.position.x + (moveX / length) * moveSpeed;
+                let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
+                let allowed = true;
+                
+                // SHOP-BEREICH (KOLLISION)
+                if (nextX < -LOBBY_SIZE / 2) {
+                    let minShopX = shopXCenter - SHOP_SIZE / 2 + playerRadius;
+                    let maxShopZ = shopZCenter + SHOP_SIZE / 2 - playerRadius; let minShopZ = shopZCenter - SHOP_SIZE / 2 + playerRadius;
+                    if (nextX < minShopX || nextZ > maxShopZ || nextZ < minShopZ) allowed = false;
+                    if (nextX > -LOBBY_SIZE/2 - playerRadius && (nextZ < ROOM_SIZE/2 + 4 || nextZ > ROOM_SIZE/2 + LOBBY_SIZE - 4)) allowed = false;
+                    if (nextZ < shopZCenter - SHOP_SIZE/2 + 0.55 + playerRadius) allowed = false; 
+                    let relShopX = nextX - shopXCenter; let relShopZ = nextZ - shopZCenter;
+                    if (relShopX > 1.5 - 0.9 && relShopX < 1.5 + 0.9 && relShopZ > 1.5 - 0.4 && relShopZ < 1.5 + 0.4) allowed = false; 
+                    if (nextX < shopXCenter - SHOP_SIZE/2 + 1.2 && nextZ > shopZCenter + SHOP_SIZE/2 - 2.2 && nextZ < shopZCenter + SHOP_SIZE/2 - 0.8) allowed = false;
+                }
+                // LOBBY-BEREICH
+                else if (nextZ > ROOM_SIZE / 2) {
+                    let maxLobbyX = LOBBY_SIZE / 2 - playerRadius; let maxLobbyZ = ROOM_SIZE / 2 + LOBBY_SIZE - playerRadius;
+                    if (nextX > maxLobbyX || nextZ > maxLobbyZ) allowed = false;
+                    if (nextX < -maxLobbyX && (nextZ < ROOM_SIZE/2 + 4 || nextZ > ROOM_SIZE/2 + LOBBY_SIZE - 4)) allowed = false; 
+                    if (nextZ < ROOM_SIZE / 2 + playerRadius && (nextX < -2 || nextX > 2)) allowed = false;
+                    if (nextZ > ROOM_SIZE / 2 + LOBBY_SIZE - 2.0) { if ((nextX > -3.8 && nextX < -1.2) || (nextX > 1.2 && nextX < 3.8)) allowed = false; }
+                    if (nextX > -1.6 && nextX < 1.6) {
+                        if ((nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 - 2.1 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 - 0.9) || (nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.9 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 2.1)) allowed = false;
+                    }
+                    if (nextX > LOBBY_SIZE/2 - 1.0 && nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 - 2.7 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 - 1.3) allowed = false;
+                    if (nextX > LOBBY_SIZE/2 - 1.0 && nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.8 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 2.2) allowed = false;
+                }
+                // BÜRO
+                else if (nextX > ROOM_SIZE / 2 - playerRadius) {
+                    if (nextX <= ROOM_SIZE / 2 + playerRadius) {
+                        if (nextZ < -DOOR_WIDTH / 2 + playerRadius || nextZ > DOOR_WIDTH / 2 - playerRadius) allowed = false;
+                        if (!isDoorOpen && nextX > ROOM_SIZE / 2 - playerRadius) allowed = false;
+                    } else {
+                        let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius; let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
+                        if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
+                        let relX = nextX - (ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2);
+                        if (relX > -1.3 && relX < 1.3 && nextZ > -0.7 && nextZ < 0.7) allowed = false; 
+                        if (nextZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false; 
+                        if (relX > 4.6 - 0.5 - playerRadius && nextZ > -2.8 && nextZ < 0.5) allowed = false; 
+                        if (relX > 4.0 - 0.3 && relX < 4.0 + 0.3 && nextZ > 4.0 - 0.3 && nextZ < 4.0 + 0.3) allowed = false; 
+                    }
+                } 
+                // HAUPTRAUM
+                else {
+                    let maxCoord = ROOM_SIZE / 2 - playerRadius; if (nextX < -maxCoord || nextZ < -maxCoord) allowed = false;
+                    if (nextZ > maxCoord && (nextX < -2 || nextX > 2)) allowed = false;
+                    let blockBound = BLOCK_SIZE / 2 + playerRadius; if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
+                }
+
+                if (allowed) { playerGroup.position.x = nextX; playerGroup.position.z = nextZ; }
+                playerGroup.rotation.y = Math.atan2(moveX, moveZ);
+
+                let time = Date.now() * 0.01;
+                leftLegGroup.rotation.x = Math.sin(time) * 0.6; rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
+                leftArm.rotation.x = -Math.sin(time) * 0.4; rightArm.rotation.x = Math.sin(time) * 0.4;
+            } else { leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8; leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8; }
+
+            // TRIGGER- & ENTFERNUNGS-CHECKS
+            let playerPos3D = new THREE.Vector3(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
+            let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
+            let distToDoor = playerPos2D.distanceTo(new THREE.Vector3(ROOM_SIZE / 2, 0, 0));
+            let distToTrash = playerPos2D.distanceTo(trashCanData.getWorldPos());
             
-            // Touch-Geschwindigkeit aufaddieren
-            if (touchVelocity.x !== 0 || touchVelocity.z !== 0) {
-                let touchVec = new THREE.Vector3(touchVelocity.x, 0, touchVelocity.z).normalize();
-                touchVec.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotY);
-                moveVector.add(touchVec);
+            let arcadeWorldPos = new THREE.Vector3(); arcadeCabinet.getWorldPosition(arcadeWorldPos);
+            let distToArcade = playerPos2D.distanceTo(new THREE.Vector3(arcadeWorldPos.x, 0, arcadeWorldPos.z));
+
+            const promptBtn = document.getElementById('interaction-prompt');
+
+            let closestPaper = null; let minPaperDist = Infinity;
+            paperMeshes.forEach(pObj => {
+                let pPos = pObj.getWorldPos(); let dist = playerPos3D.distanceTo(pPos);
+                if(dist < minPaperDist) { minPaperDist = dist; closestPaper = pObj; }
+            });
+
+            let closestVending = null; let minVendingDist = Infinity;
+            vendingMachines.forEach(vm => {
+                let vPos = vm.getWorldPos(); let dist = playerPos2D.distanceTo(vPos);
+                if(dist < minVendingDist) { minVendingDist = dist; closestVending = vm; }
+            });
+
+            if (minPaperDist < 2.0) {
+                activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
+                promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`; promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; promptBtn.style.borderColor = "#9b59b6";
+            } 
+            else if (distToTrash < 1.8) {
+                activeTrashNearMe = trashCanData; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
+                promptBtn.innerText = "🗑️ Mülleimer untersuchen (R)"; promptBtn.style.background = "rgba(44, 62, 80, 0.85)"; promptBtn.style.borderColor = "#7f8c8d";
+            }
+            else if (distToDoor < 2.2 && playerGroup.position.x < ROOM_SIZE/2 + 0.5) {
+                isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
+                promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)"; promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
+            } 
+            else if (distToArcade < 2.0 && playerGroup.position.x < shopXCenter + 0.6) {
+                activeArcadeNearMe = arcadeCabinet; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; promptBtn.style.display = 'block';
+                promptBtn.innerText = "🕹️ Automat spielen (R)"; promptBtn.style.background = "rgba(0, 168, 255, 0.85)"; promptBtn.style.borderColor = "#00a8ff";
+            }
+            else if (minVendingDist < 2.0) {
+                activeVendingNearMe = closestVending; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
+                promptBtn.innerText = "🎰 Automat untersuchen (R)"; promptBtn.style.background = "rgba(230, 126, 34, 0.85)"; promptBtn.style.borderColor = "#e67e22";
+            }
+            else {
+                isNearDoor = false; activeDocumentNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; let closest = null; let minDist = Infinity;
+                for(let ex of exhibits) { let dist = playerPos2D.distanceTo(ex.position); if (dist < minDist) { minDist = dist; closest = ex; } }
+
+                if (minDist < 2.5 && playerGroup.position.z < ROOM_SIZE/2) {
+                    activeExhibitNearMe = closest; promptBtn.style.display = 'block';
+                    if(closest.currentNumber !== null) {
+                        promptBtn.innerText = `👋 Bild (${closest.currentNumber}) einpacken`; promptBtn.style.background = "rgba(234, 32, 39, 0.85)"; promptBtn.style.borderColor = "#ff4757";
+                    } else {
+                        promptBtn.innerText = "🖼️ Zahl aufhängen"; promptBtn.style.background = "rgba(46, 213, 115, 0.85)"; promptBtn.style.borderColor = "#2ed573";
+                    }
+                } else { activeExhibitNearMe = null; promptBtn.style.display = 'none'; }
             }
 
-            const speed = 5.0;
-            let nextPos = player.pos.clone().addScaledVector(moveVector, speed * delta);
-            if (checkCollisions(nextPos)) {
-                player.pos.copy(nextPos);
-            }
-
-            // Kamera-Matrix transformieren
-            camera.position.copy(player.pos);
-            camera.rotation.set(0, 0, 0);
-            camera.rotation.y = player.rotY;
-            camera.rotation.x = player.rotX;
-
-            scanInteractions();
-            renderer.render(scene, camera);
+            // Kamera-Führung
+            let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4.5;
+            let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4.5;
+            let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
+            camera.position.x += (targetCamX - camera.position.x) * 0.1; camera.position.y += (targetCamY - camera.position.y) * 0.1; camera.position.z += (targetCamZ - camera.position.z) * 0.1;
+            camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.1, playerGroup.position.z);
         }
 
-        // Window Resize Handling
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Engine-Start
+        function animate() { requestAnimationFrame(animate); updateGame(); renderer.render(scene, camera); }
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         animate();
     </script>
 </body>
