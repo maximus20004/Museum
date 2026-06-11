@@ -2,1011 +2,724 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum - Arcade Memory Update</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Mathe-Museum: Interaktive Exponate</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #0a0a16;
-            font-family: 'Segoe UI', sans-serif;
-            touch-action: none;
-        }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #05050d; font-family: sans-serif; user-select: none; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; }
         
-        #ui-layer {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            background: rgba(0, 0, 0, 0.75);
-            padding: 15px;
-            border-radius: 10px;
-            max-width: 280px;
-            z-index: 100;
-            pointer-events: none;
-        }
-        h1 { margin: 0 0 5px 0; font-size: 1.3rem; color: #4a90e2; }
-        p { margin: 3px 0; font-size: 0.85rem; line-height: 1.3; }
-        .controls-hint {
-            margin-top: 10px;
-            border-top: 1px solid #444;
-            padding-top: 8px;
-            font-size: 0.8rem;
-            color: #2ed573;
-        }
-
-        #interaction-prompt {
-            position: absolute;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(234, 32, 39, 0.85);
-            border: 2px solid #ff4757;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            box-shadow: 0 6px 25px rgba(0,0,0,0.6);
-            z-index: 150;
-            display: none; 
-            cursor: pointer;
-            user-select: none;
-            animation: pulse 1.5s infinite alternate;
-        }
-        @keyframes pulse {
-            from { transform: translateX(-50%) scale(1); }
-            to { transform: translateX(-50%) scale(1.03); }
-        }
-
-        #inventory-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 12px 20px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            z-index: 101;
-        }
-
-        #inventory-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(10, 10, 22, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        #inventory-overlay.open { opacity: 1; pointer-events: auto; }
-
-        .inventory-box {
-            background: #1e1e24;
-            border: 3px solid #4a90e2;
-            border-radius: 20px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            color: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            text-align: center;
-        }
-        .inventory-box h2 { margin-top: 0; color: #4a90e2; margin-bottom: 5px;}
-        .inventory-box p { color: #aaa; margin-bottom: 20px; font-size: 0.9rem; }
+        #ui-overlay { position: absolute; top: 20px; left: 20px; color: #fff; background: rgba(10, 10, 25, 0.75); padding: 15px 25px; border-radius: 12px; border: 1px solid #3b82f6; pointer-events: none; max-width: 350px; font-size: 14px; line-height: 1.5; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        #ui-overlay h1 { margin: 0 0 8px 0; font-size: 18px; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; }
+        .controls-list { margin: 10px 0 0 0; padding-left: 20px; color: #94a3b8; }
+        .controls-list li { margin: 4px 0; }
         
-        .inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .inventory-slot {
-            background: rgba(255,255,255,0.05);
-            border: 2px dashed #444;
-            border-radius: 12px;
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.8rem;
-            color: #747d8c;
-        }
-        .inventory-slot.selectable {
-            border: 2px solid #2ed573;
-            color: white;
-            background: rgba(46, 213, 115, 0.1);
-            cursor: pointer;
-        }
-        .slot-icon { font-size: 2rem; font-weight: bold; margin-bottom: 5px; }
-        .close-btn { background: #ff4757; color: white; border: none; border-radius: 10px; padding: 10px 25px; font-size: 1rem; cursor: pointer; }
-
-        /* --- RETRO ARCADE MEMORY OVERLAY STYLES --- */
-        #arcade-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(5, 5, 15, 0.85);
-            backdrop-filter: blur(6px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 400;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-        #arcade-overlay.open { opacity: 1; pointer-events: auto; }
-
-        .arcade-cabinet-screen {
-            background: #11141a;
-            border: 10px solid #00ffcc;
-            border-radius: 15px;
-            padding: 25px;
-            width: 90%;
-            max-width: 460px;
-            box-shadow: 0 0 35px rgba(0, 255, 204, 0.4);
-            color: white;
-            text-align: center;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        .arcade-cabinet-screen h2 { margin: 0 0 5px 0; color: #00ffcc; text-shadow: 0 0 8px rgba(0,255,204,0.6); font-size: 1.6rem; }
-        .arcade-stats { font-size: 0.9rem; color: #ff9f43; margin-bottom: 15px; }
-
-        .memory-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .memory-card {
-            background: #1e272e;
-            border: 2px solid #485460;
-            border-radius: 8px;
-            aspect-ratio: 1;
-            font-size: 2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            color: transparent;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-            transition: background 0.2s, border-color 0.2s, transform 0.1s;
-        }
-        .memory-card:active { transform: scale(0.95); }
-        .memory-card.revealed {
-            background: #00a8ff;
-            border-color: #00ffff;
-            color: white;
-            text-shadow: 0 0 6px white;
-        }
-        .memory-card.matched {
-            background: #2ed573;
-            border-color: #26de81;
-            color: white;
-            cursor: default;
-            pointer-events: none;
-            box-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
-        }
-
-        #arcade-win-message {
-            display: none;
-            color: #2ed573;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin: 15px 0;
-            animation: blink 1s infinite alternate;
-        }
-        @keyframes blink { from { opacity: 0.4; } to { opacity: 1; } }
-
-        #document-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 250; opacity: 0; pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-        #document-overlay.open { opacity: 1; pointer-events: auto; }
-        .document-box {
-            background: #f4edd2; 
-            color: #2c3e50;
-            border: 8px double #8e44ad;
-            border-radius: 4px;
-            padding: 40px;
-            width: 80%; max-width: 450px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
-            transform: scale(0.8) rotate(-1deg);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-family: 'Georgia', serif;
-        }
-        #document-overlay.open .document-box { transform: scale(1) rotate(0deg); }
-        .document-box h2 { margin-top: 0; font-family: 'Times New Roman', serif; border-bottom: 2px dashed #8e44ad; padding-bottom: 10px; color: #6c5ce7; }
-        .document-box p { font-size: 1.1rem; line-height: 1.6; white-space: pre-line; }
-        .document-close-hint { margin-top: 30px; font-size: 0.85rem; color: #7f8c8d; text-align: center; font-style: italic; }
-
-        #win-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(10, 25, 15, 0.95);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 300; opacity: 0; pointer-events: none;
-            transition: opacity 0.5s ease;
-        }
-        #win-overlay.open { opacity: 1; pointer-events: auto; }
-        .win-box {
-            background: #142119; border: 3px solid #2ed573; border-radius: 20px;
-            padding: 40px; width: 85%; max-width: 450px;
-            color: white; box-shadow: 0 0 30px rgba(46, 213, 115, 0.4); text-align: center;
-        }
-        .win-box h2 { margin-top: 0; color: #2ed573; font-size: 2rem; }
-        .win-box p { color: #dddddd; font-size: 1.1rem; line-height: 1.5; margin-bottom: 30px; }
-        .restart-btn {
-            background: #2ed573; color: #142119; border: none; border-radius: 10px;
-            padding: 12px 30px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(46, 213, 115, 0.3); transition: transform 0.2s;
-        }
-        .restart-btn:hover { transform: scale(1.05); }
+        #action-prompt { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(239, 68, 68, 0.85); color: white; padding: 12px 30px; border-radius: 30px; font-weight: bold; font-size: 16px; letter-spacing: 0.5px; display: none; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); pointer-events: none; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.05); } 100% { transform: translateX(-50%) scale(1); } }
+        
+        .game-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 5, 12, 0.85); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+        .game-overlay.active { opacity: 1; pointer-events: auto; }
+        .game-window { background: #0f172a; border: 2px solid #3b82f6; border-radius: 16px; padding: 30px; width: 90%; max-width: 600px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.7); position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #64748b; transition: color 0.2s; }
+        .close-btn:hover { color: #ef4444; }
+        
+        .grid-3d { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 25px 0; }
+        .card-3d { aspect-ratio: 1; background: #1e293b; border: 2px solid #475569; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 28px; font-weight: bold; cursor: pointer; transition: all 0.2s ease; transform-style: preserve-3d; position: relative; }
+        .card-3d:hover { border-color: #3b82f6; background: #1e3a8a; transform: translateY(-3px); }
+        .card-3d.flipped { background: #3b82f6; border-color: #60a5fa; color: white; transform: rotateY(180deg); }
+        .card-3d.matched { background: #10b981; border-color: #34d399; opacity: 0.6; cursor: default; transform: none; }
+        
+        #office-overlay .game-window { max-width: 500px; border-color: #10b981; }
+        .office-desc { text-align: left; background: #1e293b; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 14px; color: #cbd5e1; line-height: 1.6; }
+        
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; background: rgba(255,255,255,0.4); border-radius: 50%; pointer-events: none; z-index: 10; border: 1px solid rgba(0,0,0,0.2); }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <h1>🏛️ Mathe-Museum v11.2</h1>
-        <p>Erkunde das Museum. Finde das funktionierende Memory-Spiel am Retro-Automaten im Shop!</p>
-        <div class="controls-hint">
-            💻 PC-STEUERUNG:<br>
-            • Laufen: W, A, S, D / Pfeile<br>
-            • Interagieren / Minispiele: R<br>
-            • Rucksack öffnen: E<br>
-            <br>
-            📱 TABLET-STEUERUNG:<br>
-            • Laufen & Umschauen: Wischen<br>
-            • Interagieren: Auf den Button tippen
+    <div id="crosshair"></div>
+    <div id="canvas-container"></div>
+
+    <div id="ui-overlay">
+        <h1>Mathe-Museum</h1>
+        <p>Erkunde den Raum und löse die mathematische Ordnung der Exponate.</p>
+        <ul class="controls-list">
+            <li><b>W, A, S, D</b> / Pfeiltasten: Bewegen</li>
+            <li><b>Maus:</b> Umsehen</li>
+            <li><b>R:</b> Interagieren / Aktivieren</li>
+            <li><b>ESC:</b> Spiel verlassen / Maus freigeben</li>
+        </ul>
+    </div>
+
+    <div id="action-prompt">Interagieren (R)</div>
+
+    <div id="memory-overlay" class="game-overlay">
+        <div class="game-window">
+            <span class="close-btn" onclick="closeAllOverlays()">&times;</span>
+            <h2>🧮 Mathe-Memory</h2>
+            <p>Finde die zusammengehörigen Paare aus mathematischen Formeln und ihren Lösungen!</p>
+            <div class="grid-3d" id="memory-grid"></div>
+            <div id="memory-stats" style="font-weight: bold; color: #a7f3d0;"></div>
         </div>
     </div>
 
-    <div id="interaction-prompt" onclick="triggerInteraction()">Tippen zum Interagieren</div>
-    <button id="inventory-btn" onclick="toggleInventory()">🎒 Inventar</button>
-
-    <div id="inventory-overlay">
-        <div class="inventory-box">
-            <h2 id="inv-title">🎒 Dein Rucksack</h2>
-            <p id="inv-subtitle">Deine gesammelten Gegenstände</p>
-            <div class="inventory-grid" id="inventory-grid"></div>
-            <button class="close-btn" onclick="toggleInventory()">Schließen</button>
-        </div>
-    </div>
-
-    <div id="document-overlay" onclick="closeDocument()">
-        <div class="document-box" onclick="event.stopPropagation()">
-            <h2 id="doc-title">Titel des Dokuments</h2>
-            <p id="doc-content">Inhalt...</p>
-            <div class="document-close-hint">Klicke irgendwo hin oder drücke 'R', um zu schließen</div>
-        </div>
-    </div>
-
-    <div id="win-overlay">
-        <div class="win-box">
-            <h2>🎉 Gelöst!</h2>
-            <p>Ausgezeichnet! Du hast die Zahlenordnung an der Wand wiederhergestellt (1 - 2 - 3 - 4 - 5).</p>
-            <button class="restart-btn" onclick="restartGame()">Nochmal spielen</button>
-        </div>
-    </div>
-
-    <div id="arcade-overlay">
-        <div class="arcade-cabinet-screen">
-            <h2>✨ GEOMETRY MEMORY ✨</h2>
-            <div class="arcade-stats">Versuche: <span id="arcade-moves">0</span> | Paare: <span id="arcade-pairs">0/8</span></div>
-            
-            <div class="memory-grid" id="arcade-memory-grid">
-                </div>
-
-            <div id="arcade-win-message">🎉 GEWONNEN! Ticket erhalten!</div>
-            <button class="close-btn" style="background:#ff4757; width:100%; margin-top:5px;" onclick="closeArcadeGame()">Spiel Verlassen</button>
+    <div id="office-overlay" class="game-overlay">
+        <div class="game-window">
+            <span class="close-btn" onclick="closeAllOverlays()">&times;</span>
+            <h2>办公厅 - Museums-Büro</h2>
+            <div class="office-desc">
+                <p><b>Status:</b> Administrator-Arbeitsplatz</p>
+                <p>Willkommen im rückwärtigen Verwaltungsraum des Museums. Hier werden neue Exponate geplant und mathematische Simulationen berechnet.</p>
+                <p><i>Hinweis: Die Terminals sind zurzeit im Standby-Modus. Schau dich ruhig um.</i></p>
+            </div>
+            <button style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="closeAllOverlays()">Zurück zum Museum</button>
         </div>
     </div>
 
     <script>
-        // --- 1. BASICS & SCENE SETUP ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0a16);
-        scene.fog = new THREE.FogExp2(0x0a0a16, 0.04);
+        // --- Globale Variablen & Setup ---
+        let scene, camera, renderer;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let prevTime = performance.now();
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        
+        // Kamera-Rotations-Tracking
+        let yaw = 0, pitch = 0;
+        const targetRotation = { yaw: 0, pitch: 0 };
+        const mouseSensitivity = 0.002;
+        const lookSmoothFactor = 0.15;
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.body.appendChild(renderer.domElement);
+        // Exponate-Logik
+        let exhibits = [];
+        const TOTAL_EXHIBITS = 5;
+        const EXPO_RADIUS = 7.5; 
+        let activeOverlay = null;
+        let isUIActive = false;
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5)); 
-        const light = new THREE.DirectionalLight(0xffffff, 0.8);
-        light.position.set(10, 20, 10);
-        light.castShadow = true;
-        scene.add(light);
+        // Spieler-Startposition im Kreis (Zentrum bei 0,0,0)
+        const player = {
+            position: new THREE.Vector3(0, 1.7, 0),
+            radius: 0.4
+        };
 
-        // --- 2. MATERIAL- & TEXTUR-DEFINITIONEN ---
-        const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d271d, roughness: 0.7 }); 
-        const plasticMat = new THREE.MeshStandardMaterial({ color: 0x1e252b, roughness: 0.4 }); 
-        const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.1 }); 
-        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff }); 
-        const counterMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.4 });
-        const glassMat = new THREE.MeshStandardMaterial({ color: 0x00a8ff, transparent: true, opacity: 0.4, roughness: 0.1 });
-        const arcadeNeonMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+        const initialOrder = [2, 5, 1, 4, 3]; 
 
-        function createMarbleTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
-            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8e8f0'; ctx.fillRect(0, 0, 512, 512);
-            for (let i = 0; i < 20; i++) { ctx.fillStyle = `rgba(220, 220, 230, ${Math.random() * 0.3})`; ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 200, Math.random() * 200); }
-            ctx.strokeStyle = 'rgba(150, 150, 165, 0.25)'; ctx.lineWidth = 1.5;
-            for (let j = 0; j < 8; j++) { ctx.beginPath(); let x = Math.random() * 512; let y = 0; ctx.moveTo(x, y); while (y < 512) { x += (Math.random() - 0.5) * 45; y += Math.random() * 40 + 10; ctx.lineTo(x, y); } ctx.stroke(); }
+        // --- Initialisierung ---
+        init();
+        animate();
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050510);
+            scene.fog = new THREE.FogExp2(0x050510, 0.035);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.copy(player.position);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            setupLights();
+            buildMuseumArchitecture();
+            spawnExhibits();
+
+            // Event-Listener
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            
+            // Pointer Lock Setup
+            container.addEventListener('click', () => {
+                if(!isUIActive) container.requestPointerLock();
+            });
+            document.addEventListener('pointerlockchange', () => {
+                if (document.pointerLockElement !== container && !isUIActive) {
+                    // Pointer gelöst, aber kein UI offen -> optionaler Zustand
+                }
+            });
+            document.addEventListener('mousemove', onMouseMove);
+        }
+
+        function setupLights() {
+            const ambientLight = new THREE.AmbientLight(0x1a1a3a, 0.6);
+            scene.add(ambientLight);
+
+            const centerLight = new THREE.PointLight(0x3b82f6, 1.2, 30);
+            centerLight.position.set(0, 5, 0);
+            centerLight.castShadow = true;
+            centerLight.shadow.mapSize.width = 1024;
+            centerLight.shadow.mapSize.height = 1024;
+            scene.add(centerLight);
+        }
+
+        function buildMuseumArchitecture() {
+            // Boden
+            const floorGeo = new THREE.CylinderGeometry(12, 12, 0.2, 60);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.4, metalness: 0.2 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.position.y = -0.1;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Wände (Rundgang-Konstruktion aus Segmenten)
+            const wallSegments = 60;
+            const wallRadius = 11.8;
+            const wallHeight = 6;
+            const wallGroup = new THREE.Group();
+
+            for(let i=0; i<wallSegments; i++) {
+                // Platz für die Tür zum Büro lassen (Segment 30 liegt bei ca. 180 Grad gegenüber)
+                if(i >= 28 && i <= 32) continue;
+
+                const angle = (i / wallSegments) * Math.PI * 2;
+                const segWidth = (Math.PI * 2 * wallRadius) / wallSegments + 0.1;
+                
+                const segGeo = new THREE.BoxGeometry(segWidth, wallHeight, 0.3);
+                const segMat = new THREE.MeshStandardMaterial({ color: 0x0a0a1a, roughness: 0.7 });
+                const seg = new THREE.Mesh(segGeo, segMat);
+                
+                seg.position.set(Math.sin(angle) * wallRadius, wallHeight/2, Math.cos(angle) * wallRadius);
+                seg.rotation.y = angle;
+                seg.receiveShadow = true;
+                seg.castShadow = true;
+                wallGroup.add(seg);
+            }
+            scene.add(wallGroup);
+
+            // Decke
+            const roofGeo = new THREE.CylinderGeometry(12, 12, 0.2, 60);
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x050510, roughness: 0.8 });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = wallHeight;
+            scene.add(roof);
+
+            // Architektonisches Highlight: Zentrale Skulptur
+            const coreGeo = new THREE.IcosahedronGeometry(1.5, 1);
+            const coreMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, wireframe: true });
+            const core = new THREE.Mesh(coreGeo, coreMat);
+            core.position.set(0, 2.5, 0);
+            scene.add(core);
+
+            // BÜRO-TÜR DESIGN
+            buildOfficeDoorWay(wallRadius);
+        }
+
+        let doorMesh = null;
+        let isDoorOpen = false;
+        const DOOR_CLOSED_Z = -11.75;
+        const DOOR_OPEN_Z = -14.0;
+
+        function buildOfficeDoorWay(wallRadius) {
+            const angle = Math.PI; // 180 Grad
+            
+            // Türrahmen links
+            const frameL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.5, 0.5), new THREE.MeshStandardMaterial({color:0x334155}));
+            frameL.position.set(-1.4, 1.75, -wallRadius);
+            scene.add(frameL);
+
+            // Türrahmen rechts
+            const frameR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.5, 0.5), new THREE.MeshStandardMaterial({color:0x334155}));
+            frameR.position.set(1.4, 1.75, -wallRadius);
+            scene.add(frameR);
+
+            // Türrahmen oben
+            const frameT = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.4, 0.5), new THREE.MeshStandardMaterial({color:0x334155}));
+            frameT.position.set(0, 3.7, -wallRadius);
+            scene.add(frameT);
+
+            // Das bewegliche Tor (Schiebetür nach hinten/außen)
+            const doorGeo = new THREE.BoxGeometry(2.5, 3.4, 0.1);
+            const doorMat = new THREE.MeshStandardMaterial({color: 0x1e293b, metalness: 0.5, roughness: 0.3});
+            doorMesh = new THREE.Mesh(doorGeo, doorMat);
+            doorMesh.position.set(0, 1.7, DOOR_CLOSED_Z);
+            scene.add(doorMesh);
+
+            // Ein Schild über dem Eingang
+            const signTex = createTextTexture("办公厅 / BÜRO", 256, 64, '#10b981');
+            const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.45), new THREE.MeshBasicMaterial({map: signTex, transparent:true}));
+            sign.position.set(0, 4.2, -wallRadius + 0.26);
+            scene.add(sign);
+
+            // Der Raum dahinter (Das Büro)
+            buildOfficeRoom();
+        }
+
+        function buildOfficeRoom() {
+            const officeGroup = new THREE.Group();
+            
+            // Boden Büro
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, 6), new THREE.MeshStandardMaterial({color: 0x0f172a}));
+            floor.position.set(0, -0.05, -15);
+            officeGroup.add(floor);
+
+            // Wände Büro
+            const wallMat = new THREE.MeshStandardMaterial({color: 0x1e293b});
+            
+            const wallBack = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 0.2), wallMat);
+            wallBack.position.set(0, 2, -18);
+            officeGroup.add(wallBack);
+
+            const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 6), wallMat);
+            wallL.position.set(-3, 2, -15);
+            officeGroup.add(wallL);
+
+            const wallR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 6), wallMat);
+            wallR.position.set(3, 2, -15);
+            officeGroup.add(wallR);
+
+            // Decke Büro
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 6), new THREE.MeshStandardMaterial({color: 0x0f172a}));
+            roof.position.set(0, 4, -15);
+            officeGroup.add(roof);
+
+            // Licht im Büro
+            const officeLight = new THREE.PointLight(0x10b981, 0.8, 10);
+            officeLight.position.set(0, 3, -15);
+            officeGroup.add(officeLight);
+
+            // Ein einfacher Schreibtisch im Büro
+            const deskT = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 1.2), new THREE.MeshStandardMaterial({color: 0x475569}));
+            deskT.position.set(0, 0.8, -16);
+            officeGroup.add(deskT);
+
+            const legL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 1.0), new THREE.MeshStandardMaterial({color: 0x334155}));
+            legL.position.set(-1.0, 0.4, -16);
+            officeGroup.add(legL);
+
+            const legR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 1.0), new THREE.MeshStandardMaterial({color: 0x334155}));
+            legR.position.set(1.0, 0.4, -16);
+            officeGroup.add(legR);
+
+            // Terminal auf dem Schreibtisch (Interaktiver Punkt)
+            const monitor = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.1), new THREE.MeshStandardMaterial({color: 0x020617}));
+            monitor.position.set(0, 1.15, -16.2);
+            officeGroup.add(monitor);
+
+            scene.add(officeGroup);
+        }
+
+        // --- EXPONATE GENERIEREN ---
+        function spawnExhibits() {
+            const step = (Math.PI * 2) / TOTAL_EXHIBITS;
+            
+            for(let i=0; i<TOTAL_EXHIBITS; i++) {
+                // Mathematische Anordnung entlang des Kreisbogens
+                const angle = i * step;
+                const x = Math.sin(angle) * EXPO_RADIUS;
+                const z = Math.cos(angle) * EXPO_RADIUS;
+
+                const exGroup = new THREE.Group();
+                exGroup.position.set(x, 0, z);
+                exGroup.rotation.y = angle + Math.PI; 
+
+                // Sockel
+                const baseGeo = new THREE.CylinderGeometry(0.6, 0.7, 1.0, 16);
+                const baseMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+                const base = new THREE.Mesh(baseGeo, baseMat);
+                base.position.y = 0.5;
+                base.castShadow = true;
+                base.receiveShadow = true;
+                exGroup.add(base);
+
+                // Interaktiver Schalter / Button auf dem Sockel
+                const btnGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16);
+                const btnMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x551111 });
+                const btn = new THREE.Mesh(btnGeo, btnMat);
+                btn.position.set(0, 1.05, 0.2);
+                exGroup.add(btn);
+
+                // Das Plakat / Display-Halterung
+                const boardFrameGeo = new THREE.BoxGeometry(2.2, 2.2, 0.1);
+                const boardFrameMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+                const boardFrame = new THREE.Mesh(boardFrameGeo, boardFrameMat);
+                boardFrame.position.set(0, 2.3, 0);
+                exGroup.add(boardFrame);
+
+                scene.add(exGroup);
+
+                // Datenstruktur für Exponat abspeichern
+                exhibits.push({
+                    id: i,
+                    initialNumber: initialOrder[i],
+                    currentNumber: initialOrder[i],
+                    groupRef: exGroup,
+                    posterMesh: null,
+                    buttonMesh: btn
+                });
+
+                updateExhibitVisual(exhibits[i]);
+            }
+            
+            // Ersten Zustand validieren
+            checkMathematicalOrder();
+        }
+
+        // --- TEXTUREN & VISUALS GENERIEREN ---
+        
+        // HIER IST DIE AKTUALISIERTE FUNKTION MIT GLUMANDA-INTEGRATION!
+        function createNumberTexture(number) {
+            // Wenn es die 4 ist, laden wir dein Glumanda-Bild!
+            if (number === 4) {
+                const loader = new THREE.TextureLoader();
+                const charmanderTex = loader.load('120px-Shuffle004Winking.png', 
+                    (tex) => {
+                        tex.needsUpdate = true;
+                    },
+                    undefined,
+                    (err) => console.error("Fehler beim Laden des Glumanda-Bildes:", err)
+                );
+                return charmanderTex;
+            }
+
+            // Für alle anderen Zahlen (1, 2, 3, 5) bleibt das alte Canvas-Design bestehen
+            const canvas = document.createElement('canvas'); 
+            canvas.width = 256; canvas.height = 256; 
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#4a90e2'; ctx.fillRect(0, 0, 256, 256); 
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 216, 216);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 130px sans-serif'; 
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+            ctx.fillText(number, 128, 128); 
+            
             return new THREE.CanvasTexture(canvas);
         }
-        const marbleTexture = createMarbleTexture();
-        const wallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05 });
-        const partitionWallMat = new THREE.MeshStandardMaterial({ map: marbleTexture, roughness: 0.2, metalness: 0.05, side: THREE.DoubleSide });
 
-        function createParquetTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512; const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#5c3a21'; ctx.fillRect(0, 0, 512, 512); const cols = 8; const rowH = 32;
-            for (let c = 0; c < cols; c++) {
-                let startX = c * 64;
-                for (let y = -32; y < 544; y += rowH) {
-                    let brightness = Math.floor(Math.random() * 25) - 12; ctx.fillStyle = `rgb(${92 + brightness}, ${58 + brightness}, ${33 + brightness})`; ctx.beginPath();
-                    if (c % 2 === 0) { ctx.moveTo(startX, y); ctx.lineTo(startX + 64, y + 32); ctx.lineTo(startX + 64, y + 48); ctx.lineTo(startX, y + 16); } 
-                    else { ctx.moveTo(startX, y + 32); ctx.lineTo(startX + 64, y); ctx.lineTo(startX + 64, y + 16); ctx.lineTo(startX, y + 48); }
-                    ctx.fill(); ctx.strokeStyle = 'rgba(40, 20, 5, 0.6)'; ctx.lineWidth = 1; ctx.stroke();
-                }
-            }
-            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2, 2); return tex;
-        }
-
-        function createTerrazzoTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512; const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#d1d8e0'; ctx.fillRect(0, 0, 512, 512); const colors = ['#778ca3', '#a5b1c2', '#4b6584', '#fed330', '#eb3b5a', '#ffffff'];
-            for(let i=0; i<800; i++) { ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)]; ctx.beginPath(); let rx = Math.random() * 512; let ry = Math.random() * 512; let rSize = 1 + Math.random() * 3; ctx.arc(rx, ry, rSize, 0, Math.PI * 2); ctx.fill(); }
-            ctx.strokeStyle = 'rgba(100, 110, 120, 0.4)'; ctx.lineWidth = 2;
-            for(let g=0; g<=512; g+=128) { ctx.beginPath(); ctx.moveTo(g, 0); ctx.lineTo(g, 512); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, g); ctx.lineTo(512, g); ctx.stroke(); }
-            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(3, 3); return tex;
-        }
-
-        function createCarpetTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#800020'; ctx.fillRect(0, 0, 512, 512);
-            for (let i = 0; i < 80000; i++) { let x = Math.random() * 512; let y = Math.random() * 512; let noise = Math.floor(Math.random() * 30) - 15; ctx.fillStyle = `rgb(${128 + noise}, ${0 + Math.max(0, noise)}, ${32 + noise})`; ctx.fillRect(x, y, 1.5, 1.5); }
-            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(4, 4); return tex;
-        }
-
-        function createShopFloorTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#f5f0e1'; ctx.fillRect(0, 0, 256, 256);
-            for(let i=0; i<3000; i++) { let x = Math.random() * 256; let y = Math.random() * 256; ctx.fillStyle = Math.random() > 0.5 ? 'rgba(180, 160, 140, 0.2)' : 'rgba(255, 255, 255, 0.6)'; ctx.fillRect(x, y, 2, 2); }
-            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2, 2); return tex;
-        }
-
-        // --- 3. RAUM-DIMENSIONEN & BÖDEN ---
-        const ROOM_SIZE = 24; const BLOCK_SIZE = 8; const SUB_ROOM_SIZE = 10; const LOBBY_SIZE = 12; const SHOP_SIZE = 10; const DOOR_HEIGHT = 2.8; const DOOR_WIDTH = 2.2;  
-        
-        const floorGeo = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
-        const floorMat = new THREE.MeshStandardMaterial({ map: createCarpetTexture(), roughness: 0.9 });
-        const floor = new THREE.Mesh(floorGeo, floorMat); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-
-        const subFloorGeo = new THREE.PlaneGeometry(SUB_ROOM_SIZE, SUB_ROOM_SIZE);
-        const subFloorMat = new THREE.MeshStandardMaterial({ map: createParquetTexture(), roughness: 0.3, metalness: 0.1 }); 
-        const subFloor = new THREE.Mesh(subFloorGeo, subFloorMat); subFloor.rotation.x = -Math.PI / 2; subFloor.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); subFloor.receiveShadow = true; scene.add(subFloor);
-
-        const lobbyFloorGeo = new THREE.PlaneGeometry(LOBBY_SIZE, LOBBY_SIZE);
-        const lobbyFloorMat = new THREE.MeshStandardMaterial({ map: createTerrazzoTexture(), roughness: 0.2 });
-        const lobbyFloor = new THREE.Mesh(lobbyFloorGeo, lobbyFloorMat); lobbyFloor.rotation.x = -Math.PI / 2; lobbyFloor.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2); lobbyFloor.receiveShadow = true; scene.add(lobbyFloor);
-
-        const shopFloorGeo = new THREE.PlaneGeometry(SHOP_SIZE, SHOP_SIZE);
-        const shopFloorMat = new THREE.MeshStandardMaterial({ map: createShopFloorTexture(), roughness: 0.5 });
-        const shopFloor = new THREE.Mesh(shopFloorGeo, shopFloorMat); shopFloor.rotation.x = -Math.PI / 2; shopFloor.position.set(-LOBBY_SIZE / 2 - SHOP_SIZE / 2, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2); shopFloor.receiveShadow = true; scene.add(shopFloor);
-
-        // Visual Grids
-        const grid = new THREE.GridHelper(ROOM_SIZE, ROOM_SIZE, 0xd42426, 0x4a1114); grid.position.y = 0.005; scene.add(grid);
-        const subGrid = new THREE.GridHelper(SUB_ROOM_SIZE, SUB_ROOM_SIZE, 0xfa8231, 0x3e2723); subGrid.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0.005, 0); scene.add(subGrid);
-        const lobbyGrid = new THREE.GridHelper(LOBBY_SIZE, LOBBY_SIZE, 0xa84a9f, 0x443342); lobbyGrid.position.set(0, 0.005, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGrid);
-        const shopGrid = new THREE.GridHelper(SHOP_SIZE, SHOP_SIZE, 0x00ffcc, 0x113e35); shopGrid.position.set(-LOBBY_SIZE / 2 - SHOP_SIZE / 2, 0.005, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(shopGrid);
-
-        // --- 4. WÄNDE-STRUKTUR ---
-        const wallGeo = new THREE.PlaneGeometry(ROOM_SIZE, 6);
-        const backWall = new THREE.Mesh(wallGeo, wallMat); backWall.position.set(0, 3, -ROOM_SIZE/2); scene.add(backWall);
-        const leftWall = new THREE.Mesh(wallGeo, wallMat); leftWall.position.set(-ROOM_SIZE/2, 3, 0); leftWall.rotation.y = Math.PI/2; scene.add(leftWall);
-        
-        const frontWallSegLen = (ROOM_SIZE - 4) / 2; const frontWallSegGeo = new THREE.PlaneGeometry(frontWallSegLen, 6);
-        const frontWallLeft = new THREE.Mesh(frontWallSegGeo, partitionWallMat); frontWallLeft.position.set(-ROOM_SIZE/2 + frontWallSegLen/2, 3, ROOM_SIZE/2); frontWallLeft.rotation.y = Math.PI; scene.add(frontWallLeft);
-        const frontWallRight = new THREE.Mesh(frontWallSegGeo, partitionWallMat); frontWallRight.position.set(ROOM_SIZE/2 - frontWallSegLen/2, 3, ROOM_SIZE/2); frontWallRight.rotation.y = Math.PI; scene.add(frontWallRight);
-        const frontWallLintel = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), partitionWallMat); frontWallLintel.position.set(0, 5, ROOM_SIZE/2); frontWallLintel.rotation.y = Math.PI; scene.add(frontWallLintel);
-
-        const lintel = new THREE.Mesh(new THREE.PlaneGeometry(DOOR_WIDTH, 6 - DOOR_HEIGHT), partitionWallMat); lintel.position.set(ROOM_SIZE/2, DOOR_HEIGHT + (6 - DOOR_HEIGHT)/2, 0); lintel.rotation.y = -Math.PI/2; scene.add(lintel);
-        const sideWallLength = (ROOM_SIZE - DOOR_WIDTH) / 2; const rightWallSegGeo = new THREE.PlaneGeometry(sideWallLength, 6);
-        const rightWallSeg1 = new THREE.Mesh(rightWallSegGeo, partitionWallMat); rightWallSeg1.position.set(ROOM_SIZE/2, 3, -ROOM_SIZE/4 - DOOR_WIDTH/4); rightWallSeg1.rotation.y = -Math.PI/2; scene.add(rightWallSeg1);
-        const rightWallSeg2 = new THREE.Mesh(rightWallSegGeo, partitionWallMat); rightWallSeg2.position.set(ROOM_SIZE/2, 3, ROOM_SIZE/4 + DOOR_WIDTH/4); rightWallSeg2.rotation.y = -Math.PI/2; scene.add(rightWallSeg2);
-
-        const subWallGeoH = new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6);
-        const subBackWall = new THREE.Mesh(subWallGeoH, wallMat); subBackWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, -SUB_ROOM_SIZE/2); scene.add(subBackWall);
-        const subFrontWall = new THREE.Mesh(subWallGeoH, wallMat); subFrontWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE/2, 3, SUB_ROOM_SIZE/2); subFrontWall.rotation.y = Math.PI; scene.add(subFrontWall);
-        const subRightWall = new THREE.Mesh(new THREE.PlaneGeometry(SUB_ROOM_SIZE, 6), wallMat); subRightWall.position.set(ROOM_SIZE/2 + SUB_ROOM_SIZE, 3, 0); subRightWall.rotation.y = -Math.PI/2; scene.add(subRightWall);
-
-        const lobbyWallGeoW = new THREE.PlaneGeometry(LOBBY_SIZE, 6);
-        const lobbyBackWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyBackWall.position.set(0, 3, ROOM_SIZE/2 + LOBBY_SIZE); lobbyBackWall.rotation.y = Math.PI; scene.add(lobbyBackWall);
-        const lobbyRightWall = new THREE.Mesh(lobbyWallGeoW, wallMat); lobbyRightWall.position.set(LOBBY_SIZE/2, 3, ROOM_SIZE/2 + LOBBY_SIZE/2); lobbyRightWall.rotation.y = -Math.PI/2; scene.add(lobbyRightWall);
-        
-        const lobbyLeftSegGeo = new THREE.PlaneGeometry(4, 6);
-        const lobbyLeftWallBack = new THREE.Mesh(lobbyLeftSegGeo, partitionWallMat); lobbyLeftWallBack.position.set(-LOBBY_SIZE/2, 3, ROOM_SIZE/2 + 2); lobbyLeftWallBack.rotation.y = Math.PI/2; scene.add(lobbyLeftWallBack);
-        const lobbyLeftWallFront = new THREE.Mesh(lobbyLeftSegGeo, partitionWallMat); lobbyLeftWallFront.position.set(-LOBBY_SIZE/2, 3, ROOM_SIZE/2 + LOBBY_SIZE - 2); lobbyLeftWallFront.rotation.y = Math.PI/2; scene.add(lobbyLeftWallFront);
-        const lobbyLeftLintel = new THREE.Mesh(new THREE.PlaneGeometry(4, 2), partitionWallMat); lobbyLeftLintel.position.set(-LOBBY_SIZE/2, 5, ROOM_SIZE/2 + LOBBY_SIZE/2); lobbyLeftLintel.rotation.y = Math.PI/2; scene.add(lobbyLeftLintel);
-
-        const shopWallGeo = new THREE.PlaneGeometry(SHOP_SIZE, 6); const shopXCenter = -LOBBY_SIZE / 2 - SHOP_SIZE / 2; const shopZCenter = ROOM_SIZE / 2 + LOBBY_SIZE / 2;
-        const shopLeftWall = new THREE.Mesh(shopWallGeo, wallMat); shopLeftWall.position.set(shopXCenter - SHOP_SIZE/2, 3, shopZCenter); shopLeftWall.rotation.y = Math.PI/2; scene.add(shopLeftWall);
-        const shopBackWall = new THREE.Mesh(shopWallGeo, wallMat); shopBackWall.position.set(shopXCenter, 3, shopZCenter - SHOP_SIZE/2); scene.add(shopBackWall);
-        const shopFrontWall = new THREE.Mesh(shopWallGeo, wallMat); shopFrontWall.position.set(shopXCenter, 3, shopZCenter + SHOP_SIZE/2); shopFrontWall.rotation.y = Math.PI; scene.add(shopFrontWall);
-
-        const centerBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK_SIZE, 6, BLOCK_SIZE), wallMat); centerBlock.position.set(0, 3, 0); scene.add(centerBlock);
-
-        // --- 5. TÜR (BÜRO) ---
-        function createDoorTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 512; const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 0, 256, 512); ctx.fillStyle = '#1a252f'; ctx.fillRect(20, 20, 216, 210); ctx.fillRect(20, 250, 216, 240);
-            ctx.fillStyle = '#00a8ff'; ctx.fillRect(15, 20, 4, 472); ctx.fillRect(237, 20, 4, 472);
-            ctx.strokeStyle = '#34495e'; ctx.lineWidth = 4; ctx.strokeRect(35, 35, 186, 180); ctx.strokeRect(35, 265, 186, 210);
-            ctx.fillStyle = '#e74c3c'; ctx.fillRect(20, 235, 20, 10); return new THREE.CanvasTexture(canvas);
-        }
-        const doorTexture = createDoorTexture(); const doorGroup = new THREE.Group(); doorGroup.position.set(ROOM_SIZE / 2, 0, -DOOR_WIDTH / 2);
-        const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(0.1, DOOR_HEIGHT, DOOR_WIDTH), new THREE.MeshStandardMaterial({ map: doorTexture, metalness: 0.7, roughness: 0.2 }));
-        doorPanel.position.set(0, DOOR_HEIGHT / 2, DOOR_WIDTH / 2); doorGroup.add(doorPanel);
-        const frameMat = new THREE.MeshBasicMaterial({ color: 0x00a8ff });
-        const leftFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, DOOR_HEIGHT, 0.08), frameMat); leftFrame.position.set(0, DOOR_HEIGHT/2, 0); doorGroup.add(leftFrame);
-        const rightFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, DOOR_HEIGHT, 0.08), frameMat); rightFrame.position.set(0, DOOR_HEIGHT/2, DOOR_WIDTH); doorGroup.add(rightFrame);
-        const topFrame = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, DOOR_WIDTH), frameMat); topFrame.position.set(0, DOOR_HEIGHT, DOOR_WIDTH/2); doorGroup.add(topFrame);
-        scene.add(doorGroup);
-
-        let isDoorOpen = false; let doorTargetAngle = 0;
-        function toggleDoor() { isDoorOpen = !isDoorOpen; doorTargetAngle = isDoorOpen ? Math.PI / 1.7 : 0; const ctx = doorTexture.image.getContext('2d'); ctx.fillStyle = isDoorOpen ? '#2ed573' : '#e74c3c'; ctx.fillRect(20, 235, 20, 10); doorTexture.needsUpdate = true; }
-
-        // --- 6. BÜRO-EINRICHTUNG ---
-        const officeGroup = new THREE.Group(); officeGroup.position.set(ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2, 0, 0); scene.add(officeGroup);
-        const desk = new THREE.Group(); const tabletop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 1.2), woodMat); tabletop.position.y = 0.76; desk.add(tabletop);
-        const legMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.5 });
-        const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg1.position.set(-1.1, 0.38, 0); desk.add(leg1);
-        const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.76, 1.0), legMat); leg2.position.set(1.1, 0.38, 0); desk.add(leg2); officeGroup.add(desk);
-
-        const monitor = new THREE.Group(); monitor.position.set(0, 0.8, -0.3);
-        const stand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.1), plasticMat); stand.position.y = 0.15; monitor.add(stand);
-        const screen = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.05), plasticMat); screen.position.y = 0.4; monitor.add(screen);
-        const display = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.46), new THREE.MeshBasicMaterial({ color: 0x00a8ff })); display.position.set(0, 0.4, 0.026); monitor.add(display); desk.add(monitor);
-
-        const deskLamp = new THREE.Group(); deskLamp.position.set(-0.8, 0.8, -0.2);
-        const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.02), chromeMat); deskLamp.add(lampBase);
-        const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.4), chromeMat); lampArm.position.set(0, 0.2, 0); lampArm.rotation.z = 0.2; deskLamp.add(lampArm);
-        const lampHead = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.1), plasticMat); lampHead.position.set(0.08, 0.4, 0); lampHead.rotation.z = -0.5; deskLamp.add(lampHead); desk.add(deskLamp);
-
-        const papers = [
-            { title: "📜 Tagebucheintrag des Kurators", content: "Tag 42 im mathematischen Exil:\nDie KI verhält sich seltsam. Sie weigert sich, die Exponate in einer chaotischen Reihenfolge anzuzeigen. Ordnung ist ihr oberstes Gebot.\n\nIch habe versucht, die Bilder zu sabotieren, aber das System setzt alles zurück, sobald die natürliche Zahlenfolge von 1 bis 5 hergestellt ist. Ich muss vorsichtig sein...", offsetX: 0.5, offsetZ: 0.2, rotY: 0.2 },
-            { title: "📋 Labornotiz: Systemfehler #04", content: "ACHTUNG - Kritischer Fehler in der Galerie-Matrix!\n\nDie Hauptwand registriert fehlerhafte Zustände. Falls die Schilder verrückt spielen, hilft nur ein händischer Reset.\n\nRegel für den Neustart:\nDas kleinste Glied steht immer links am Anfang. Die Energie fließt lückenlos aufsteigend nach rechts weg. (1... 2... 3...)", offsetX: -0.4, offsetZ: 0.3, rotY: -0.4 },
-            { title: "✉️ Ungelesener Brief", content: "Lieber Kollege,\n\nich habe das Büro wie besprochen abgeschlossen. Der Code für die Magnetschranke ist prozedural verschlüsselt.\n\nFalls du feststeckst: Schau dich einfach im Raum um. Die Möbel verbergen keine Geheimnisse, aber der Geist des Museums verlangt nach absoluter, mathematischer Symmetrie.\n\n- Dr. Alpha", offsetX: 0.2, offsetZ: -0.2, rotY: 0.5 }
-        ];
-        const paperMeshes = []; const paperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }); const paperGeo = new THREE.BoxGeometry(0.24, 0.005, 0.32);
-        papers.forEach((pData) => {
-            const paperMesh = new THREE.Mesh(paperGeo, paperMat); paperMesh.position.set(pData.offsetX, 0.805, pData.offsetZ); paperMesh.rotation.y = pData.rotY; desk.add(paperMesh);
-            paperMeshes.push({ mesh: paperMesh, title: pData.title, content: pData.content, getWorldPos: function() { let target = new THREE.Vector3(); return paperMesh.getWorldPosition(target); } });
-        });
-
-        let activeDocumentNearMe = null; let isDocumentOpen = false;
-        function openDocument(doc) { isDocumentOpen = true; const overlay = document.getElementById('document-overlay'); document.getElementById('doc-title').innerText = doc.title; document.getElementById('doc-content').innerText = doc.content; overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; }
-        function closeDocument() { isDocumentOpen = false; document.getElementById('document-overlay').classList.remove('open'); }
-
-        function createShelf(x, z) {
-            const shelf = new THREE.Group(); shelf.position.set(x, 0, z); const shelfWoodMat = new THREE.MeshStandardMaterial({ color: 0x2c1a10, roughness: 0.5 }); const bookColors = [0xe74c3c, 0x3498db, 0x2ecc71, 0xf1c40f, 0x9b59b6];
-            const backwall = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.4, 0.04), shelfWoodMat); backwall.position.set(0, 1.2, -0.18); shelf.add(backwall);
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat); leftWall.position.set(-0.78, 1.2, 0); shelf.add(leftWall);
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.4), shelfWoodMat); rightWall.position.set(0.78, 1.2, 0); shelf.add(rightWall);
-            for (let i = 1; i <= 4; i++) {
-                const h = i * 0.48; const board = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.03, 0.38), shelfWoodMat); board.position.set(0, h, 0); shelf.add(board); let cx = -0.7;
-                while (cx < 0.7) {
-                    if (Math.random() > 0.15) {
-                        const bw = 0.03 + Math.random() * 0.04; const bh = 0.22 + Math.random() * 0.13;
-                        const book = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.24), new THREE.MeshStandardMaterial({ color: bookColors[Math.floor(Math.random() * bookColors.length)] }));
-                        book.position.set(cx + bw / 2, h + 0.015 + bh / 2, 0.05); cx += bw + 0.02; shelf.add(book);
-                    } else { cx += 0.08; }
-                }
-            } return shelf;
-        }
-        officeGroup.add(createShelf(-2.5, -4.7)); officeGroup.add(createShelf(-0.8, -4.7)); 
-
-        const chair = new THREE.Group(); chair.position.set(0, 0, 0.8); chair.rotation.y = Math.PI - 0.3; 
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4), chromeMat); base.position.y = 0.2; chair.add(base);
-        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.55), plasticMat); seat.position.y = 0.43; chair.add(seat);
-        const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.06), plasticMat); backrest.position.set(0, 0.73, -0.25); chair.add(backrest); officeGroup.add(chair);
-
-        function createCabinet(x, z, rot) {
-            const cab = new THREE.Group(); cab.position.set(x, 0, z); cab.rotation.y = rot;
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xdcdde1 })); body.position.y = 0.9; cab.add(body);
-            for(let f=0.25; f<1.8; f+=0.42) {
-                const drawer = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.36, 0.02), new THREE.MeshStandardMaterial({ color: 0xb2bec3 })); drawer.position.set(0, f, 0.26); cab.add(drawer);
-                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.03), chromeMat); handle.position.set(0, f, 0.28); cab.add(handle);
-            } return cab;
-        }
-        officeGroup.add(createCabinet(4.6, -2.0, -Math.PI / 2)); officeGroup.add(createCabinet(4.6, -0.4, -Math.PI / 2));
-
-        const trashCanGroup = new THREE.Group(); trashCanGroup.position.set(4.0, 0, 4.0);
-        const binMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.4, metalness: 0.6 });
-        const binBody = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.55, 12), binMat); binBody.position.y = 0.275; trashCanGroup.add(binBody);
-        const binRim = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.03, 12), chromeMat); binRim.position.y = 0.54; trashCanGroup.add(binRim);
-        officeGroup.add(trashCanGroup);
-
-        const trashCanData = {
-            hasPaper: true, title: "🗑️ Zerknüllter Zettel",
-            content: "🔒 GEHEIMES MEMO AN DEN DIRETTORE:\n\nIch habe herausgefunden, wie die KI-Sperre der Bilderwand überbrückt werden kann!\n\nFalls die Exponate durcheinandergeraten sind und du die Reihenfolge (1-2-3-4-5) nicht weißt, suche nach den Originalplatten im Archiv. \n\nMerke dir gut: Jedes Bild besitzt ein exaktes Gegengewicht. Sobald die Wand die lückenlose Reihe spürt, entriegelt sich das System vollautomatisch.",
-            getWorldPos: function() { let target = new THREE.Vector3(); return trashCanGroup.getWorldPosition(target); }
-        };
-        let activeTrashNearMe = null;
-
-        // --- 7. EINRICHTUNG FÜR DIE LOBBY / EINGANGSHALLE ---
-        const lobbyGroup = new THREE.Group(); lobbyGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE / 2); scene.add(lobbyGroup);
-
-        function createTicketCounter(x) {
-            const counter = new THREE.Group(); counter.position.set(x, 0, LOBBY_SIZE / 2 - 1.2);
-            const cBase = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 0.8), counterMat); cBase.position.y = 0.55; counter.add(cBase);
-            const plate = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.05, 0.9), woodMat); plate.position.y = 1.12; counter.add(plate);
-            const glass = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.0, 0.04), glassMat); glass.position.set(0, 1.64, 0.2); counter.add(glass);
-            const pc = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.1), plasticMat); pc.position.set(-0.2, 1.3, -0.1); pc.rotation.y = 0.2; counter.add(pc);
-            return counter;
-        }
-        lobbyGroup.add(createTicketCounter(-2.5)); lobbyGroup.add(createTicketCounter(2.5));
-
-        const vendingMachines = [];
-        function createVendingMachine(id, x, z, rotY, givesMoney) {
-            const vm = new THREE.Group(); vm.position.set(x, 0, z); vm.rotation.y = rotY;
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.8), plasticMat); body.position.y = 1.1; vm.add(body);
-            const vGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.4), new THREE.MeshBasicMaterial({ color: 0x050510 })); vGlass.position.set(0, 1.2, 0.41); vm.add(vGlass);
-            const slot = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.1), chromeMat); slot.position.set(0, 0.25, 0.38); vm.add(slot);
-            const lightStrip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.02), glowMat); lightStrip.position.set(0.42, 1.2, 0.41); vm.add(lightStrip);
-            const drinkColors = [0xe74c3c, 0x2ecc71, 0xf1c40f, 0xe67e22]; const canGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.14, 6);
-            for (let row = 0; row < 3; row++) {
-                let rowY = 0.75 + row * 0.35; const shelfPlate = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.01, 0.3), chromeMat); shelfPlate.position.set(0, rowY, 0.22); vm.add(shelfPlate);
-                for (let col = 0; col < 4; col++) {
-                    let colX = -0.3 + col * 0.2; let cMat = new THREE.MeshStandardMaterial({ color: drinkColors[(row + col) % drinkColors.length], roughness: 0.3, metalness: 0.6 });
-                    const drinkCan = new THREE.Mesh(canGeo, cMat); drinkCan.position.set(colX, rowY + 0.07, 0.25); vm.add(drinkCan);
-                }
-            }
-            lobbyGroup.add(vm); vendingMachines.push({ id: id, givesMoney: givesMoney, hasMoney: givesMoney, getWorldPos: function() { let target = new THREE.Vector3(); return vm.getWorldPosition(target); } });
-        }
-        createVendingMachine(1, LOBBY_SIZE / 2 - 0.6, -2.0, -Math.PI / 2, false);
-        createVendingMachine(2, LOBBY_SIZE / 2 - 0.6, 1.5, -Math.PI / 2, true);
-
-        function createLobbyBench(z) {
-            const bench = new THREE.Group(); bench.position.set(0, 0, z);
-            const frame = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 1.0), chromeMat); frame.position.y = 0.15; bench.add(frame);
-            const legA = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 1.0), chromeMat); legA.position.set(-1.4, 0.075, 0); bench.add(legA);
-            const legB = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 1.0), chromeMat); legB.position.set(1.4, 0.075, 0); bench.add(legB);
-            const cushion = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.3, 0.9), new THREE.MeshStandardMaterial({ color: 0x9b59b6, roughness: 0.8 })); cushion.position.y = 0.35; bench.add(cushion);
-            return bench;
-        }
-        lobbyGroup.add(createLobbyBench(-1.5)); lobbyGroup.add(createLobbyBench(1.5));
-
-        // --- 8. EINRICHTUNG MUSEUMSSHOP & AUTOMAT ---
-        const shopGroup = new THREE.Group(); shopGroup.position.set(shopXCenter, 0, shopZCenter); scene.add(shopGroup);
-
-        function createShopShelf(x, z, rotY) {
-            const shelf = new THREE.Group(); shelf.position.set(x, 0, z); shelf.rotation.y = rotY;
-            const sMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
-            const back = new THREE.Mesh(new THREE.BoxGeometry(2.0, 2.2, 0.05), sMat); back.position.y = 1.1; shelf.add(back);
-            for(let i=1; i<=3; i++) {
-                const board = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 0.35), sMat); board.position.set(0, i * 0.55, 0.16); shelf.add(board);
-                if(i === 1) {
-                    const cubeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15); const cubeMesh = new THREE.Mesh(cubeGeo, new THREE.MeshStandardMaterial({ color: 0x2ed573 })); cubeMesh.position.set(-0.4, i * 0.55 + 0.1, 0.16); shelf.add(cubeMesh);
-                } else if(i === 2) {
-                    const coneGeo = new THREE.ConeGeometry(0.1, 0.2, 8); const coneMesh = new THREE.Mesh(coneGeo, new THREE.MeshStandardMaterial({ color: 0xff4757 })); coneMesh.position.set(0.3, i * 0.55 + 0.1, 0.16); shelf.add(coneMesh);
-                } else {
-                    const sphereGeo = new THREE.SphereGeometry(0.09, 8, 8); const sphereMesh = new THREE.Mesh(sphereGeo, new THREE.MeshStandardMaterial({ color: 0xffa502 })); sphereMesh.position.set(0, i * 0.55 + 0.1, 0.16); shelf.add(sphereMesh);
-                }
-            } return shelf;
-        }
-        shopGroup.add(createShopShelf(0, -SHOP_SIZE/2 + 0.1, 0)); shopGroup.add(createShopShelf(2.5, -SHOP_SIZE/2 + 0.1, 0)); 
-
-        const shopCounter = new THREE.Group(); shopCounter.position.set(1.5, 0, 1.5);
-        const scBase = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.6), new THREE.MeshStandardMaterial({ color: 0x34495e })); scBase.position.y = 0.5; shopCounter.add(scBase);
-        const scPlate = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.04, 0.65), woodMat); scPlate.position.y = 1.02; shopCounter.add(scPlate);
-        const cardStand = new THREE.Group(); cardStand.position.set(-1.0, 0, 0);
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.6), chromeMat); pole.position.y = 0.8; cardStand.add(pole);
-        const basePod = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.04), plasticMat); basePod.position.y = 0.02; cardStand.add(basePod);
-        const cardsBody = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 0.35), new THREE.MeshStandardMaterial({ color: 0xffffff })); cardsBody.position.y = 1.1; cardStand.add(cardsBody);
-        shopCounter.add(cardStand); shopGroup.add(shopCounter);
-
-        // SPIELEAUTOMAT
-        const arcadeCabinet = new THREE.Group(); arcadeCabinet.position.set(-SHOP_SIZE/2 + 0.5, 0, SHOP_SIZE/2 - 1.5); arcadeCabinet.rotation.y = Math.PI / 2; 
-        const cabColor = new THREE.MeshStandardMaterial({ color: 0x11141a, roughness: 0.5 });
-        const sideL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.0, 0.7), cabColor); sideL.position.set(-0.4, 1.0, 0); arcadeCabinet.add(sideL);
-        const sideR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.0, 0.7), cabColor); sideR.position.set(0.4, 1.0, 0); arcadeCabinet.add(sideR);
-        const backPanel = new THREE.Mesh(new THREE.BoxGeometry(0.76, 2.0, 0.04), cabColor); backPanel.position.set(0, 1.0, -0.33); arcadeCabinet.add(backPanel);
-        const ctrlPanel = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.15, 0.3), new THREE.MeshStandardMaterial({ color: 0x222f3e })); ctrlPanel.position.set(0, 0.95, 0.15); arcadeCabinet.add(ctrlPanel);
-        const joystick = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.1), chromeMat); joystick.position.set(-0.15, 1.06, 0.15); joystick.rotation.x = 0.2; arcadeCabinet.add(joystick);
-        const joyKnob = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff4757 })); joyKnob.position.set(-0.17, 1.12, 0.17); arcadeCabinet.add(joyKnob);
-        const screenBox = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.5, 0.04), plasticMat); screenBox.position.set(0, 1.35, -0.05); screenBox.rotation.x = -0.25; arcadeCabinet.add(screenBox);
-        
-        function createArcadeScreenTexture() {
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 192; const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, 256, 192); ctx.fillStyle = '#00ffcc'; ctx.font = 'bold 18px monospace'; ctx.fillText('GEOMETRY MEMORY', 15, 45);
-            ctx.fillStyle = '#ffffff'; ctx.font = '14px monospace'; ctx.fillText('DRÜCKE R ZUM STARTEN', 20, 110); return new THREE.CanvasTexture(canvas);
-        }
-        const arcadeScreenGeo = new THREE.PlaneGeometry(0.72, 0.46); const arcadeScreenMat = new THREE.MeshBasicMaterial({ map: createArcadeScreenTexture() });
-        const arcadeScreen = new THREE.Mesh(arcadeScreenGeo, arcadeScreenMat); arcadeScreen.position.set(0, 1.36, -0.02); arcadeScreen.rotation.x = -0.25; arcadeCabinet.add(arcadeScreen);
-        const marquee = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.15, 0.2), arcadeNeonMat); marquee.position.set(0, 1.85, 0.1); arcadeCabinet.add(marquee);
-        shopGroup.add(arcadeCabinet);
-
-        let activeArcadeNearMe = null;
-        let isArcadeOverlayOpen = false;
-
-        // --- 8B. AUTOMATEN MINIGAME-LOGIK (MEMORY 4X4) ---
-        const memorySymbols = ['▲', '■', '⬢', '★', '𝚺', '𝛑', '∞', '√'];
-        let memoryDeck = []; let selectedCards = []; let matchedPairsCount = 0; let arcadeMovesCount = 0; let lockBoard = false;
-        let hasWonTicketBefore = false;
-
-        function initMemoryGame() {
-            memoryDeck = [...memorySymbols, ...memorySymbols];
-            // Karten mischen
-            memoryDeck.sort(() => Math.random() - 0.5);
-            
-            matchedPairsCount = 0; arcadeMovesCount = 0; selectedCards = []; lockBoard = false;
-            document.getElementById('arcade-moves').innerText = '0';
-            document.getElementById('arcade-pairs').innerText = '0/8';
-            document.getElementById('arcade-win-message').style.display = 'none';
-
-            const gridContainer = document.getElementById('arcade-memory-grid');
-            gridContainer.innerHTML = '';
-
-            memoryDeck.forEach((symbol, index) => {
-                const card = document.createElement('div');
-                card.className = 'memory-card';
-                card.dataset.symbol = symbol;
-                card.dataset.index = index;
-                card.innerText = '❓'; // Rückseiten-Symbol
-                card.onclick = () => flipMemoryCard(card);
-                gridContainer.appendChild(card);
-            });
-        }
-
-        function flipMemoryCard(card) {
-            if (lockBoard || card.classList.contains('revealed') || card.classList.contains('matched')) return;
-
-            card.classList.add('revealed');
-            card.innerText = card.dataset.symbol;
-            selectedCards.push(card);
-
-            if (selectedCards.length === 2) {
-                arcadeMovesCount++;
-                document.getElementById('arcade-moves').innerText = arcadeMovesCount;
-                checkMemoryMatch();
-            }
-        }
-
-        function checkMemoryMatch() {
-            let [card1, card2] = selectedCards;
-            let isMatch = card1.dataset.symbol === card2.dataset.symbol;
-
-            if (isMatch) {
-                card1.classList.add('matched'); card2.classList.add('matched');
-                matchedPairsCount++;
-                document.getElementById('arcade-pairs').innerText = `${matchedPairsCount}/8`;
-                selectedCards = [];
-                if (matchedPairsCount === 8) {
-                    document.getElementById('arcade-win-message').style.display = 'block';
-                    if(!hasWonTicketBefore) {
-                        hasWonTicketBefore = true;
-                        playerInventory.push({ name: "🎫 Goldenes VIP-Ticket", icon: "🎫", isReadable: true, content: "Ein goldenes Ticket vom Arcade-Automaten!\nEs gewährt Eintritt in alle geheimen Archive des Mathe-Museums." });
-                    }
-                }
-            } else {
-                lockBoard = true;
-                setTimeout(() => {
-                    card1.classList.remove('revealed'); card1.innerText = '❓';
-                    card2.classList.remove('revealed'); card2.innerText = '❓';
-                    selectedCards = []; lockBoard = false;
-                }, 1000); // 1 Sekunde Bedenkzeit beim Fehlversuch
-            }
-        }
-
-        function openArcadeGame() {
-            isArcadeOverlayOpen = true;
-            initMemoryGame();
-            document.getElementById('arcade-overlay').classList.add('open');
-            for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0;
-        }
-        function closeArcadeGame() { isArcadeOverlayOpen = false; document.getElementById('arcade-overlay').classList.remove('open'); }
-
-        // --- 9. EXPO-PLÄTZE ---
-        const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
-        function createNumberTexture(number) {
-            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#4a90e2'; ctx.fillRect(0, 0, 256, 256); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 216, 216);
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 130px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(number, 128, 128); return new THREE.CanvasTexture(canvas);
-        }
-        for(let i=0; i<5; i++) {
-            const posX = -8 + i * 4; const posZ = -ROOM_SIZE/2 + 0.15; const group = new THREE.Group();
-            const frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 })); group.add(frame);
-            const emptySpace = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.9 })); emptySpace.position.z = 0.051; group.add(emptySpace);
-            group.position.set(posX, 3, posZ); scene.add(group); exhibits.push({ id: i, position: new THREE.Vector3(posX, 0, posZ), currentNumber: initialNumbers[i], posterMesh: null, groupRef: group });
-            updateExhibitVisual(exhibits[i]);
-        }
+        // HIER DIE ANPASSUNG FÜR DIE KORREKTE MATERIALDARSTELLUNG
         function updateExhibitVisual(exhibit) {
-            if(exhibit.posterMesh) { exhibit.groupRef.remove(exhibit.posterMesh); exhibit.posterMesh.geometry.dispose(); exhibit.posterMesh.material.dispose(); exhibit.posterMesh = null; }
+            if(exhibit.posterMesh) { 
+                exhibit.groupRef.remove(exhibit.posterMesh); 
+                exhibit.posterMesh.geometry.dispose(); 
+                exhibit.posterMesh.material.dispose(); 
+                exhibit.posterMesh = null; 
+            }
             if(exhibit.currentNumber !== null) {
-                const tex = createNumberTexture(exhibit.currentNumber); exhibit.posterMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), new THREE.MeshBasicMaterial({ map: tex }));
-                exhibit.posterMesh.position.z = 0.06; exhibit.groupRef.add(exhibit.posterMesh);
-            }
-        }
-
-        // --- 10. AVATAR ---
-        const playerGroup = new THREE.Group();
-        const metalMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.2, metalness: 0.8 });
-        const armorMat = new THREE.MeshStandardMaterial({ color: 0x2e3192, roughness: 0.3 });
-        const jointMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.5 });
-        const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8), jointMat); pelvis.position.y = 0.85; playerGroup.add(pelvis);
-        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.55, 6), armorMat); torso.position.y = 1.2; playerGroup.add(torso);
-        const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glowMat); core.position.set(0, 1.3, 0.21); playerGroup.add(core);
-        const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), metalMat); leftArm.position.set(-0.32, 1.15, 0); playerGroup.add(leftArm);
-        const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), metalMat); rightArm.position.set(0.32, 1.15, 0); playerGroup.add(rightArm);
-        const robotHead = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.24, 0.24), armorMat); robotHead.position.y = 1.66; playerGroup.add(robotHead);
-        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, 0.03), glowMat); visor.position.set(0, 1.68, 0.12); playerGroup.add(visor);
-        const leftLegGroup = new THREE.Group(); leftLegGroup.position.set(-0.13, 0.85, 0);
-        const leftLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); leftLegMesh.position.y = -0.25; leftLegGroup.add(leftLegMesh);
-        const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); leftFoot.position.set(0, -0.5, 0.03); leftLegGroup.add(leftFoot); playerGroup.add(leftLegGroup);
-        const rightLegGroup = new THREE.Group(); rightLegGroup.position.set(0.13, 0.85, 0);
-        const rightLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.5), metalMat); rightLegMesh.position.y = -0.25; rightLegGroup.add(rightLegMesh);
-        const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.16), armorMat); rightFoot.position.set(0, -0.5, 0.03); rightLegGroup.add(rightFoot); playerGroup.add(rightLegGroup);
-        playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); scene.add(playerGroup);
-
-        // --- 11. INTERAKTIONS- & INVENTARLOGIK ---
-        let isInventoryOpen = false; let isGameWon = false; 
-        let activeExhibitNearMe = null; let isNearDoor = false; let activeVendingNearMe = null;
-        let modePlacement = false; const playerInventory = []; 
-
-        function toggleInventory() {
-            if (isGameWon || isDocumentOpen || isArcadeOverlayOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
-            if (isInventoryOpen) { overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; renderInventoryUI(); } 
-            else { overlay.classList.remove('open'); modePlacement = false; }
-        }
-
-        function renderInventoryUI() {
-            const gridContainer = document.getElementById('inventory-grid'); gridContainer.innerHTML = '';
-            document.getElementById('inv-title').innerText = modePlacement ? "🖼️ Welches Bild aufhängen?" : "🎒 Dein Rucksack";
-            for(let i = 0; i < 6; i++) {
-                const slot = document.createElement('div'); slot.className = 'inventory-slot';
-                if(playerInventory[i] !== undefined) {
-                    const itemVal = playerInventory[i]; slot.className = 'inventory-slot filled selectable';
-                    if (typeof itemVal === 'number') {
-                        slot.innerHTML = `<div class="slot-icon">${itemVal}</div><span>Bild-Zahl</span>`;
-                        slot.onclick = () => { if(modePlacement && activeExhibitNearMe !== null) { playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = itemVal; updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition(); } };
-                    } else {
-                        slot.innerHTML = `<div class="slot-icon">${itemVal.icon}</div><span>${itemVal.name}</span>`;
-                        if (itemVal.isReadable) { slot.onclick = () => { toggleInventory(); openDocument({ title: itemVal.name, content: itemVal.content }); }; }
-                    }
-                } else { slot.innerHTML = `<div class="slot-icon">🔒</div><span>Leer</span>`; }
-                gridContainer.appendChild(slot);
-            }
-        }
-
-        function triggerInteraction() {
-            if (isGameWon) return; 
-            if (isArcadeOverlayOpen) { closeArcadeGame(); return; }
-            if (isDocumentOpen) { closeDocument(); return; } 
-            if (activeDocumentNearMe !== null) { openDocument(activeDocumentNearMe); return; }
-            if (isNearDoor) { toggleDoor(); return; }
-            if (activeArcadeNearMe !== null) { openArcadeGame(); return; } // Memory triggern!
-            
-            if (activeTrashNearMe !== null) {
-                if (trashCanData.hasPaper) {
-                    trashCanData.hasPaper = false; playerInventory.push({ name: trashCanData.title, icon: "📄", isReadable: true, content: trashCanData.content });
-                    openDocument({ title: "🗑️ Mülleimer durchsucht", content: "Du wühlst im Mülleimer des Kurators...\n\nZwischen alten Kaffeefiltern findest du einen zerknüllten Zettel!\n\n(Du packst den Zettel in deinen Rucksack.)" });
-                } else { openDocument({ title: "🗑️ Mülleimer", content: "Der Mülleimer ist leer." }); }
-                return;
-            }
-
-            if (activeVendingNearMe !== null) {
-                if (activeVendingNearMe.hasMoney) {
-                    activeVendingNearMe.hasMoney = false; playerInventory.push({ name: "Wechselgeld", icon: "🪙", isReadable: false });
-                    openDocument({ title: "🎰 Münzfach untersucht", content: "Oh, im Münzfach liegt noch etwas Restgeld!\n\nDu nimmst die Münzen an dich.\n(Gegenstand 'Wechselgeld' erhalten)" });
-                } else { openDocument({ title: "🥤 Automat", content: "Ein Getränkeautomat.\nDie Dosen im Inneren leuchten kühl hinter der Scheibe, aber du hast keinen Durst." }); }
-                return;
-            }
-
-            if (activeExhibitNearMe !== null && !isInventoryOpen) {
-                if (activeExhibitNearMe.currentNumber !== null) { playerInventory.push(activeExhibitNearMe.currentNumber); activeExhibitNearMe.currentNumber = null; updateExhibitVisual(activeExhibitNearMe); } 
-                else { modePlacement = true; toggleInventory(); }
-            }
-        }
-
-        function checkWinCondition() { if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) { isGameWon = true; document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open'); } }
-        function restartGame() {
-            isGameWon = false; playerInventory.length = 0; hasWonTicketBefore = false; const mixed = [4, 1, 5, 2, 3]; exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
-            vendingMachines.forEach(vm => { if (vm.givesMoney) vm.hasMoney = true; }); trashCanData.hasPaper = true;
-            playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
-        }
-
-        // --- 12. STEUERUNGS-SYSTEM ---
-        let cameraAngleH = 0; let cameraAngleV = 0.3; let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
-        window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
-        window.addEventListener('mouseup', () => isMouseDown = false);
-        window.addEventListener('mousemove', (e) => {
-            if (!isMouseDown || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
-            cameraAngleH += (e.clientX - previousMousePosition.x) * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + (e.clientY - previousMousePosition.y) * 0.005));
-            previousMousePosition = { x: e.clientX, y: e.clientY };
-        });
-        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
-        window.addEventListener('keydown', (e) => { 
-            if (isGameWon) return; if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } 
-            if (isDocumentOpen || isArcadeOverlayOpen) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
-            if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
-        });
-        window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
-
-        let touchStartPos = { x: 0, y: 0 }; let touchVelocity = { x: 0, z: 0 }; let isTouching = false;
-        window.addEventListener('touchstart', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isTouching = true; touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY; });
-        window.addEventListener('touchmove', (e) => {
-            if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
-            let diffX = e.touches[0].clientX - touchStartPos.x; let diffY = e.touches[0].clientY - touchStartPos.y;
-            cameraAngleH += diffX * 0.0003; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
-            let forward = Math.max(-1, Math.min(1, -diffY * 0.01));
-            if (Math.abs(diffY) > 10) { touchVelocity.x = -Math.sin(cameraAngleH) * forward; touchVelocity.z = -Math.cos(cameraAngleH) * forward; } else { touchVelocity.x = 0; touchVelocity.z = 0; }
-        });
-        window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
-
-        // --- 13. GAME LOOP & KOLLISIONSSYSTEM ---
-        const moveSpeed = 0.08; const playerRadius = 0.4; 
-
-        function updateGame() {
-            if (isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
-            doorGroup.rotation.y += (doorTargetAngle - doorGroup.rotation.y) * 0.1;
-
-            let moveX = 0; let moveZ = 0;
-            if (keys.w || keys.ArrowUp) { moveX -= Math.sin(cameraAngleH); moveZ -= Math.cos(cameraAngleH); }
-            if (keys.s || keys.ArrowDown) { moveX += Math.sin(cameraAngleH); moveZ += Math.cos(cameraAngleH); }
-            if (keys.a || keys.ArrowLeft) { moveX -= Math.sin(cameraAngleH + Math.PI/2); moveZ -= Math.cos(cameraAngleH + Math.PI/2); }
-            if (keys.d || keys.ArrowRight) { moveX += Math.sin(cameraAngleH + Math.PI/2); moveZ += Math.cos(cameraAngleH + Math.PI/2); }
-            if (isTouching) { moveX += touchVelocity.x; moveZ += touchVelocity.z; }
-
-            if (moveX !== 0 || moveZ !== 0) {
-                let length = Math.sqrt(moveX * moveX + moveZ * moveZ);
-                let nextX = playerGroup.position.x + (moveX / length) * moveSpeed;
-                let nextZ = playerGroup.position.z + (moveZ / length) * moveSpeed;
-                let allowed = true;
+                const tex = createNumberTexture(exhibit.currentNumber); 
                 
-                // SHOP-BEREICH (KOLLISION)
-                if (nextX < -LOBBY_SIZE / 2) {
-                    let minShopX = shopXCenter - SHOP_SIZE / 2 + playerRadius;
-                    let maxShopZ = shopZCenter + SHOP_SIZE / 2 - playerRadius; let minShopZ = shopZCenter - SHOP_SIZE / 2 + playerRadius;
-                    if (nextX < minShopX || nextZ > maxShopZ || nextZ < minShopZ) allowed = false;
-                    if (nextX > -LOBBY_SIZE/2 - playerRadius && (nextZ < ROOM_SIZE/2 + 4 || nextZ > ROOM_SIZE/2 + LOBBY_SIZE - 4)) allowed = false;
-                    if (nextZ < shopZCenter - SHOP_SIZE/2 + 0.55 + playerRadius) allowed = false; 
-                    let relShopX = nextX - shopXCenter; let relShopZ = nextZ - shopZCenter;
-                    if (relShopX > 1.5 - 0.9 && relShopX < 1.5 + 0.9 && relShopZ > 1.5 - 0.4 && relShopZ < 1.5 + 0.4) allowed = false; 
-                    if (nextX < shopXCenter - SHOP_SIZE/2 + 1.2 && nextZ > shopZCenter + SHOP_SIZE/2 - 2.2 && nextZ < shopZCenter + SHOP_SIZE/2 - 0.8) allowed = false;
-                }
-                // LOBBY-BEREICH
-                else if (nextZ > ROOM_SIZE / 2) {
-                    let maxLobbyX = LOBBY_SIZE / 2 - playerRadius; let maxLobbyZ = ROOM_SIZE / 2 + LOBBY_SIZE - playerRadius;
-                    if (nextX > maxLobbyX || nextZ > maxLobbyZ) allowed = false;
-                    if (nextX < -maxLobbyX && (nextZ < ROOM_SIZE/2 + 4 || nextZ > ROOM_SIZE/2 + LOBBY_SIZE - 4)) allowed = false; 
-                    if (nextZ < ROOM_SIZE / 2 + playerRadius && (nextX < -2 || nextX > 2)) allowed = false;
-                    if (nextZ > ROOM_SIZE / 2 + LOBBY_SIZE - 2.0) { if ((nextX > -3.8 && nextX < -1.2) || (nextX > 1.2 && nextX < 3.8)) allowed = false; }
-                    if (nextX > -1.6 && nextX < 1.6) {
-                        if ((nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 - 2.1 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 - 0.9) || (nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.9 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 2.1)) allowed = false;
-                    }
-                    if (nextX > LOBBY_SIZE/2 - 1.0 && nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 - 2.7 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 - 1.3) allowed = false;
-                    if (nextX > LOBBY_SIZE/2 - 1.0 && nextZ > ROOM_SIZE/2 + LOBBY_SIZE/2 + 0.8 && nextZ < ROOM_SIZE/2 + LOBBY_SIZE/2 + 2.2) allowed = false;
-                }
-                // BÜRO
-                else if (nextX > ROOM_SIZE / 2 - playerRadius) {
-                    if (nextX <= ROOM_SIZE / 2 + playerRadius) {
-                        if (nextZ < -DOOR_WIDTH / 2 + playerRadius || nextZ > DOOR_WIDTH / 2 - playerRadius) allowed = false;
-                        if (!isDoorOpen && nextX > ROOM_SIZE / 2 - playerRadius) allowed = false;
-                    } else {
-                        let maxSubX = ROOM_SIZE / 2 + SUB_ROOM_SIZE - playerRadius; let maxSubZ = SUB_ROOM_SIZE / 2 - playerRadius;
-                        if (nextX > maxSubX || nextZ < -maxSubZ || nextZ > maxSubZ) allowed = false;
-                        let relX = nextX - (ROOM_SIZE / 2 + SUB_ROOM_SIZE / 2);
-                        if (relX > -1.3 && relX < 1.3 && nextZ > -0.7 && nextZ < 0.7) allowed = false; 
-                        if (nextZ < -4.7 + 0.4 + playerRadius && relX > -3.4 && relX < 0.1) allowed = false; 
-                        if (relX > 4.6 - 0.5 - playerRadius && nextZ > -2.8 && nextZ < 0.5) allowed = false; 
-                        if (relX > 4.0 - 0.3 && relX < 4.0 + 0.3 && nextZ > 4.0 - 0.3 && nextZ < 4.0 + 0.3) allowed = false; 
-                    }
-                } 
-                // HAUPTRAUM
-                else {
-                    let maxCoord = ROOM_SIZE / 2 - playerRadius; if (nextX < -maxCoord || nextZ < -maxCoord) allowed = false;
-                    if (nextZ > maxCoord && (nextX < -2 || nextX > 2)) allowed = false;
-                    let blockBound = BLOCK_SIZE / 2 + playerRadius; if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
-                }
-
-                if (allowed) { playerGroup.position.x = nextX; playerGroup.position.z = nextZ; }
-                playerGroup.rotation.y = Math.atan2(moveX, moveZ);
-
-                let time = Date.now() * 0.01;
-                leftLegGroup.rotation.x = Math.sin(time) * 0.6; rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
-                leftArm.rotation.x = -Math.sin(time) * 0.4; rightArm.rotation.x = Math.sin(time) * 0.4;
-            } else { leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8; leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8; }
-
-            // TRIGGER- & ENTFERNUNGS-CHECKS
-            let playerPos3D = new THREE.Vector3(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
-            let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
-            let distToDoor = playerPos2D.distanceTo(new THREE.Vector3(ROOM_SIZE / 2, 0, 0));
-            let distToTrash = playerPos2D.distanceTo(trashCanData.getWorldPos());
-            
-            let arcadeWorldPos = new THREE.Vector3(); arcadeCabinet.getWorldPosition(arcadeWorldPos);
-            let distToArcade = playerPos2D.distanceTo(new THREE.Vector3(arcadeWorldPos.x, 0, arcadeWorldPos.z));
-
-            const promptBtn = document.getElementById('interaction-prompt');
-
-            let closestPaper = null; let minPaperDist = Infinity;
-            paperMeshes.forEach(pObj => {
-                let pPos = pObj.getWorldPos(); let dist = playerPos3D.distanceTo(pPos);
-                if(dist < minPaperDist) { minPaperDist = dist; closestPaper = pObj; }
-            });
-
-            let closestVending = null; let minVendingDist = Infinity;
-            vendingMachines.forEach(vm => {
-                let vPos = vm.getWorldPos(); let dist = playerPos2D.distanceTo(vPos);
-                if(dist < minVendingDist) { minVendingDist = dist; closestVending = vm; }
-            });
-
-            if (minPaperDist < 2.0) {
-                activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
-                promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`; promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; promptBtn.style.borderColor = "#9b59b6";
-            } 
-            else if (distToTrash < 1.8) {
-                activeTrashNearMe = trashCanData; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
-                promptBtn.innerText = "🗑️ Mülleimer untersuchen (R)"; promptBtn.style.background = "rgba(44, 62, 80, 0.85)"; promptBtn.style.borderColor = "#7f8c8d";
+                // Nutzt MeshBasicMaterial, damit das Bild farbecht strahlt
+                const mat = new THREE.MeshBasicMaterial({ map: tex });
+                
+                exhibit.posterMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), mat);
+                exhibit.posterMesh.position.z = 0.06; 
+                exhibit.posterMesh.position.y = 2.3;
+                exhibit.groupRef.add(exhibit.posterMesh);
             }
-            else if (distToDoor < 2.2 && playerGroup.position.x < ROOM_SIZE/2 + 0.5) {
-                isNearDoor = true; activeDocumentNearMe = null; activeExhibitNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
-                promptBtn.innerText = isDoorOpen ? "🚪 Tür schließen (R)" : "🚪 Tür öffnen (R)"; promptBtn.style.background = "rgba(74, 144, 226, 0.85)"; promptBtn.style.borderColor = "#4a90e2";
-            } 
-            else if (distToArcade < 2.0 && playerGroup.position.x < shopXCenter + 0.6) {
-                activeArcadeNearMe = arcadeCabinet; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; promptBtn.style.display = 'block';
-                promptBtn.innerText = "🕹️ Automat spielen (R)"; promptBtn.style.background = "rgba(0, 168, 255, 0.85)"; promptBtn.style.borderColor = "#00a8ff";
-            }
-            else if (minVendingDist < 2.0) {
-                activeVendingNearMe = closestVending; activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
-                promptBtn.innerText = "🎰 Automat untersuchen (R)"; promptBtn.style.background = "rgba(230, 126, 34, 0.85)"; promptBtn.style.borderColor = "#e67e22";
-            }
-            else {
-                isNearDoor = false; activeDocumentNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; let closest = null; let minDist = Infinity;
-                for(let ex of exhibits) { let dist = playerPos2D.distanceTo(ex.position); if (dist < minDist) { minDist = dist; closest = ex; } }
-
-                if (minDist < 2.5 && playerGroup.position.z < ROOM_SIZE/2) {
-                    activeExhibitNearMe = closest; promptBtn.style.display = 'block';
-                    if(closest.currentNumber !== null) {
-                        promptBtn.innerText = `👋 Bild (${closest.currentNumber}) einpacken`; promptBtn.style.background = "rgba(234, 32, 39, 0.85)"; promptBtn.style.borderColor = "#ff4757";
-                    } else {
-                        promptBtn.innerText = "🖼️ Zahl aufhängen"; promptBtn.style.background = "rgba(46, 213, 115, 0.85)"; promptBtn.style.borderColor = "#2ed573";
-                    }
-                } else { activeExhibitNearMe = null; promptBtn.style.display = 'none'; }
-            }
-
-            // Kamera-Führung
-            let targetCamX = playerGroup.position.x + Math.sin(cameraAngleH) * 4.5;
-            let targetCamZ = playerGroup.position.z + Math.cos(cameraAngleH) * 4.5;
-            let targetCamY = playerGroup.position.y + 1.8 + Math.sin(cameraAngleV) * 2;
-            camera.position.x += (targetCamX - camera.position.x) * 0.1; camera.position.y += (targetCamY - camera.position.y) * 0.1; camera.position.z += (targetCamZ - camera.position.z) * 0.1;
-            camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.1, playerGroup.position.z);
         }
 
-        function animate() { requestAnimationFrame(animate); updateGame(); renderer.render(scene, camera); }
-        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
-        animate();
+        function createTextTexture(text, width, height, bgColor) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = bgColor; ctx.fillRect(0,0,width,height);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, width/2, height/2);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // --- STEUERUNG & INTERAKTION ---
+        function onMouseMove(e) {
+            if (document.pointerLockElement !== document.getElementById('canvas-container')) return;
+            
+            targetRotation.yaw -= e.movementX * mouseSensitivity;
+            targetRotation.pitch -= e.movementY * mouseSensitivity;
+            targetRotation.pitch = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, targetRotation.pitch));
+        }
+
+        function onKeyDown(e) {
+            if(isUIActive) return;
+            switch (e.code) {
+                case 'ArrowUp': case 'KeyW': moveForward = true; break;
+                case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+                case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+                case 'ArrowRight': case 'KeyD': moveRight = true; break;
+                case 'KeyR': handleInteraction(); break;
+            }
+        }
+
+        function onKeyUp(e) {
+            switch (e.code) {
+                case 'ArrowUp': case 'KeyW': moveForward = false; break;
+                case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+                case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+                case 'ArrowRight': case 'KeyD': moveRight = false; break;
+            }
+        }
+
+        function handleInteraction() {
+            // Check 1: Distanz zu Exponaten (Zahlentausch)
+            for(let i=0; i<TOTAL_EXHIBITS; i++) {
+                const ex = exhibits[i];
+                const worldPos = new THREE.Vector3();
+                ex.buttonMesh.getWorldPosition(worldPos);
+                
+                const dist = camera.position.distanceTo(worldPos);
+                if(dist < 2.2) {
+                    // Zahl mit dem nächsten Exponat (rechts im Kreis) tauschen
+                    const nextIndex = (i + 1) % TOTAL_EXHIBITS;
+                    const temp = ex.currentNumber;
+                    ex.currentNumber = exhibits[nextIndex].currentNumber;
+                    exhibits[nextIndex].currentNumber = temp;
+
+                    // Visuell updaten
+                    updateExhibitVisual(ex);
+                    updateExhibitVisual(exhibits[nextIndex]);
+
+                    // Animation des Buttons triggern
+                    animateButtonPress(ex.buttonMesh);
+
+                    // Prüfen ob Rätsel gelöst
+                    checkMathematicalOrder();
+                    return;
+                }
+            }
+
+            // Check 2: Zentrales Memory-Spiel aktivieren
+            const centerPos = new THREE.Vector3(0, 0, 0);
+            if(camera.position.distanceTo(centerPos) < 3.0) {
+                openMemoryGame();
+                return;
+            }
+
+            // Check 3: Büro-Terminal aktivieren
+            const officeTerminalPos = new THREE.Vector3(0, 1.2, -16.2);
+            if(camera.position.distanceTo(officeTerminalPos) < 2.0 && isDoorOpen) {
+                openOfficeTerminal();
+                return;
+            }
+        }
+
+        function animateButtonPress(mesh) {
+            const origY = mesh.position.y;
+            mesh.position.y -= 0.04;
+            setTimeout(() => { mesh.position.y = origY; }, 150);
+        }
+
+        // --- GAME LOGIC: MATHEMATISCHE REIHENFOLGE ---
+        function checkMathematicalOrder() {
+            let correctCount = 0;
+            // Erwartete geordnete Sequenz im Uhrzeigersinn: 1, 2, 3, 4, 5
+            for(let i=0; i<TOTAL_EXHIBITS; i++) {
+                if(exhibits[i].currentNumber === (i + 1)) {
+                    correctCount++;
+                }
+            }
+
+            // Wenn alle 5 Schilder mathematisch aufsteigend sortiert sind (1, 2, 3, 4, 5)
+            if(correctCount === TOTAL_EXHIBITS) {
+                isDoorOpen = true;
+                // Färbe alle Schilder temporär grün zur Bestätigung
+                exhibits.forEach(ex => {
+                    ex.posterMesh.material.color.setHex(0xa7f3d0);
+                });
+            } else {
+                isDoorOpen = false;
+                exhibits.forEach(ex => {
+                    if(ex.posterMesh && ex.currentNumber !== 4) ex.posterMesh.material.color.setHex(0xffffff);
+                });
+            }
+        }
+
+        // --- ENGINE LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = performance.now();
+            const delta = (time - prevTime) / 1000;
+            prevTime = time;
+
+            // Kamera-Glättung (Interpolation)
+            yaw += (targetRotation.yaw - yaw) * lookSmoothFactor;
+            pitch += (targetRotation.pitch - pitch) * lookSmoothFactor;
+            
+            camera.rotation.set(0, 0, 0);
+            camera.rotation.y = yaw;
+            camera.rotation.x = pitch;
+
+            // Bewegungskalkulation (nur wenn kein UI offen ist)
+            if (!isUIActive && document.pointerLockElement === document.getElementById('canvas-container')) {
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.normalize();
+
+                if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * delta;
+                if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * delta;
+
+                camera.translateX(-velocity.x * delta);
+                camera.translateZ(-velocity.z * delta);
+                camera.position.y = player.position.y; // Augenhöhe fixieren
+
+                // Kollisionsprüfung Wände & Grenzen
+                handleCollisions();
+            }
+
+            // Türanimation (Sanftes Auf-/Zusliden basierend auf Rätsel-Status)
+            if(doorMesh) {
+                const targetZ = isDoorOpen ? DOOR_OPEN_Z : DOOR_CLOSED_Z;
+                doorMesh.position.z += (targetZ - doorMesh.position.z) * 0.08;
+            }
+
+            // UI Prompts steuern
+            updateUIInteractions();
+
+            renderer.render(scene, camera);
+        }
+
+        function handleCollisions() {
+            const pos = camera.position;
+            
+            // Im Hauptraum (Zylinderraum)
+            if(pos.z > -11.5) {
+                const distFromCenter = Math.hypot(pos.x, pos.z);
+                if (distFromCenter > 11.2) { // Wandnähe Hauptraum
+                    pos.setLength(11.2);
+                }
+                if (distFromCenter < 1.8) { // Zentrale Skulptur Schutzbereich
+                    pos.setLength(1.8);
+                }
+            } 
+            // Im Verbindungskorridor / Büro
+            else {
+                // Begrenzung x-Achse im Gang/Büro
+                if(pos.x < -2.6) pos.x = -2.6;
+                if(pos.x > 2.6) pos.x = 2.6;
+                // Hintere Bürowand
+                if(pos.z < -17.4) pos.z = -17.4;
+            }
+        }
+
+        function updateUIInteractions() {
+            let showPrompt = false;
+
+            // Nah an einem Exponat-Button?
+            exhibits.forEach(ex => {
+                const worldPos = new THREE.Vector3();
+                ex.buttonMesh.getWorldPosition(worldPos);
+                if(camera.position.distanceTo(worldPos) < 2.2) showPrompt = true;
+            });
+
+            // Nah an der Mitte (Memory)?
+            if(camera.position.distanceTo(new THREE.Vector3(0,0,0)) < 3.0) showPrompt = true;
+
+            // Nah am Büro-Terminal?
+            if(camera.position.distanceTo(new THREE.Vector3(0, 1.2, -16.2)) < 2.0 && isDoorOpen) showPrompt = true;
+
+            document.getElementById('action-prompt').style.display = showPrompt ? 'block' : 'none';
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- OVERLAYS & UI-MINISPIELE ---
+        function openMemoryGame() {
+            isUIActive = true;
+            document.exitPointerLock();
+            document.getElementById('memory-overlay').classList.add('active');
+            initMemoryGrid();
+        }
+
+        function openOfficeTerminal() {
+            isUIActive = true;
+            document.exitPointerLock();
+            document.getElementById('office-overlay').classList.add('active');
+        }
+
+        function closeAllOverlays() {
+            isUIActive = false;
+            document.getElementById('memory-overlay').classList.remove('active');
+            document.getElementById('office-overlay').classList.remove('active');
+            document.getElementById('canvas-container').requestPointerLock();
+        }
+
+        // --- MEMORY ENGINE ---
+        const memoryPairs = [
+            {q: "2³", a: "8"}, {q: "√81", a: "9"},
+            {q: "10-²", a: "0,01"}, {q: "π ≈", a: "3,14"},
+        ];
+        let memoryCards = [];
+        let firstCard = null, secondCard = null;
+        let lockGrid = false;
+
+        function initMemoryGrid() {
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = "";
+            memoryCards = [];
+            firstCard = null; secondCard = null;
+            
+            // Verdoppeln und mischen
+            let items = [];
+            memoryPairs.forEach((p, idx) => {
+                items.push({ text: p.q, pairId: idx, type: 'q' });
+                items.push({ text: p.a, pairId: idx, type: 'a' });
+            });
+            items.sort(() => Math.random() - 0.5);
+
+            items.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card-3d');
+                card.innerText = "?";
+                card.dataset.index = index;
+                card.addEventListener('click', () => flipMemoryCard(card, item));
+                grid.appendChild(card);
+                memoryCards.push({ element: card, data: item, matched: false });
+            });
+            document.getElementById('memory-stats').innerText = "Finde alle mathematischen Verbindungen!";
+        }
+
+        function flipMemoryCard(cardEl, item) {
+            if(lockGrid || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+            cardEl.innerText = item.text;
+            cardEl.classList.add('flipped');
+
+            if(!firstCard) {
+                firstCard = memoryCards[cardEl.dataset.index];
+            } else {
+                secondCard = memoryCards[cardEl.dataset.index];
+                lockGrid = true;
+
+                if(firstCard.data.pairId === secondCard.data.pairId) {
+                    // Match!
+                    setTimeout(() => {
+                        firstCard.element.classList.add('matched');
+                        secondCard.element.classList.add('matched');
+                        firstCard.matched = true;
+                        secondCard.matched = true;
+                        resetTurn();
+                        
+                        // Gewonnen-Check
+                        if(memoryCards.every(c => c.matched)) {
+                            document.getElementById('memory-stats').innerText = "🏆 Großartig! Alle mathematischen Paare gelöst!";
+                        }
+                    }, 500);
+                } else {
+                    // Kein Match
+                    setTimeout(() => {
+                        firstCard.element.innerText = "?";
+                        secondCard.element.innerText = "?";
+                        firstCard.element.classList.remove('flipped');
+                        secondCard.element.classList.remove('flipped');
+                        resetTurn();
+                    }, 1200);
+                }
+            }
+        }
+
+        function resetTurn() {
+            firstCard = null; secondCard = null; lockGrid = false;
+        }
     </script>
 </body>
 </html>
