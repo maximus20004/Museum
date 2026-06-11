@@ -266,7 +266,7 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Mathe-Museum v11.2</h1>
+        <h1>🏛️ Mathe-Museum v11.3</h1>
         <p>Erkunde das Museum. Finde das funktionierende Memory-Spiel am Retro-Automaten im Shop!</p>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
@@ -580,7 +580,8 @@
                 let rowY = 0.75 + row * 0.35; const shelfPlate = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.01, 0.3), chromeMat); shelfPlate.position.set(0, rowY, 0.22); vm.add(shelfPlate);
                 for (let col = 0; col < 4; col++) {
                     let colX = -0.3 + col * 0.2; let cMat = new THREE.MeshStandardMaterial({ color: drinkColors[(row + col) % drinkColors.length], roughness: 0.3, metalness: 0.6 });
-                    const drinkCan = new Mesh(canGeo, cMat); drinkCan.position.set(colX, rowY + 0.07, 0.25); vm.add(drinkCan);
+                    // HIER WAR DER FEHLER: "new Mesh" statt "new THREE.Mesh"
+                    const drinkCan = new THREE.Mesh(canGeo, cMat); drinkCan.position.set(colX, rowY + 0.07, 0.25); vm.add(drinkCan);
                 }
             }
             lobbyGroup.add(vm); vendingMachines.push({ id: id, givesMoney: givesMoney, hasMoney: givesMoney, getWorldPos: function() { let target = new THREE.Vector3(); return vm.getWorldPosition(target); } });
@@ -727,21 +728,22 @@
         }
         function closeArcadeGame() { isArcadeOverlayOpen = false; document.getElementById('arcade-overlay').classList.remove('open'); }
 
-        // --- 9. EXPO-PLÄTZE (MIT GLUMANDA-INTEGRATION) ---
+        // --- 9. EXPO-PLÄTZE (NEU: MIT BILDTEXTURE FÜR DIE NUMMER 4) ---
         const initialNumbers = [4, 1, 5, 2, 3]; const exhibits = [];
         
-        // >>> HIER IST DER TEXTURE-LOADER FÜR DEIN BILD <<<
-        const textureLoader = new THREE.TextureLoader();
+        // Globale Lader-Instanz, um Fehler zu vermeiden
+        const globalTextureLoader = new THREE.TextureLoader();
 
         function createNumberTexture(number) {
-            // Wenn die Nummer "4" ist, wird das Glumanda-Bild geladen
+            // Glumanda laden
             if (number === 4) {
-                return textureLoader.load('120px-Shuffle004Winking.png', (tex) => {
-                    tex.needsUpdate = true;
-                });
+                const imgTex = globalTextureLoader.load('120px-Shuffle004Winking.png');
+                imgTex.wrapS = THREE.RepeatWrapping;
+                imgTex.repeat.x = -1; // Bild horizontal spiegeln
+                return imgTex;
             }
 
-            // Für alle anderen Zahlen (1,2,3,5) wird normaler Text gerendert
+            // Normales Canvas für alle anderen Zahlen
             const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#4a90e2'; ctx.fillRect(0, 0, 256, 256); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 216, 216);
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 130px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(number, 128, 128); return new THREE.CanvasTexture(canvas);
@@ -759,10 +761,8 @@
             if(exhibit.posterMesh) { exhibit.groupRef.remove(exhibit.posterMesh); exhibit.posterMesh.geometry.dispose(); exhibit.posterMesh.material.dispose(); exhibit.posterMesh = null; }
             if(exhibit.currentNumber !== null) {
                 const tex = createNumberTexture(exhibit.currentNumber); 
-                
-                // >>> WICHTIG: Das Material akzeptiert transparente Bilder <<<
+                // "transparent: true" sorgt dafür, dass PNGs mit durchsichtigem Hintergrund richtig aussehen
                 const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
-                
                 exhibit.posterMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), mat);
                 exhibit.posterMesh.position.z = 0.06; exhibit.groupRef.add(exhibit.posterMesh);
             }
@@ -808,9 +808,9 @@
                 if(playerInventory[i] !== undefined) {
                     const itemVal = playerInventory[i]; slot.className = 'inventory-slot filled selectable';
                     if (typeof itemVal === 'number') {
-                        // Wenn der Wert 4 ist, könnte man theoretisch auch das Bild im Inventar rendern. 
-                        // Der Einfachheit halber zeigen wir im Text-Slot aber das Wort "Bild"
-                        slot.innerHTML = `<div class="slot-icon">${itemVal === 4 ? '🔥' : itemVal}</div><span>Bild</span>`;
+                        // Emoji statt der Nummer anzeigen, wenn es Bild Nr. 4 ist
+                        let displayVal = itemVal === 4 ? '🔥' : itemVal;
+                        slot.innerHTML = `<div class="slot-icon">${displayVal}</div><span>Bild</span>`;
                         slot.onclick = () => { if(modePlacement && activeExhibitNearMe !== null) { playerInventory.splice(i, 1); activeExhibitNearMe.currentNumber = itemVal; updateExhibitVisual(activeExhibitNearMe); toggleInventory(); checkWinCondition(); } };
                     } else {
                         slot.innerHTML = `<div class="slot-icon">${itemVal.icon}</div><span>${itemVal.name}</span>`;
