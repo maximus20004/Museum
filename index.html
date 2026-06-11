@@ -138,11 +138,6 @@
             container.addEventListener('click', () => {
                 if(!isUIActive) container.requestPointerLock();
             });
-            document.addEventListener('pointerlockchange', () => {
-                if (document.pointerLockElement !== container && !isUIActive) {
-                    // Pointer gelöst, aber kein UI offen -> optionaler Zustand
-                }
-            });
             document.addEventListener('mousemove', onMouseMove);
         }
 
@@ -174,8 +169,7 @@
             const wallGroup = new THREE.Group();
 
             for(let i=0; i<wallSegments; i++) {
-                // Platz für die Tür zum Büro lassen (Segment 30 liegt bei ca. 180 Grad gegenüber)
-                if(i >= 28 && i <= 32) continue;
+                if(i >= 28 && i <= 32) continue; // Platz für Bürotür lassen
 
                 const angle = (i / wallSegments) * Math.PI * 2;
                 const segWidth = (Math.PI * 2 * wallRadius) / wallSegments + 0.1;
@@ -199,14 +193,13 @@
             roof.position.y = wallHeight;
             scene.add(roof);
 
-            // Architektonisches Highlight: Zentrale Skulptur
+            // Zentrale Skulptur
             const coreGeo = new THREE.IcosahedronGeometry(1.5, 1);
             const coreMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, wireframe: true });
             const core = new THREE.Mesh(coreGeo, coreMat);
             core.position.set(0, 2.5, 0);
             scene.add(core);
 
-            // BÜRO-TÜR DESIGN
             buildOfficeDoorWay(wallRadius);
         }
 
@@ -216,49 +209,39 @@
         const DOOR_OPEN_Z = -14.0;
 
         function buildOfficeDoorWay(wallRadius) {
-            const angle = Math.PI; // 180 Grad
-            
-            // Türrahmen links
             const frameL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.5, 0.5), new THREE.MeshStandardMaterial({color:0x334155}));
             frameL.position.set(-1.4, 1.75, -wallRadius);
             scene.add(frameL);
 
-            // Türrahmen rechts
             const frameR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.5, 0.5), new THREE.MeshStandardMaterial({color:0x334155}));
             frameR.position.set(1.4, 1.75, -wallRadius);
             scene.add(frameR);
 
-            // Türrahmen oben
             const frameT = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.4, 0.5), new THREE.MeshStandardMaterial({color:0x334155}));
             frameT.position.set(0, 3.7, -wallRadius);
             scene.add(frameT);
 
-            // Das bewegliche Tor (Schiebetür nach hinten/außen)
             const doorGeo = new THREE.BoxGeometry(2.5, 3.4, 0.1);
             const doorMat = new THREE.MeshStandardMaterial({color: 0x1e293b, metalness: 0.5, roughness: 0.3});
             doorMesh = new THREE.Mesh(doorGeo, doorMat);
             doorMesh.position.set(0, 1.7, DOOR_CLOSED_Z);
             scene.add(doorMesh);
 
-            // Ein Schild über dem Eingang
             const signTex = createTextTexture("办公厅 / BÜRO", 256, 64, '#10b981');
             const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.45), new THREE.MeshBasicMaterial({map: signTex, transparent:true}));
             sign.position.set(0, 4.2, -wallRadius + 0.26);
             scene.add(sign);
 
-            // Der Raum dahinter (Das Büro)
             buildOfficeRoom();
         }
 
         function buildOfficeRoom() {
             const officeGroup = new THREE.Group();
             
-            // Boden Büro
             const floor = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, 6), new THREE.MeshStandardMaterial({color: 0x0f172a}));
             floor.position.set(0, -0.05, -15);
             officeGroup.add(floor);
 
-            // Wände Büro
             const wallMat = new THREE.MeshStandardMaterial({color: 0x1e293b});
             
             const wallBack = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 0.2), wallMat);
@@ -273,17 +256,14 @@
             wallR.position.set(3, 2, -15);
             officeGroup.add(wallR);
 
-            // Decke Büro
             const roof = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 6), new THREE.MeshStandardMaterial({color: 0x0f172a}));
             roof.position.set(0, 4, -15);
             officeGroup.add(roof);
 
-            // Licht im Büro
             const officeLight = new THREE.PointLight(0x10b981, 0.8, 10);
             officeLight.position.set(0, 3, -15);
             officeGroup.add(officeLight);
 
-            // Ein einfacher Schreibtisch im Büro
             const deskT = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 1.2), new THREE.MeshStandardMaterial({color: 0x475569}));
             deskT.position.set(0, 0.8, -16);
             officeGroup.add(deskT);
@@ -296,7 +276,6 @@
             legR.position.set(1.0, 0.4, -16);
             officeGroup.add(legR);
 
-            // Terminal auf dem Schreibtisch (Interaktiver Punkt)
             const monitor = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.1), new THREE.MeshStandardMaterial({color: 0x020617}));
             monitor.position.set(0, 1.15, -16.2);
             officeGroup.add(monitor);
@@ -304,12 +283,11 @@
             scene.add(officeGroup);
         }
 
-        // --- EXPONATE GENERIEREN ---
+        // --- EXPONATE SPAWNEN ---
         function spawnExhibits() {
             const step = (Math.PI * 2) / TOTAL_EXHIBITS;
             
             for(let i=0; i<TOTAL_EXHIBITS; i++) {
-                // Mathematische Anordnung entlang des Kreisbogens
                 const angle = i * step;
                 const x = Math.sin(angle) * EXPO_RADIUS;
                 const z = Math.cos(angle) * EXPO_RADIUS;
@@ -327,14 +305,14 @@
                 base.receiveShadow = true;
                 exGroup.add(base);
 
-                // Interaktiver Schalter / Button auf dem Sockel
+                // Button
                 const btnGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16);
                 const btnMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x551111 });
                 const btn = new THREE.Mesh(btnGeo, btnMat);
                 btn.position.set(0, 1.05, 0.2);
                 exGroup.add(btn);
 
-                // Das Plakat / Display-Halterung
+                // Rahmen
                 const boardFrameGeo = new THREE.BoxGeometry(2.2, 2.2, 0.1);
                 const boardFrameMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
                 const boardFrame = new THREE.Mesh(boardFrameGeo, boardFrameMat);
@@ -343,7 +321,6 @@
 
                 scene.add(exGroup);
 
-                // Datenstruktur für Exponat abspeichern
                 exhibits.push({
                     id: i,
                     initialNumber: initialOrder[i],
@@ -355,29 +332,26 @@
 
                 updateExhibitVisual(exhibits[i]);
             }
-            
-            // Ersten Zustand validieren
             checkMathematicalOrder();
         }
 
-        // --- TEXTUREN & VISUALS GENERIEREN ---
-        
-        // HIER IST DIE AKTUALISIERTE FUNKTION MIT GLUMANDA-INTEGRATION!
+        // --- TEXTUREN GENERIEREN (KORREKTUR DER KORDINATEN & ORIENTIERUNG) ---
         function createNumberTexture(number) {
-            // Wenn es die 4 ist, laden wir dein Glumanda-Bild!
             if (number === 4) {
                 const loader = new THREE.TextureLoader();
                 const charmanderTex = loader.load('120px-Shuffle004Winking.png', 
                     (tex) => {
+                        // Da die Kamera von innen schaut, spiegeln wir das Bild horizontal, damit es richtig herum ist
+                        tex.wrapS = THREE.RepeatWrapping;
+                        tex.repeat.x = -1;
                         tex.needsUpdate = true;
                     },
                     undefined,
-                    (err) => console.error("Fehler beim Laden des Glumanda-Bildes:", err)
+                    (err) => console.error("Bildladefehler:", err)
                 );
                 return charmanderTex;
             }
 
-            // Für alle anderen Zahlen (1, 2, 3, 5) bleibt das alte Canvas-Design bestehen
             const canvas = document.createElement('canvas'); 
             canvas.width = 256; canvas.height = 256; 
             const ctx = canvas.getContext('2d');
@@ -386,12 +360,15 @@
             ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 12; ctx.strokeRect(20, 20, 216, 216);
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 130px sans-serif'; 
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+            
+            // Text spiegeln, da PlaneGeometry von innen betrachtet wird
+            ctx.translate(256, 0);
+            ctx.scale(-1, 1);
             ctx.fillText(number, 128, 128); 
             
             return new THREE.CanvasTexture(canvas);
         }
 
-        // HIER DIE ANPASSUNG FÜR DIE KORREKTE MATERIALDARSTELLUNG
         function updateExhibitVisual(exhibit) {
             if(exhibit.posterMesh) { 
                 exhibit.groupRef.remove(exhibit.posterMesh); 
@@ -401,13 +378,11 @@
             }
             if(exhibit.currentNumber !== null) {
                 const tex = createNumberTexture(exhibit.currentNumber); 
-                
-                // Nutzt MeshBasicMaterial, damit das Bild farbecht strahlt
-                const mat = new THREE.MeshBasicMaterial({ map: tex });
+                const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
                 
                 exhibit.posterMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.0), mat);
-                exhibit.posterMesh.position.z = 0.06; 
-                exhibit.posterMesh.position.y = 2.3;
+                // WICHTIG: Relativ zum exGroup-Mittelpunkt setzen, wo auch das boardFrame auf 2.3 sitzt!
+                exhibit.posterMesh.position.set(0, 2.3, 0.06); 
                 exhibit.groupRef.add(exhibit.posterMesh);
             }
         }
@@ -419,14 +394,15 @@
             ctx.fillStyle = bgColor; ctx.fillRect(0,0,width,height);
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px sans-serif';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            // Text für Türschild spiegeln
+            ctx.translate(width, 0); ctx.scale(-1, 1);
             ctx.fillText(text, width/2, height/2);
             return new THREE.CanvasTexture(canvas);
         }
 
-        // --- STEUERUNG & INTERAKTION ---
+        // --- ENGINELOOP, BEWEGUNG & SKRIPTSTEUERUNG ---
         function onMouseMove(e) {
             if (document.pointerLockElement !== document.getElementById('canvas-container')) return;
-            
             targetRotation.yaw -= e.movementX * mouseSensitivity;
             targetRotation.pitch -= e.movementY * mouseSensitivity;
             targetRotation.pitch = Math.max(-Math.PI / 2.5, Math.min(Math.PI / 2.5, targetRotation.pitch));
@@ -453,43 +429,31 @@
         }
 
         function handleInteraction() {
-            // Check 1: Distanz zu Exponaten (Zahlentausch)
             for(let i=0; i<TOTAL_EXHIBITS; i++) {
                 const ex = exhibits[i];
                 const worldPos = new THREE.Vector3();
                 ex.buttonMesh.getWorldPosition(worldPos);
                 
-                const dist = camera.position.distanceTo(worldPos);
-                if(dist < 2.2) {
-                    // Zahl mit dem nächsten Exponat (rechts im Kreis) tauschen
+                if(camera.position.distanceTo(worldPos) < 2.2) {
                     const nextIndex = (i + 1) % TOTAL_EXHIBITS;
                     const temp = ex.currentNumber;
                     ex.currentNumber = exhibits[nextIndex].currentNumber;
                     exhibits[nextIndex].currentNumber = temp;
 
-                    // Visuell updaten
                     updateExhibitVisual(ex);
                     updateExhibitVisual(exhibits[nextIndex]);
-
-                    // Animation des Buttons triggern
                     animateButtonPress(ex.buttonMesh);
-
-                    // Prüfen ob Rätsel gelöst
                     checkMathematicalOrder();
                     return;
                 }
             }
 
-            // Check 2: Zentrales Memory-Spiel aktivieren
-            const centerPos = new THREE.Vector3(0, 0, 0);
-            if(camera.position.distanceTo(centerPos) < 3.0) {
+            if(camera.position.distanceTo(new THREE.Vector3(0, 0, 0)) < 3.0) {
                 openMemoryGame();
                 return;
             }
 
-            // Check 3: Büro-Terminal aktivieren
-            const officeTerminalPos = new THREE.Vector3(0, 1.2, -16.2);
-            if(camera.position.distanceTo(officeTerminalPos) < 2.0 && isDoorOpen) {
+            if(camera.position.distanceTo(new THREE.Vector3(0, 1.2, -16.2)) < 2.0 && isDoorOpen) {
                 openOfficeTerminal();
                 return;
             }
@@ -501,22 +465,16 @@
             setTimeout(() => { mesh.position.y = origY; }, 150);
         }
 
-        // --- GAME LOGIC: MATHEMATISCHE REIHENFOLGE ---
         function checkMathematicalOrder() {
             let correctCount = 0;
-            // Erwartete geordnete Sequenz im Uhrzeigersinn: 1, 2, 3, 4, 5
             for(let i=0; i<TOTAL_EXHIBITS; i++) {
-                if(exhibits[i].currentNumber === (i + 1)) {
-                    correctCount++;
-                }
+                if(exhibits[i].currentNumber === (i + 1)) correctCount++;
             }
 
-            // Wenn alle 5 Schilder mathematisch aufsteigend sortiert sind (1, 2, 3, 4, 5)
             if(correctCount === TOTAL_EXHIBITS) {
                 isDoorOpen = true;
-                // Färbe alle Schilder temporär grün zur Bestätigung
                 exhibits.forEach(ex => {
-                    ex.posterMesh.material.color.setHex(0xa7f3d0);
+                    if (ex.posterMesh && ex.currentNumber !== 4) ex.posterMesh.material.color.setHex(0xa7f3d0);
                 });
             } else {
                 isDoorOpen = false;
@@ -526,7 +484,6 @@
             }
         }
 
-        // --- ENGINE LOOP ---
         function animate() {
             requestAnimationFrame(animate);
 
@@ -534,7 +491,6 @@
             const delta = (time - prevTime) / 1000;
             prevTime = time;
 
-            // Kamera-Glättung (Interpolation)
             yaw += (targetRotation.yaw - yaw) * lookSmoothFactor;
             pitch += (targetRotation.pitch - pitch) * lookSmoothFactor;
             
@@ -542,7 +498,6 @@
             camera.rotation.y = yaw;
             camera.rotation.x = pitch;
 
-            // Bewegungskalkulation (nur wenn kein UI offen ist)
             if (!isUIActive && document.pointerLockElement === document.getElementById('canvas-container')) {
                 velocity.x -= velocity.x * 10.0 * delta;
                 velocity.z -= velocity.z * 10.0 * delta;
@@ -556,61 +511,41 @@
 
                 camera.translateX(-velocity.x * delta);
                 camera.translateZ(-velocity.z * delta);
-                camera.position.y = player.position.y; // Augenhöhe fixieren
+                camera.position.y = player.position.y;
 
-                // Kollisionsprüfung Wände & Grenzen
                 handleCollisions();
             }
 
-            // Türanimation (Sanftes Auf-/Zusliden basierend auf Rätsel-Status)
             if(doorMesh) {
                 const targetZ = isDoorOpen ? DOOR_OPEN_Z : DOOR_CLOSED_Z;
                 doorMesh.position.z += (targetZ - doorMesh.position.z) * 0.08;
             }
 
-            // UI Prompts steuern
             updateUIInteractions();
-
             renderer.render(scene, camera);
         }
 
         function handleCollisions() {
             const pos = camera.position;
-            
-            // Im Hauptraum (Zylinderraum)
             if(pos.z > -11.5) {
                 const distFromCenter = Math.hypot(pos.x, pos.z);
-                if (distFromCenter > 11.2) { // Wandnähe Hauptraum
-                    pos.setLength(11.2);
-                }
-                if (distFromCenter < 1.8) { // Zentrale Skulptur Schutzbereich
-                    pos.setLength(1.8);
-                }
-            } 
-            // Im Verbindungskorridor / Büro
-            else {
-                // Begrenzung x-Achse im Gang/Büro
+                if (distFromCenter > 11.2) pos.setLength(11.2);
+                if (distFromCenter < 1.8) pos.setLength(1.8);
+            } else {
                 if(pos.x < -2.6) pos.x = -2.6;
                 if(pos.x > 2.6) pos.x = 2.6;
-                // Hintere Bürowand
                 if(pos.z < -17.4) pos.z = -17.4;
             }
         }
 
         function updateUIInteractions() {
             let showPrompt = false;
-
-            // Nah an einem Exponat-Button?
             exhibits.forEach(ex => {
                 const worldPos = new THREE.Vector3();
                 ex.buttonMesh.getWorldPosition(worldPos);
                 if(camera.position.distanceTo(worldPos) < 2.2) showPrompt = true;
             });
-
-            // Nah an der Mitte (Memory)?
             if(camera.position.distanceTo(new THREE.Vector3(0,0,0)) < 3.0) showPrompt = true;
-
-            // Nah am Büro-Terminal?
             if(camera.position.distanceTo(new THREE.Vector3(0, 1.2, -16.2)) < 2.0 && isDoorOpen) showPrompt = true;
 
             document.getElementById('action-prompt').style.display = showPrompt ? 'block' : 'none';
@@ -622,7 +557,6 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- OVERLAYS & UI-MINISPIELE ---
         function openMemoryGame() {
             isUIActive = true;
             document.exitPointerLock();
@@ -658,7 +592,6 @@
             memoryCards = [];
             firstCard = null; secondCard = null;
             
-            // Verdoppeln und mischen
             let items = [];
             memoryPairs.forEach((p, idx) => {
                 items.push({ text: p.q, pairId: idx, type: 'q' });
@@ -691,21 +624,17 @@
                 lockGrid = true;
 
                 if(firstCard.data.pairId === secondCard.data.pairId) {
-                    // Match!
                     setTimeout(() => {
                         firstCard.element.classList.add('matched');
                         secondCard.element.classList.add('matched');
                         firstCard.matched = true;
                         secondCard.matched = true;
                         resetTurn();
-                        
-                        // Gewonnen-Check
                         if(memoryCards.every(c => c.matched)) {
                             document.getElementById('memory-stats').innerText = "🏆 Großartig! Alle mathematischen Paare gelöst!";
                         }
                     }, 500);
                 } else {
-                    // Kein Match
                     setTimeout(() => {
                         firstCard.element.innerText = "?";
                         secondCard.element.innerText = "?";
