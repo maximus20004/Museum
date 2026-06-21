@@ -944,21 +944,23 @@
                         if (relX > 4.0 - 0.3 && relX < 4.0 + 0.3 && nextZ > 4.0 - 0.3 && nextZ < 4.0 + 0.3) allowed = false; 
                     }
                 } 
-                // HAUPTRAUM
-                else {
-                    let maxCoord = ROOM_SIZE / 2 - playerRadius; if (nextX < -maxCoord || nextZ < -maxCoord) allowed = false;
-                    if (nextZ > maxCoord && (nextX < -2 || nextX > 2)) allowed = false;
-                    let blockBound = BLOCK_SIZE / 2 + playerRadius; if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
+                // Zentraler Block im Hauptraum Kollision (BLOCK_SIZE = 8, also von -4 bis 4)
+                if (Math.abs(x) < (BLOCK_SIZE/2 + 0.3) && Math.abs(z) < (BLOCK_SIZE/2 + 0.3)) return true;
+    
+                // Hauptraum Grenzen
+                if (x < -ROOM_SIZE/2 + 0.5 || z < -ROOM_SIZE/2 + 0.5) return true;
+                
+                // ==========================================================
+                // BEHOBEN: Südwand-Kollision angepasst an LOBBY_SIZE (12m / 2 = 6)
+                // ==========================================================
+                if (z > ROOM_SIZE/2 - 0.5) { 
+                    if (x < -(LOBBY_SIZE / 2) || x > (LOBBY_SIZE / 2)) return true; 
                 }
-
-                if (allowed) { playerGroup.position.x = nextX; playerGroup.position.z = nextZ; }
-                playerGroup.rotation.y = Math.atan2(moveX, moveZ);
-
-                let time = Date.now() * 0.01;
-                leftLegGroup.rotation.x = Math.sin(time) * 0.6; rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
-                leftArm.rotation.x = -Math.sin(time) * 0.4; rightArm.rotation.x = Math.sin(time) * 0.4;
-            } else { leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8; leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8; }
-
+                
+                if (x > ROOM_SIZE/2 - 0.5) { if (z < -DOOR_WIDTH || z > 0) return true; }
+                
+                return false;
+            }
             // TRIGGER- & ENTFERNUNGS-CHECKS
             let playerPos3D = new THREE.Vector3(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
             let playerPos2D = new THREE.Vector3(playerGroup.position.x, 0, playerGroup.position.z);
