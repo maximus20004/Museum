@@ -946,18 +946,26 @@
                 }
                 // HAUPTRAUM
                 else {
-                    let maxCoord = ROOM_SIZE / 2 - playerRadius; if (nextX < -maxCoord || nextZ < -maxCoord) allowed = false;
-                    if (nextZ > maxCoord && (nextX < -2 || nextX > 2)) allowed = false;
-                    let blockBound = BLOCK_SIZE / 2 + playerRadius; if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
+                    let maxCoord = ROOM_SIZE / 2 - playerRadius; 
+                    
+                    // Grenze bei -12 und +12 (Wände)
+                    // Wir prüfen jetzt alle vier Seiten des Hauptraums korrekt:
+                    if (nextX < -maxCoord || nextX > maxCoord || nextZ < -maxCoord) {
+                        allowed = false;
+                    }
+                    
+                    // Besonderheit: Die Vorderseite (nextZ > maxCoord) ist offen zum Eingangsbereich
+                    // Daher lassen wir den Spieler dort nur durch, wenn er durch die Öffnung geht:
+                    if (nextZ > maxCoord && (nextX < -2 || nextX > 2)) {
+                        allowed = false;
+                    }
+                
+                    // Dein Block in der Mitte (der soll ja bleiben)
+                    let blockBound = BLOCK_SIZE / 2 + playerRadius; 
+                    if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) {
+                        allowed = false;
+                    }
                 }
-
-                if (allowed) { playerGroup.position.x = nextX; playerGroup.position.z = nextZ; }
-                playerGroup.rotation.y = Math.atan2(moveX, moveZ);
-
-                let time = Date.now() * 0.01;
-                leftLegGroup.rotation.x = Math.sin(time) * 0.6; rightLegGroup.rotation.x = -Math.sin(time) * 0.6;
-                leftArm.rotation.x = -Math.sin(time) * 0.4; rightArm.rotation.x = Math.sin(time) * 0.4;
-            } else { leftLegGroup.rotation.x *= 0.8; rightLegGroup.rotation.x *= 0.8; leftArm.rotation.x *= 0.8; rightArm.rotation.x *= 0.8; }
 
             // TRIGGER- & ENTFERNUNGS-CHECKS
             let playerPos3D = new THREE.Vector3(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z);
