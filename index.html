@@ -580,6 +580,7 @@
                 let rowY = 0.75 + row * 0.35; const shelfPlate = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.01, 0.3), chromeMat); shelfPlate.position.set(0, rowY, 0.22); vm.add(shelfPlate);
                 for (let col = 0; col < 4; col++) {
                     let colX = -0.3 + col * 0.2; let cMat = new THREE.MeshStandardMaterial({ color: drinkColors[(row + col) % drinkColors.length], roughness: 0.3, metalness: 0.6 });
+                    // HIER WAR DER FEHLER: "new Mesh" statt "new THREE.Mesh"
                     const drinkCan = new THREE.Mesh(canGeo, cMat); drinkCan.position.set(colX, rowY + 0.07, 0.25); vm.add(drinkCan);
                 }
             }
