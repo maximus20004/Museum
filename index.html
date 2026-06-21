@@ -948,8 +948,12 @@
                 else {
                     let maxCoord = ROOM_SIZE / 2 - playerRadius; if (nextX < -maxCoord || nextZ < -maxCoord) allowed = false;
                     if (nextZ > maxCoord && (nextX < -2 || nextX > 2)) allowed = false;
-                    let blockBound = BLOCK_SIZE / 2 + playerRadius; if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
+                    
+                    // Kleinerer Kollisions-Puffer für das Zentrum (Block verkleinert auf z.B. 2 statt 8)
+                    let blockBound = 1.5 + playerRadius; 
+                    if (nextX > -blockBound && nextX < blockBound && nextZ > -blockBound && nextZ < blockBound) allowed = false;
                 }
+
 
                 if (allowed) { playerGroup.position.x = nextX; playerGroup.position.z = nextZ; }
                 playerGroup.rotation.y = Math.atan2(moveX, moveZ);
