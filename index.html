@@ -1883,10 +1883,9 @@
             if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
             let diffX = e.touches[0].clientX - touchStartPos.x; let diffY = e.touches[0].clientY - touchStartPos.y;
             cameraAngleH += diffX * 0.0003; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
-            let forward = Math.max(-1, Math.min(1, -diffY * 0.01));
-            if (Math.abs(diffY) > 10) { touchVelocity.x = -Math.sin(cameraAngleH) * forward; touchVelocity.z = -Math.cos(cameraAngleH) * forward; } else { touchVelocity.x = 0; touchVelocity.z = 0; }
+            touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
         });
-        window.addEventListener('touchend', () => { isTouching = false; touchVelocity.x = 0; touchVelocity.z = 0; });
+        window.addEventListener('touchend', () => { isTouching = false; });
 
         // --- 13. GAME LOOP & KOLLISIONSSYSTEM ---
         const moveSpeed = 0.08; const playerRadius = 0.4; 
