@@ -1882,7 +1882,7 @@
         window.addEventListener('touchmove', (e) => {
             if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
             let diffX = e.touches[0].clientX - touchStartPos.x; let diffY = e.touches[0].clientY - touchStartPos.y;
-            cameraAngleH += diffX * 0.0003; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.0002));
+            cameraAngleH += diffX * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.003));
             touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
         });
         window.addEventListener('touchend', () => { isTouching = false; });
