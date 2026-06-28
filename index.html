@@ -141,8 +141,8 @@
         
         .inventory-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
             margin-bottom: 25px;
         }
         .inventory-slot {
@@ -270,7 +270,93 @@
         .document-box h2 { margin-top: 0; font-family: 'Times New Roman', serif; border-bottom: 2px dashed #8e44ad; padding-bottom: 10px; color: #6c5ce7; }
         .document-box p { font-size: 1.1rem; line-height: 1.6; white-space: pre-line; }
         .document-close-hint { margin-top: 30px; font-size: 0.85rem; color: #7f8c8d; text-align: center; font-style: italic; }
+        #sophia-choices { display: none; margin-top: 22px; gap: 10px; flex-direction: column; }
+        #sophia-choices.visible { display: flex; }
+        .sophia-choice-btn { padding: 10px 16px; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-family: 'Georgia', serif; transition: background 0.2s; }
+        #sophia-btn-later { background: #95a5a6; color: #fff; }
+        #sophia-btn-later:hover { background: #7f8c8d; }
+        #sophia-btn-answer { background: #2ecc71; color: #fff; }
+        #sophia-btn-answer:hover { background: #27ae60; }
+        #sophia-input-area { display: none; margin-top: 18px; }
+        #sophia-input-area.visible { display: block; }
+        #sophia-price-input { width: 100%; padding: 10px; font-size: 1.1rem; border: 2px solid #8e44ad; border-radius: 6px; font-family: 'Georgia', serif; box-sizing: border-box; margin-bottom: 10px; }
+        #sophia-submit-btn { width: 100%; padding: 10px; background: #8e44ad; color: #fff; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-family: 'Georgia', serif; }
+        #sophia-submit-btn:hover { background: #6c3483; }
 
+        #map-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.90); display: flex; justify-content: center; align-items: center;
+            z-index: 260; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 10px;
+        }
+        #map-overlay.open { opacity: 1; pointer-events: auto; }
+        #map-station {
+            width: 100%; max-width: 960px; background: #141622; border: 1px solid #2a2f45;
+            border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.8);
+            display: flex; flex-direction: column; max-height: 96vh;
+        }
+        #map-topbar {
+            background: linear-gradient(180deg,#11141f,#0d1019); border-bottom: 1px solid #262c42;
+            padding: 10px 16px 8px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+        }
+        #map-topbar h2 { margin: 0; font-size: 1rem; color: #b8960c; letter-spacing: 1px; flex: 1; font-family: 'Courier New', monospace; }
+        #map-topbar .map-close-x {
+            border: 1px solid #3a3020; background: rgba(80,55,10,.4); color: #c8a840;
+            padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
+        }
+        #map-board-wrap { position: relative; flex-shrink: 0; }
+        #map-board { width: 100%; height: auto; display: block; touch-action: none; cursor: crosshair; }
+        #map-status {
+            margin: 6px 12px 2px; padding: 7px 12px; border-radius: 8px;
+            background: #1e1e24; border: 1px solid #2a3148; min-height: 34px;
+            font-size: 0.84rem; color: #8b94ad; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+        }
+        #map-status.ok  { border-color: #2ed573; background: rgba(46,213,115,.08); color: #c8ffd8; }
+        #map-status.warn{ border-color: #ff9f43; background: rgba(255,159,67,.08); color: #ffe0b2; }
+        #map-status.err { border-color: #ff4757; background: rgba(255,71,87,.08);  color: #ffd0d3; }
+        .map-toolbar { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 12px 4px; flex-shrink: 0; }
+        .map-tool {
+            flex: 1 1 auto; min-width: 110px; border: 1px solid #2c3450; background: #1e1e24;
+            color: #e8ecf4; padding: 9px 12px; border-radius: 10px; font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: border-color .15s, background .15s;
+        }
+        .map-tool:active { transform: scale(.97); }
+        .map-tool.active { border-color: #00ffcc; background: rgba(0,255,204,.12); color: #bfffef; }
+        .map-tool.ghost  { flex: 0 0 auto; min-width: 0; background: #10131f; }
+        .map-secondary { display: flex; gap: 8px; padding: 4px 12px 10px; flex-shrink: 0; }
+        .map-viewctrl { position: absolute; top: 10px; right: 14px; display: flex; flex-direction: column; gap: 5px; }
+        .map-viewctrl button {
+            width: 34px; height: 34px; border-radius: 8px; border: 1px solid #2c3450;
+            background: rgba(20,24,38,.88); color: #e8ecf4; font-size: .95rem; font-weight: 700;
+            cursor: pointer; display: grid; place-items: center; backdrop-filter: blur(3px);
+            transition: border-color .15s, background .15s;
+        }
+        .map-viewctrl button.active { border-color: #00ffcc; background: rgba(0,255,204,.16); }
+        .map-radiusmode { display: flex; align-items: center; gap: 8px; padding: 2px 12px 0; flex-wrap: wrap; flex-shrink: 0; }
+        .map-radiusmode .mrl { font-size: .78rem; color: #8b94ad; font-weight: 600; }
+        .map-rm-btn {
+            border: 1px solid #2c3450; background: #1e1e24; color: #e8ecf4;
+            padding: 6px 10px; border-radius: 8px; font-size: .82rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 5px; transition: border-color .15s, background .15s;
+        }
+        .map-rm-btn.active { border-color: #00ffcc; background: rgba(0,255,204,.12); color: #bfffef; }
+        .map-rm-btn:disabled { opacity: .45; cursor: not-allowed; }
+        #map-close-hint { color: #5a4a20; font-size: .74rem; text-align: center; padding: 0 12px 8px; font-style: italic; flex-shrink: 0; }
+        /* ── BIBLIOTHEK ── */
+        #library-overlay { position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.90); display:flex; justify-content:center; align-items:center; z-index:265; opacity:0; pointer-events:none; transition:opacity 0.3s ease; padding:10px; }
+        #library-overlay.open { opacity:1; pointer-events:auto; }
+        #library-station { width:100%; max-width:860px; background:#141622; border:1px solid #2a2f45; border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.8); display:flex; flex-direction:column; max-height:90vh; }
+        #library-topbar { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; background:#0e1020; border-bottom:1px solid #2a2f45; flex-shrink:0; }
+        #library-topbar h2 { margin:0; color:#c8a860; font-size:1.05rem; letter-spacing:.04em; }
+        #library-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; padding:20px; overflow-y:auto; }
+        .lib-book { background:#1a1d2e; border-radius:10px; border:1px solid #252a40; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; display:flex; overflow:hidden; min-height:108px; }
+        .lib-book:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,.55); border-color:#3a4060; }
+        .lib-spine { width:11px; flex-shrink:0; }
+        .lib-info { padding:12px 14px; display:flex; flex-direction:column; gap:5px; flex:1; }
+        .lib-title { color:#dde0f0; font-size:.88rem; font-weight:700; line-height:1.3; }
+        .lib-author { color:#5a6280; font-size:.75rem; }
+        .lib-subject { margin-top:auto; font-size:.70rem; color:#8b94ad; background:#0e1020; padding:3px 8px; border-radius:4px; align-self:flex-start; letter-spacing:.03em; }
+        #library-hint { color:#3a4060; font-size:.76rem; text-align:center; padding:8px 12px; font-style:italic; flex-shrink:0; }
         #win-overlay {
             position: absolute;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -367,8 +453,66 @@
         <div class="document-box" onclick="event.stopPropagation()">
             <h2 id="doc-title">Titel des Dokuments</h2>
             <p id="doc-content">Inhalt...</p>
-            <div class="document-close-hint">Klicke irgendwo hin oder drücke 'R', um zu schließen</div>
+            <div id="sophia-choices">
+                <button class="sophia-choice-btn" id="sophia-btn-later" onclick="closeDocument()">Sophia später helfen</button>
+                <button class="sophia-choice-btn" id="sophia-btn-answer" onclick="showSophiaPriceInput()">Sophia den Preis sagen</button>
+            </div>
+            <div id="sophia-input-area">
+                <input id="sophia-price-input" type="text" placeholder="Preis eingeben, z.B. 56.23 €" onkeydown="if(event.key==='Enter') submitSophiaPrice()" />
+                <button id="sophia-submit-btn" onclick="submitSophiaPrice()">Bestätigen</button>
+            </div>
+            <div class="document-close-hint" id="doc-close-hint">Klicke irgendwo hin oder drücke 'R', um zu schließen</div>
         </div>
+    </div>
+
+    <div id="map-overlay">
+      <div id="map-station">
+        <div id="map-topbar">
+          <h2>🗺️ MATHEMATISCHE INSELKARTE — Konstruktion</h2>
+          <button class="map-close-x" onclick="closeMap()">✕ Schließen</button>
+        </div>
+        <div id="map-board-wrap">
+          <svg id="map-board" viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" aria-label="Konstruktionsfläche"></svg>
+          <div class="map-viewctrl">
+            <button onclick="mapZoomBtn(1.25)" title="Hineinzoomen">＋</button>
+            <button onclick="mapZoomBtn(0.8)"  title="Herauszoomen">－</button>
+            <button id="map-btn-pan" onclick="mapSetTool('pan')" title="Verschieben">✋</button>
+            <button onclick="mapResetView()" title="Zurücksetzen">⤢</button>
+          </div>
+        </div>
+        <div id="map-status">
+          <span id="map-status-icon">🗺️</span>
+          <span id="map-status-text">Wähle ein Werkzeug, um auf der Karte zu konstruieren.</span>
+        </div>
+        <div class="map-toolbar">
+          <button class="map-tool" id="map-tool-compass" onclick="mapSetTool('compass')">🧭 Zirkel <span style="font-size:.72rem;color:#8b94ad;font-weight:500">(Kreis)</span></button>
+          <button class="map-tool" id="map-tool-line"    onclick="mapSetTool('line')">📏 Lineal <span style="font-size:.72rem;color:#8b94ad;font-weight:500">(Gerade)</span></button>
+          <button class="map-tool" id="map-tool-mark"    onclick="mapSetTool('mark')" style="border-color:#ff6b35;color:#ff6b35">📍 Markieren <span style="font-size:.72rem;color:#8b94ad;font-weight:500">(Schatz?)</span></button>
+        </div>
+        <div class="map-radiusmode" id="map-radiusmode" style="display:none">
+          <span class="mrl">Zirkel-Radius:</span>
+          <button class="map-rm-btn active" id="map-rm-new"  onclick="mapSetRadiusMode('new')">🆕 Neuer Radius</button>
+          <button class="map-rm-btn"        id="map-rm-same" onclick="mapSetRadiusMode('same')" disabled>🔁 Wie zuvor <span id="map-rm-val" style="font-size:.72rem;color:#8b94ad"></span></button>
+        </div>
+        <div class="map-secondary">
+          <button class="map-tool ghost" onclick="mapUndo()" title="Rückgängig">↩︎</button>
+          <button class="map-tool ghost" onclick="mapHint()" title="Tipp">💡</button>
+          <button class="map-tool" onclick="mapClearAll()">🗑️ Alles löschen</button>
+          <button class="map-tool" style="background:linear-gradient(180deg,#2ed573,#22b262);color:#06210f;border-color:#26de81;font-weight:800" onclick="mapCheck()">✓ Prüfen</button>
+        </div>
+        <div id="map-close-hint">Klicke ✕ oder drücke R, um die Karte zu schließen</div>
+      </div>
+    </div>
+
+    <div id="library-overlay">
+      <div id="library-station">
+        <div id="library-topbar">
+          <h2>📚 Bibliothek des Kurators</h2>
+          <button onclick="closeLibrary()" style="background:#1a1d2e;border:1px solid #3a4060;color:#8b94ad;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.85rem">✕ Schließen</button>
+        </div>
+        <div id="library-grid"></div>
+        <div id="library-hint">Klicke ✕ oder drücke R, um die Bibliothek zu schließen</div>
+      </div>
     </div>
 
     <div id="win-overlay">
@@ -895,11 +1039,11 @@
         const monNeck = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.04), deskMetalMat); monNeck.position.y = 0.13; monitor.add(monNeck);
         const monBody = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.56, 0.04), plasticMat); monBody.position.y = 0.35; monitor.add(monBody);
         const monScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.88, 0.49), new THREE.MeshBasicMaterial({ color: 0x0d1f3c })); monScreen.position.set(0, 0.35, 0.021); monitor.add(monScreen);
-        // Bildschirminhalt: Code-Zeilen
+        // Bildschirm: leer / Standby
         const scrCanvas = document.createElement('canvas'); scrCanvas.width = 256; scrCanvas.height = 144; const scrCtx = scrCanvas.getContext('2d');
-        scrCtx.fillStyle = '#0d1f3c'; scrCtx.fillRect(0,0,256,144);
-        const codeLines = ['> SYSTEM INIT...','> CHECKING EXHIBITS...','> [4] ORDER VIOLATION','> [1] ORDER VIOLATION','> SEQUENCE: 4,1,5,2,3','> EXPECTED: 1,2,3,4,5','> STATUS: LOCKED 🔒'];
-        codeLines.forEach((l,i) => { scrCtx.fillStyle = i===3||i===4?'#ff6b6b':i===6?'#ff4757':'#2ed573'; scrCtx.font='11px monospace'; scrCtx.fillText(l,8,18+i*18); });
+        scrCtx.fillStyle = '#0a0e1a'; scrCtx.fillRect(0,0,256,144);
+        scrCtx.fillStyle = '#1a2a4a'; scrCtx.fillRect(20,60,216,24);
+        scrCtx.fillStyle = '#4a6fa5'; scrCtx.font = '11px monospace'; scrCtx.fillText('STANDBY — Büro des Kurators', 28, 76);
         monScreen.material = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(scrCanvas) });
         desk.add(monitor);
 
@@ -929,20 +1073,602 @@
         // Büroklammer-Schale
         const tray2 = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.025, 0.14), new THREE.MeshStandardMaterial({ color: 0x888899, roughness: 0.3, metalness: 0.6 })); tray2.position.set(0.85, 0.782, 0.38); desk.add(tray2);
 
-        const papers = [
-            { title: "📜 Tagebucheintrag des Kurators", content: "Tag 42 im mathematischen Exil:\nDie KI verhält sich seltsam. Sie weigert sich, die Exponate in einer chaotischen Reihenfolge anzuzeigen. Ordnung ist ihr oberstes Gebot.\n\nIch habe versucht, die Bilder zu sabotieren, aber das System setzt alles zurück, sobald die natürliche Zahlenfolge von 1 bis 5 hergestellt ist. Ich muss vorsichtig sein...", offsetX: 0.5, offsetZ: 0.2, rotY: 0.2 },
-            { title: "📋 Labornotiz: Systemfehler #04", content: "ACHTUNG - Kritischer Fehler in der Galerie-Matrix!\n\nDie Hauptwand registriert fehlerhafte Zustände. Falls die Schilder verrückt spielen, hilft nur ein händischer Reset.\n\nRegel für den Neustart:\nDas kleinste Glied steht immer links am Anfang. Die Energie fließt lückenlos aufsteigend nach rechts weg. (1... 2... 3...)", offsetX: -0.4, offsetZ: 0.3, rotY: -0.4 },
-            { title: "✉️ Ungelesener Brief", content: "Lieber Kollege,\n\nich habe das Büro wie besprochen abgeschlossen. Der Code für die Magnetschranke ist prozedural verschlüsselt.\n\nFalls du feststeckst: Schau dich einfach im Raum um. Die Möbel verbergen keine Geheimnisse, aber der Geist des Museums verlangt nach absoluter, mathematischer Symmetrie.\n\n- Dr. Alpha", offsetX: 0.2, offsetZ: -0.2, rotY: 0.5 }
+        // ── ALTE LANDKARTE AUF DEM SCHREIBTISCH ──
+        const mapIslandData = [
+            { x:160, y:160, r:28, name:'Insel Alpha',   label:'A(2|7)' },
+            { x:270, y:80,  r:20, name:'Insel Beta',    label:'B(5|9)' },
+            { x:580, y:200, r:34, name:'Insel Gamma',   label:'C(10|6)' },
+            { x:280, y:310, r:16, name:'Kap Delta',     label:'D(5|4)' },
+            { x:680, y:370, r:22, name:'Insel Epsilon', label:'E(12|3)' },
+            { x:120, y:420, r:18, name:'Insel Zeta',    label:'F(1|1)' },
+            { x:460, y:460, r:26, name:'Insel Eta',     label:'G(8|1)' },
+            { x:760, y:150, r:14, name:'Kap Theta',     label:'H(14|8)' },
         ];
-        const paperMeshes = []; const paperMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }); const paperGeo = new THREE.BoxGeometry(0.24, 0.005, 0.32);
-        papers.forEach((pData) => {
-            const paperMesh = new THREE.Mesh(paperGeo, paperMat); paperMesh.position.set(pData.offsetX, 0.805, pData.offsetZ); paperMesh.rotation.y = pData.rotY; desk.add(paperMesh);
-            paperMeshes.push({ mesh: paperMesh, title: pData.title, content: pData.content, getWorldPos: function() { let target = new THREE.Vector3(); return paperMesh.getWorldPosition(target); } });
+
+        function drawMapCanvas(canvas) {
+            const W = 900, H = 620; // always render at reference size
+            canvas.width = W; canvas.height = H;
+            const ctx = canvas.getContext('2d');
+
+            // Pergament-Rahmen (Bordüre)
+            const bgBorder = ctx.createLinearGradient(0,0,W,H);
+            bgBorder.addColorStop(0,'#c8a860'); bgBorder.addColorStop(1,'#a08040');
+            ctx.fillStyle=bgBorder; ctx.fillRect(0,0,W,H);
+
+            // Altersflecken auf dem Rahmen
+            const spots = [[40,30,30],[W-45,35,24],[35,H-45,20],[W-55,H-60,28],[120,H-28,14]];
+            spots.forEach(([x,y,r]) => {
+                const rg = ctx.createRadialGradient(x,y,0,x,y,r);
+                rg.addColorStop(0,'rgba(80,50,10,0.20)'); rg.addColorStop(1,'rgba(80,50,10,0)');
+                ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+            });
+
+            // Rand-Rahmen
+            ctx.strokeStyle='#6a4a08'; ctx.lineWidth=5; ctx.strokeRect(8,8,W-16,H-16);
+            ctx.strokeStyle='#9a7018'; ctx.lineWidth=2; ctx.strokeRect(14,14,W-28,H-28);
+
+            // ── OZEAN ──
+            const oceanGrad = ctx.createLinearGradient(18,18,W-18,H-18);
+            oceanGrad.addColorStop(0,   '#6a9eb8');
+            oceanGrad.addColorStop(0.4, '#548aa8');
+            oceanGrad.addColorStop(0.75,'#3f7090');
+            oceanGrad.addColorStop(1,   '#2e5c7a');
+            ctx.fillStyle = oceanGrad; ctx.fillRect(18,18,W-36,H-36);
+
+            // Ozean-Tiefentextur (radial)
+            const depthG = ctx.createRadialGradient(W*0.42,H*0.38,0,W*0.5,H*0.5,Math.max(W,H)*0.72);
+            depthG.addColorStop(0,'rgba(140,200,230,0.14)'); depthG.addColorStop(1,'rgba(10,30,55,0.20)');
+            ctx.fillStyle=depthG; ctx.fillRect(18,18,W-36,H-36);
+
+            // Koordinatengitter (weiß, dezent auf Ozean)
+            ctx.strokeStyle='rgba(255,255,255,0.09)'; ctx.lineWidth=0.8; ctx.setLineDash([4,8]);
+            for(let gx=60;gx<W;gx+=90){ ctx.beginPath(); ctx.moveTo(gx,20); ctx.lineTo(gx,H-20); ctx.stroke(); }
+            for(let gy=50;gy<H;gy+=80){ ctx.beginPath(); ctx.moveTo(20,gy); ctx.lineTo(W-20,gy); ctx.stroke(); }
+            ctx.setLineDash([]);
+
+            // Wellenlinien (sichtbar auf Ozean)
+            ctx.strokeStyle='rgba(180,235,255,0.20)'; ctx.lineWidth=1.4; ctx.setLineDash([10,16]);
+            for(let wy=52; wy<H-28; wy+=32){
+                for(let wx=28; wx<W-80; wx+=148){
+                    const jit=(Math.sin(wx*0.031+wy*0.017)*5);
+                    ctx.beginPath(); ctx.moveTo(wx,wy+jit);
+                    ctx.bezierCurveTo(wx+36,wy+jit-10,wx+76,wy+jit+9,wx+118,wy+jit-4); ctx.stroke();
+                }
+            }
+            ctx.setLineDash([]);
+
+            // Titel-Banner (Pergament auf Ozean)
+            ctx.fillStyle='rgba(220,195,140,0.92)';
+            ctx.beginPath(); ctx.roundRect(W/2-192,18,384,56,7); ctx.fill();
+            ctx.strokeStyle='#7a5810'; ctx.lineWidth=2; ctx.stroke();
+            ctx.fillStyle='#2a1400'; ctx.font='bold 22px "Times New Roman", serif';
+            ctx.textAlign='center'; ctx.fillText('Mathematische Inselkarte', W/2, 51);
+            ctx.font='italic 12px "Times New Roman", serif'; ctx.fillStyle='#4a3010';
+            ctx.fillText('Mathe-Museum — Archiv des Kurators', W/2, 68);
+
+            // Inseln: gemeinsame Daten + Drei Schwestern Gruppe
+            const islands = [
+                ...mapIslandData,
+                { x:340, y:490, r:10, name:'', label:'' },
+                { x:365, y:480, r: 8, name:'', label:'' },
+                { x:355, y:505, r: 7, name:'Die Drei Schwestern', label:'', group:true },
+            ];
+
+            function drawIsland(x, y, r, seed) {
+                ctx.beginPath();
+                const pts = 9;
+                for(let i=0;i<=pts;i++){
+                    const angle = (i/pts)*Math.PI*2;
+                    const noise = 0.72 + 0.28*Math.sin(seed*1.7+i*2.1) + 0.14*Math.cos(seed*3.1+i*1.3);
+                    const px = x + Math.cos(angle)*r*noise;
+                    const py = y + Math.sin(angle)*r*noise;
+                    i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+                }
+                ctx.closePath();
+            }
+
+            islands.forEach((isl, idx) => {
+                if(isl.name === '') { // Inselgruppe klein
+                    drawIsland(isl.x, isl.y, isl.r, idx+7);
+                    ctx.fillStyle='#5a8040'; ctx.fill();
+                    ctx.strokeStyle='#3a5828'; ctx.lineWidth=1; ctx.stroke();
+                    return;
+                }
+                drawIsland(isl.x, isl.y, isl.r, idx);
+                const ig = ctx.createRadialGradient(isl.x-isl.r*0.3,isl.y-isl.r*0.3,0,isl.x,isl.y,isl.r*1.1);
+                ig.addColorStop(0,'#7aaa52'); ig.addColorStop(0.6,'#5a8a38'); ig.addColorStop(1,'#3d6025');
+                ctx.fillStyle=ig; ctx.fill();
+                ctx.strokeStyle='#2e4a1a'; ctx.lineWidth=1.5; ctx.stroke();
+
+                // Schattierung (Küste)
+                drawIsland(isl.x, isl.y, isl.r, idx);
+                ctx.strokeStyle='rgba(200,180,100,0.5)'; ctx.lineWidth=2.5; ctx.stroke();
+
+                // Punkt
+                ctx.fillStyle='#7a1010'; ctx.beginPath(); ctx.arc(isl.x,isl.y,4,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle='#ffd700'; ctx.beginPath(); ctx.arc(isl.x,isl.y,2,0,Math.PI*2); ctx.fill();
+
+                // Inselname
+                if(isl.name) {
+                    ctx.font='bold 13px "Times New Roman", serif';
+                    ctx.textAlign='center';
+                    ctx.fillStyle='rgba(255,255,240,0.75)';
+                    ctx.fillRect(isl.x-52, isl.y+isl.r+3, 104, 16);
+                    ctx.fillStyle='#2c1a00';
+                    ctx.fillText(isl.name, isl.x, isl.y+isl.r+15);
+                }
+            });
+
+            // Drei-Schwestern-Label
+            ctx.font='bold 11px "Times New Roman", serif'; ctx.textAlign='center';
+            ctx.fillStyle='rgba(255,255,240,0.75)'; ctx.fillRect(298,514,116,15);
+            ctx.fillStyle='#2c1a00'; ctx.fillText('Die Drei Schwestern', 356, 525);
+
+            // Kompassrose
+            const cx=W-72, cy=H-72, cr=38;
+            ctx.strokeStyle='#6a4a10'; ctx.fillStyle='#c8a840';
+            // Hauptachsen
+            [0,90,180,270].forEach(deg => {
+                const rad=deg*Math.PI/180;
+                ctx.beginPath(); ctx.moveTo(cx,cy);
+                ctx.lineTo(cx+Math.cos(rad-Math.PI/2)*cr,cy+Math.sin(rad-Math.PI/2)*cr);
+                ctx.lineWidth=3; ctx.strokeStyle='#8b6010'; ctx.stroke();
+            });
+            // Zwischenachsen
+            [45,135,225,315].forEach(deg => {
+                const rad=deg*Math.PI/180;
+                ctx.beginPath(); ctx.moveTo(cx,cy);
+                ctx.lineTo(cx+Math.cos(rad-Math.PI/2)*cr*0.65,cy+Math.sin(rad-Math.PI/2)*cr*0.65);
+                ctx.lineWidth=1.5; ctx.strokeStyle='#a07820'; ctx.stroke();
+            });
+            ctx.beginPath(); ctx.arc(cx,cy,7,0,Math.PI*2);
+            ctx.fillStyle='#c8a840'; ctx.fill(); ctx.strokeStyle='#6a4a10'; ctx.lineWidth=1.5; ctx.stroke();
+            ctx.fillStyle='#3a2000'; ctx.font='bold 14px serif'; ctx.textAlign='center';
+            ctx.fillText('N',cx,cy-cr-4); ctx.fillText('S',cx,cy+cr+13);
+            ctx.fillText('W',cx-cr-5,cy+5); ctx.fillText('O',cx+cr+5,cy+5);
+
+            // Koordinaten-Beschriftung Rand
+            ctx.fillStyle='rgba(80,50,10,0.5)'; ctx.font='10px monospace'; ctx.textAlign='center';
+            for(let i=1;i<=13;i++){ ctx.fillText(i, 20+i*60, H-8); }
+            ctx.textAlign='right';
+            for(let j=1;j<=9;j++){ ctx.fillText(j, 18, H-20-j*60); }
+
+        }
+
+        // Karte rendern (900×620 Referenz), dann Thumbnail für 3D-Tisch ableiten
+        const mapBgCanvas = document.createElement('canvas');
+        drawMapCanvas(mapBgCanvas);
+        const mapBgDataURL = mapBgCanvas.toDataURL('image/png');
+
+        const mapThumbCanvas = document.createElement('canvas');
+        mapThumbCanvas.width = 256; mapThumbCanvas.height = 176;
+        mapThumbCanvas.getContext('2d').drawImage(mapBgCanvas, 0, 0, 256, 176);
+
+        const mapMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(0.52, 0.006, 0.36),
+            new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(mapThumbCanvas), roughness: 0.7 })
+        );
+        mapMesh.position.set(-0.5, 0.808, 0.25); mapMesh.rotation.y = 0.18; desk.add(mapMesh);
+
+        // ── KONSTRUKTIONSWERKZEUGE FÜR DIE KARTE ──
+        const MAP_W = 900, MAP_H = 620;
+        const mapBoard = document.getElementById('map-board');
+        let mapObjects=[], mapPending=[], mapMouse=null, mapTool=null;
+        let mapRadiusMode='new', mapLastRadius=null;
+        let mapAux=[], mapSnapPoints=[];
+        let mapView={x:0,y:0,w:MAP_W,h:MAP_H};
+
+        // Geometrie-Helfer
+        const mDist=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y);
+        function mLineLine(a,b,c,d){const den=(a.x-b.x)*(c.y-d.y)-(a.y-b.y)*(c.x-d.x);if(Math.abs(den)<1e-9)return[];const t=((a.x-c.x)*(c.y-d.y)-(a.y-c.y)*(c.x-d.x))/den;return[{x:a.x+t*(b.x-a.x),y:a.y+t*(b.y-a.y)}];}
+        function mCircleCircle(c1,c2){const d=mDist(c1,c2);if(d<1e-9||d>c1.r+c2.r+1e-6||d<Math.abs(c1.r-c2.r)-1e-6)return[];const a=(c1.r*c1.r-c2.r*c2.r+d*d)/(2*d);let h2=c1.r*c1.r-a*a;if(h2<0)h2=0;const h=Math.sqrt(h2),xm=c1.x+a*(c2.x-c1.x)/d,ym=c1.y+a*(c2.y-c1.y)/d,rx=-(c2.y-c1.y)*(h/d),ry=(c2.x-c1.x)*(h/d),out=[{x:xm+rx,y:ym+ry}];if(h>1e-6)out.push({x:xm-rx,y:ym-ry});return out;}
+        function mLineCircle(a,b,c){const dx=b.x-a.x,dy=b.y-a.y,fx=a.x-c.x,fy=a.y-c.y,A2=dx*dx+dy*dy,B2=2*(fx*dx+fy*dy),C2=fx*fx+fy*fy-c.r*c.r;let disc=B2*B2-4*A2*C2;if(disc<0)return[];disc=Math.sqrt(disc);const t1=(-B2-disc)/(2*A2),out=[{x:a.x+t1*dx,y:a.y+t1*dy}];if(disc>1e-6){const t2=(-B2+disc)/(2*A2);out.push({x:a.x+t2*dx,y:a.y+t2*dy});}return out;}
+
+        function mapRecompute(){
+            mapAux=[];
+            for(let i=0;i<mapObjects.length;i++) for(let j=i+1;j<mapObjects.length;j++){
+                const A=mapObjects[i],B=mapObjects[j];let pts=[];
+                if(A.type==='circle'&&B.type==='circle') pts=mCircleCircle(A,B);
+                else if(A.type==='line'&&B.type==='line') pts=mLineLine(A.a,A.b,B.a,B.b);
+                else{const L=A.type==='line'?A:B,K=A.type==='line'?B:A;pts=mLineCircle(L.a,L.b,K);}
+                pts.forEach(p=>{if(Math.abs(p.x)<9000&&Math.abs(p.y)<9000)mapAux.push(p);});
+            }
+            const dd=[];mapAux.forEach(p=>{if(!dd.some(q=>mDist(p,q)<2))dd.push(p);});mapAux=dd;
+            mapSnapPoints=[
+                ...mapIslandData.map(d=>({x:d.x,y:d.y,kind:'island',name:d.name})),
+                ...mapAux.map(p=>({x:p.x,y:p.y,kind:'aux'}))
+            ];
+            let r=null; for(const o of mapObjects) if(o.type==='circle') r=o.r; mapLastRadius=r;
+            const hasR=r&&r>1;
+            const sb=document.getElementById('map-rm-same');
+            if(sb){sb.disabled=!hasR;document.getElementById('map-rm-val').textContent=hasR?'(r≈'+Math.round(r)+')':'';}
+            if(!hasR&&mapRadiusMode==='same'){mapRadiusMode='new';document.getElementById('map-rm-new').classList.add('active');if(sb)sb.classList.remove('active');}
+        }
+
+        // Zoom / Pan
+        function mapApplyView(){mapBoard.setAttribute('viewBox',`${mapView.x} ${mapView.y} ${mapView.w} ${mapView.h}`);}
+        function mapResetView(){mapView={x:0,y:0,w:MAP_W,h:MAP_H};mapApplyView();mapRender();}
+        function mapBoardRect(){return mapBoard.getBoundingClientRect();}
+        function mapToWorld(cx,cy){const r=mapBoardRect();return{x:mapView.x+(cx-r.left)/r.width*mapView.w,y:mapView.y+(cy-r.top)/r.height*mapView.h};}
+        function mapPxLen(px){const r=mapBoardRect();return px*(mapView.w/Math.max(r.width,1));}
+        function mapZoomAt(wp,f){const nw=mapView.w/f;if(nw<150||nw>3200)return;mapView.x=wp.x-(wp.x-mapView.x)/f;mapView.y=wp.y-(wp.y-mapView.y)/f;mapView.w=nw;mapView.h=mapView.h/f;mapApplyView();mapRender();}
+        function mapZoomBtn(f){mapZoomAt({x:mapView.x+mapView.w/2,y:mapView.y+mapView.h/2},f);}
+        function mapPanBy(dx,dy){const r=mapBoardRect();mapView.x-=dx*(mapView.w/r.width);mapView.y-=dy*(mapView.h/r.height);mapApplyView();mapRender();}
+
+        // Pointer-Events (Zoom/Pan + Tap → Punkt setzen)
+        const mPtrs=new Map();
+        let mFD=null,mPanLast=null,mPinchActive=false,mPinchLast=null,mSuppressTap=false;
+        function mPinchState(){const v=[...mPtrs.values()];return{dist:Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y),mid:{x:(v[0].x+v[1].x)/2,y:(v[0].y+v[1].y)/2}};}
+        mapBoard.addEventListener('pointerdown',e=>{
+            e.preventDefault();mapBoard.setPointerCapture(e.pointerId);
+            mPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+            if(mPtrs.size===2){mPinchActive=true;mSuppressTap=true;mPinchLast=mPinchState();}
+            else if(mPtrs.size===1){mFD={sx:e.clientX,sy:e.clientY,world:mapToWorld(e.clientX,e.clientY),moved:false};if(mapTool==='pan')mPanLast={x:e.clientX,y:e.clientY};}
         });
+        mapBoard.addEventListener('pointermove',e=>{
+            if(mPtrs.has(e.pointerId))mPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+            if(mPinchActive&&mPtrs.size>=2){const cur=mPinchState();if(mPinchLast&&cur.dist>0){const f=cur.dist/mPinchLast.dist;if(isFinite(f)&&f>0)mapZoomAt(mapToWorld(cur.mid.x,cur.mid.y),f);mapPanBy(cur.mid.x-mPinchLast.mid.x,cur.mid.y-mPinchLast.mid.y);}mPinchLast=cur;return;}
+            if(mPtrs.size===0){if(mapTool==='compass'||mapTool==='line'||mapTool==='mark'){const sh=mapTool==='compass'&&mapRadiusMode==='same'&&mapLastRadius>1;if(mapPending.length===1||sh||mapTool==='mark'){mapMouse=mapToWorld(e.clientX,e.clientY);mapRender();}}return;}
+            if(mPtrs.size===1){if(mFD&&Math.hypot(e.clientX-mFD.sx,e.clientY-mFD.sy)>6)mFD.moved=true;if(mapTool==='pan'&&mPanLast){mapPanBy(e.clientX-mPanLast.x,e.clientY-mPanLast.y);mPanLast={x:e.clientX,y:e.clientY};}else if((mapTool==='compass'||mapTool==='line')&&mapPending.length===1){mapMouse=mapToWorld(e.clientX,e.clientY);mapRender();}}
+        });
+        function mEndPtr(e){mPtrs.delete(e.pointerId);if(mPtrs.size<2){mPinchActive=false;mPinchLast=null;}if(mapTool==='pan'){mPanLast=null;if(mPtrs.size===0)mSuppressTap=false;return;}if(mPtrs.size===0){if(mFD&&!mFD.moved&&!mSuppressTap){if(mapTool==='compass'||mapTool==='line')mapPlacePoint(mFD.world);else if(mapTool==='mark')mapMarkPoint(mFD.world);}mFD=null;mSuppressTap=false;}}
+        mapBoard.addEventListener('pointerup',mEndPtr);mapBoard.addEventListener('pointercancel',mEndPtr);
+        mapBoard.addEventListener('wheel',e=>{e.preventDefault();mapZoomAt(mapToWorld(e.clientX,e.clientY),e.deltaY<0?1.12:1/1.12);},{passive:false});
+
+        // Snap
+        function mProjLine(p,a,b){const vx=b.x-a.x,vy=b.y-a.y,L2=vx*vx+vy*vy,t=L2?((p.x-a.x)*vx+(p.y-a.y)*vy)/L2:0,x=a.x+t*vx,y=a.y+t*vy;return{x,y,d:Math.hypot(p.x-x,p.y-y)};}
+        function mapSnap(p){
+            const th=mapPxLen(22),bias=mapPxLen(10);
+            let dp=Infinity,bp=null;for(const s of mapSnapPoints){const d=mDist(p,s);if(d<dp){dp=d;bp=s;}}
+            let de=Infinity,be=null;for(const o of mapObjects){if(o.type==='line'){const pr=mProjLine(p,o.a,o.b);if(pr.d<de){de=pr.d;be={x:pr.x,y:pr.y};}}}
+            const pOK=bp&&dp<=th,eOK=be&&de<=th;
+            if(pOK&&(!eOK||dp<=de+bias))return{x:bp.x,y:bp.y};if(eOK)return{x:be.x,y:be.y};return null;
+        }
+
+        // Punkt setzen
+        function mapPlacePoint(world){
+            const sp=mapSnap(world),p=sp||{x:world.x,y:world.y};
+            if(mapTool==='compass'&&mapRadiusMode==='same'&&mapLastRadius>1){mapObjects.push({type:'circle',x:p.x,y:p.y,r:mapLastRadius});mapPending=[];mapRecompute();mapPromptStep();mapRender();return;}
+            mapPending.push(p);
+            if(mapTool==='compass'&&mapPending.length===2){const r=mDist(mapPending[0],mapPending[1]);if(r>1)mapObjects.push({type:'circle',x:mapPending[0].x,y:mapPending[0].y,r});mapPending=[];mapRecompute();}
+            else if(mapTool==='line'&&mapPending.length===2){if(mDist(mapPending[0],mapPending[1])>1)mapObjects.push({type:'line',a:mapPending[0],b:mapPending[1]});mapPending=[];mapRecompute();}
+            mapPromptStep();mapRender();
+        }
+        function mapUndo(){mapObjects.pop();mapPending=[];mapRecompute();mapPromptStep();mapRender();}
+        function mapClearAll(){mapObjects=[];mapPending=[];mapMarkedPoint=null;mapRecompute();mapPromptStep();mapRender();}
+        function mapMarkPoint(p){
+            const sp=mapSnap(p)||p;
+            mapMarkedPoint={x:sp.x,y:sp.y};
+            mapPromptStep();mapRender();
+        }
+
+        // Werkzeuge
+        function mapSetTool(t){
+            if((t==='compass'||t==='line')&&mapTool!==t&&mapTool!=='pan')mapPending=[];
+            if(t==='mark')mapPending=[];
+            mapTool=t;
+            document.getElementById('map-tool-compass').classList.toggle('active',t==='compass');
+            document.getElementById('map-tool-line').classList.toggle('active',t==='line');
+            document.getElementById('map-tool-mark').classList.toggle('active',t==='mark');
+            document.getElementById('map-btn-pan').classList.toggle('active',t==='pan');
+            document.getElementById('map-radiusmode').style.display=(t==='compass')?'flex':'none';
+            mapPromptStep();mapRender();
+        }
+        function mapSetRadiusMode(m){
+            if(m==='same'&&!(mapLastRadius>1))return;
+            mapRadiusMode=m;mapPending=[];
+            document.getElementById('map-rm-new').classList.toggle('active',m==='new');
+            document.getElementById('map-rm-same').classList.toggle('active',m==='same');
+            mapPromptStep();mapRender();
+        }
+        function mapPromptStep(){
+            if(mapTool==='pan'){mapSetStatus('✋','Verschieben: Ziehe die Karte. Mausrad oder Pinch zum Zoomen.','');return;}
+            if(mapTool==='compass'){
+                if(mapRadiusMode==='same'&&mapLastRadius>1)mapSetStatus('🧭','Zirkel (gleicher Radius): Klick setzt den Mittelpunkt.','');
+                else mapSetStatus('🧭',mapPending.length===0?'Zirkel: Setze den Mittelpunkt (Einstich).':'Zirkel: Setze einen Punkt für den Radius.','');
+            }else if(mapTool==='line'){
+                mapSetStatus('📏',mapPending.length===0?'Lineal: Setze den ersten Punkt.':'Lineal: Setze den zweiten Punkt.','');
+            }else if(mapTool==='mark'){
+                mapSetStatus('📍',mapMarkedPoint?'Markierung gesetzt. Klicke „✓ Prüfen" oder wähle einen neuen Punkt.':'Markieren: Klicke auf den Punkt, den du als Schatz vermutест.','');
+            }else mapSetStatus('🗺️','Wähle ein Werkzeug, um auf der Karte zu konstruieren.','');
+        }
+        function mapSetStatus(icon,text,cls){
+            const s=document.getElementById('map-status');
+            s.className=cls?cls:'';
+            document.getElementById('map-status-icon').textContent=icon;
+            document.getElementById('map-status-text').textContent=text;
+        }
+
+        // Rendern
+        function mapRender(){
+            if(!mapBoard||!mapAux)return;
+            const k=mapView.w/MAP_W, sw=v=>(v*k).toFixed(2);
+            const E=[];
+            // Hintergrund (Karte)
+            E.push(`<image href="${mapBgDataURL}" x="0" y="0" width="${MAP_W}" height="${MAP_H}"/>`);
+            // Sanfte Markierung der Inselpunkte
+            mapIslandData.forEach(d=>{E.push(`<circle cx="${d.x}" cy="${d.y}" r="${d.r+5}" fill="none" stroke="rgba(255,200,50,0.28)" stroke-width="${sw(2.5)}"/>`);});
+            // Schatzpunkt-Markierung nach Lösung
+            if(mapSolved){
+                E.push(`<circle cx="${mapTreasure.x}" cy="${mapTreasure.y}" r="${sw(14)}" fill="none" stroke="#ffd700" stroke-width="${sw(3)}" class="glowpulse"/>`);
+                E.push(`<circle cx="${mapTreasure.x}" cy="${mapTreasure.y}" r="${sw(6)}" fill="#ffd700"/>`);
+                E.push(`<text x="${mapTreasure.x}" y="${mapTreasure.y-18*k}" fill="#ffd700" font-size="${sw(18)}" text-anchor="middle" font-weight="700" font-family="serif">⚑ Schatz</text>`);
+            }
+            // Konstruktionsobjekte
+            mapObjects.forEach(o=>{
+                if(o.type==='circle') E.push(`<circle cx="${o.x}" cy="${o.y}" r="${o.r}" fill="none" stroke="#34c3ff" stroke-width="${sw(1.8)}" opacity=".88"/>`);
+                else{const dx=o.b.x-o.a.x,dy=o.b.y-o.a.y,L=Math.hypot(dx,dy)||1,F=30000;E.push(`<line x1="${o.a.x-dx/L*F}" y1="${o.a.y-dy/L*F}" x2="${o.b.x+dx/L*F}" y2="${o.b.y+dy/L*F}" stroke="#ffb86c" stroke-width="${sw(1.8)}" opacity=".88"/>`);}
+            });
+            // Vorschau während Zeichen
+            if(mapPending.length===1&&mapMouse){const sp=mapSnap(mapMouse)||mapMouse;if(mapTool==='compass')E.push(`<circle cx="${mapPending[0].x}" cy="${mapPending[0].y}" r="${mDist(mapPending[0],sp)}" fill="none" stroke="#34c3ff" stroke-width="${sw(1.4)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".55"/>`);else if(mapTool==='line')E.push(`<line x1="${mapPending[0].x}" y1="${mapPending[0].y}" x2="${sp.x}" y2="${sp.y}" stroke="#ffb86c" stroke-width="${sw(1.6)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".6"/>`);}
+            // Gleicher-Radius-Vorschau
+            if(mapTool==='compass'&&mapRadiusMode==='same'&&mapLastRadius>1&&mapPending.length===0&&mapMouse){const sp=mapSnap(mapMouse)||mapMouse;E.push(`<circle cx="${sp.x}" cy="${sp.y}" r="${mapLastRadius}" fill="none" stroke="#34c3ff" stroke-width="${sw(1.4)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".5"/>`);E.push(`<circle cx="${sp.x}" cy="${sp.y}" r="${sw(3)}" fill="#34c3ff" opacity=".75"/>`);}
+            // Schnittpunkte
+            mapAux.forEach(p=>E.push(`<circle cx="${p.x}" cy="${p.y}" r="${sw(3.5)}" fill="#9aa6c0" opacity=".95"/>`));
+            // Gesetzter erster Punkt
+            mapPending.forEach(p=>E.push(`<circle cx="${p.x}" cy="${p.y}" r="${sw(7)}" fill="none" stroke="#ff9f43" stroke-width="${sw(2.5)}"/>`));
+            // Markierter Schatzpunkt
+            if(mapMarkedPoint){
+                const mx=mapMarkedPoint.x,my=mapMarkedPoint.y,a=sw(10);
+                E.push(`<circle cx="${mx}" cy="${my}" r="${sw(13)}" fill="rgba(255,107,53,0.18)" stroke="#ff6b35" stroke-width="${sw(2)}"/>`);
+                E.push(`<line x1="${mx-a}" y1="${my}" x2="${parseFloat(mx)+parseFloat(a)}" y2="${my}" stroke="#ff6b35" stroke-width="${sw(2.5)}"/>`);
+                E.push(`<line x1="${mx}" y1="${my-a}" x2="${mx}" y2="${parseFloat(my)+parseFloat(a)}" stroke="#ff6b35" stroke-width="${sw(2.5)}"/>`);
+                E.push(`<text x="${mx}" y="${parseFloat(my)-parseFloat(sw(16))}" fill="#ff6b35" font-size="${sw(11)}" text-anchor="middle" font-weight="700" font-family="sans-serif">?</text>`);
+            }
+            // Snap-Indikator
+            if((mapTool==='compass'||mapTool==='line'||mapTool==='mark')&&mapMouse){const sp=mapSnap(mapMouse);if(sp)E.push(`<circle cx="${sp.x}" cy="${sp.y}" r="${sw(9)}" fill="none" stroke="${mapTool==='mark'?'#ff6b35':'#ff9f43'}" stroke-width="${sw(2)}" opacity=".9"/>`);}
+            mapBoard.innerHTML=E.join('');
+            mapApplyView();
+        }
+
+        // Karte-Interaktion
+        let isMapOpen = false;
+        const mapWorldPos = new THREE.Vector3();
+        let activeMapNearMe = false;
+        function openMap(){
+            isMapOpen=true;
+            mapRecompute();mapRender();
+            document.getElementById('map-overlay').classList.add('open');
+            for(let k in keys)keys[k]=false;touchVelocity.x=0;touchVelocity.z=0;
+        }
+        function closeMap(){isMapOpen=false;document.getElementById('map-overlay').classList.remove('open');}
+
+        // ── BIBLIOTHEK ──
+        let isLibraryOpen = false;
+        const libraryBooks = [
+            {
+                color:'#c0392b', title:'Algebra und Gleichungen', author:'Prof. H. Müller', subject:'Algebra',
+                content:'ALGEBRA UND GLEICHUNGEN\nProf. H. Müller · 4. Auflage\n\nKapitel 3: Quadratische Gleichungen\n\n[Inhalt wird ergänzt]\n\nWichtige Formeln:\n  ax² + bx + c = 0\n  x = (–b ± √(b²–4ac)) / 2a\n\nBeispiele und Übungsaufgaben folgen.'
+            },
+            {
+                color:'#2471a3', title:'Geometrie der Ebene', author:'Dr. K. Weber', subject:'Geometrie',
+                content:'GEOMETRIE DER EBENE\nDr. K. Weber · 2. Auflage\n\nKapitel 5: Kreise und Winkel\n\n[Inhalt wird ergänzt]\n\nThemen dieses Kapitels:\n  • Kreisumfang und Fläche\n  • Umkreis und Inkreis\n  • Tangenten\n\nBeispiele und Übungsaufgaben folgen.'
+            },
+            {
+                color:'#1e8449', title:'Trigonometrie', author:'Prof. A. Fischer', subject:'Trigonometrie',
+                content:'TRIGONOMETRIE\nProf. A. Fischer · 3. Auflage\n\nKapitel 2: Sinus, Kosinus, Tangens\n\n[Inhalt wird ergänzt]\n\nWichtige Formeln:\n  sin²α + cos²α = 1\n  tan α = sin α / cos α\n\nBeispiele und Übungsaufgaben folgen.'
+            },
+            {
+                color:'#d4a017', title:'Analytische Geometrie', author:'Dr. M. Braun', subject:'Analytische Geo.',
+                content:'ANALYTISCHE GEOMETRIE\nDr. M. Braun · 1. Auflage\n\nKapitel 4: Geraden und Kreise\n\n[Inhalt wird ergänzt]\n\nThemen dieses Kapitels:\n  • Koordinatensystem\n  • Geradengleichungen\n  • Schnittpunkte\n\nBeispiele und Übungsaufgaben folgen.'
+            },
+            {
+                color:'#6c3483', title:'Wahrscheinlichkeitsrechnung', author:'Prof. L. Schmidt', subject:'Stochastik',
+                content:'WAHRSCHEINLICHKEITSRECHNUNG\nProf. L. Schmidt · 5. Auflage\n\nKapitel 1: Grundbegriffe\n\n[Inhalt wird ergänzt]\n\nThemen dieses Kapitels:\n  • Ereignisse und Wahrscheinlichkeiten\n  • Kombinatorik\n  • Bedingte Wahrscheinlichkeit\n\nBeispiele und Übungsaufgaben folgen.'
+            },
+            {
+                color:'#117a65', title:'Differentialrechnung', author:'Dr. E. Hoffmann', subject:'Analysis',
+                content:'DIFFERENTIALRECHNUNG\nDr. E. Hoffmann · 2. Auflage\n\nKapitel 6: Ableitungsregeln\n\n[Inhalt wird ergänzt]\n\nWichtige Regeln:\n  (xⁿ)\' = n·xⁿ⁻¹\n  Kettenregel, Produktregel\n\nBeispiele und Übungsaufgaben folgen.'
+            },
+        ];
+
+        function openLibrary(){
+            isLibraryOpen=true;
+            const grid=document.getElementById('library-grid');
+            grid.innerHTML=libraryBooks.map((b,i)=>`
+                <div class="lib-book" onclick="openLibraryBook(${i})">
+                    <div class="lib-spine" style="background:${b.color}"></div>
+                    <div class="lib-info">
+                        <div class="lib-title">${b.title}</div>
+                        <div class="lib-author">${b.author}</div>
+                        <div class="lib-subject">${b.subject}</div>
+                    </div>
+                </div>`).join('');
+            document.getElementById('library-overlay').classList.add('open');
+            for(let k in keys)keys[k]=false; touchVelocity.x=0; touchVelocity.z=0;
+        }
+        function closeLibrary(){isLibraryOpen=false;document.getElementById('library-overlay').classList.remove('open');}
+        function openLibraryBook(i){
+            const b=libraryBooks[i];
+            closeLibrary();
+            openDocument({title:'📖 '+b.title, content:b.content});
+        }
+
+        // Office-Regal Weltpositionen (officeGroup bei x=17)
+        const officeShelfPositions=[
+            new THREE.Vector3(17+(-2.5),0,-4.7),
+            new THREE.Vector3(17+(-0.8),0,-4.7),
+        ];
+        let activeBookshelfNearMe=false;
+
+        // ── SCHATZ-AUFGABE ──
+        function mapCircumcircle(A,B,C){
+            const D=2*(A.x*(B.y-C.y)+B.x*(C.y-A.y)+C.x*(A.y-B.y));
+            const ax=A.x*A.x+A.y*A.y,bx=B.x*B.x+B.y*B.y,cx=C.x*C.x+C.y*C.y;
+            const x=(ax*(B.y-C.y)+bx*(C.y-A.y)+cx*(A.y-B.y))/D;
+            const y=(ax*(C.x-B.x)+bx*(A.x-C.x)+cx*(B.x-A.x))/D;
+            return{x,y,r:Math.hypot(x-A.x,y-A.y)};
+        }
+        // Dreieck: Alpha(0), Delta(3), Gamma(2)
+        const mapTargetCC = mapCircumcircle(mapIslandData[0], mapIslandData[3], mapIslandData[2]);
+        // Schatzpunkt = Umkreis ∩ Gerade Beta–Epsilon, der näher an Kap Theta liegt
+        const mapTreasure = (()=>{
+            const P=mapIslandData[1], Q=mapIslandData[4]; // Beta, Epsilon
+            const Theta=mapIslandData[7]; // Kap Theta
+            const pts=mLineCircle(P,Q,mapTargetCC);
+            const onMap=pts.filter(p=>p.x>20&&p.x<880&&p.y>20&&p.y<600);
+            const cands=onMap.length?onMap:pts;
+            return cands.reduce((a,b)=>mDist(a,Theta)<mDist(b,Theta)?a:b);
+        })();
+        let mapSolved = false;
+        let mapMarkedPoint = null;
+
+        const mapHints=[
+            'Konstruiere den Umkreis des Dreiecks Alpha–Delta–Gamma. Schlage zuerst die Mittelsenkrechte von Alpha–Delta: Zirkel von Alpha nach Delta, dann von Delta nach Alpha — gleicher Radius!',
+            'Die Schnittpunkte der zwei Kreise verbindest du mit dem Lineal → Mittelsenkrechte von Alpha–Delta. Wiederhole für Delta–Gamma.',
+            'Der Schnittpunkt der zwei Mittelsenkrechten ist der Mittelpunkt M des Umkreises. Schlage jetzt den Umkreis: M → Alpha (oder Delta oder Gamma).',
+            'Zeichne eine Gerade durch Insel Beta und Insel Epsilon. Von den zwei Schnittpunkten mit dem Umkreis liegt der Schatz an dem, der näher an Kap Theta ist. Markiere ihn mit 📍 und klicke Prüfen!'
+        ];
+        let mapHintStep=0;
+        function mapHint(){mapSetStatus('💡',mapHints[mapHintStep%mapHints.length],'warn');mapHintStep++;}
+
+        function mapCheck(){
+            const TOL=22;
+            // 1) Kein Marker gesetzt → Hinweis
+            if(!mapMarkedPoint){
+                mapSetStatus('📍','Markiere zuerst einen Punkt: Wähle das 📍-Werkzeug und klicke auf den Schnittpunkt, den du für den Schatz hältst.','warn');
+                return;
+            }
+            // 2) Marker korrekt?
+            if(mDist(mapMarkedPoint,mapTreasure)<TOL){
+                mapSolved=true; mapRender();
+                mapSetStatus('🏆','Richtig! Du hast den Schatzpunkt gefunden. Geh jetzt zu Kurator Dr. Albrecht und berichte ihm — er wartet auf dich!','ok');
+                return;
+            }
+            // 3) Konstruktion-Zwischenstand
+            const hasCC=mapObjects.some(o=>o.type==='circle'&&mDist({x:o.x,y:o.y},mapTargetCC)<TOL*2&&Math.abs(o.r-mapTargetCC.r)<TOL*2);
+            const B_isl=mapIslandData[1], E_isl=mapIslandData[4];
+            const hasLine=mapObjects.some(o=>{
+                if(o.type!=='line')return false;
+                return mProjLine(B_isl,o.a,o.b).d<TOL && mProjLine(E_isl,o.a,o.b).d<TOL;
+            });
+            if(hasCC&&hasLine) mapSetStatus('❌','Nicht ganz — du hast Umkreis und Gerade, aber der markierte Punkt ist falsch. Welcher Schnittpunkt liegt näher an Kap Theta?','err');
+            else if(hasCC)     mapSetStatus('📏','Guter Umkreis! Zeichne noch eine Gerade durch Beta und Epsilon, dann markiere den richtigen Schnittpunkt.','warn');
+            else if(hasLine)   mapSetStatus('🧭','Gute Gerade! Konstruiere noch den Umkreis von Alpha–Delta–Gamma.','warn');
+            else               mapSetStatus('🤔','Noch nicht. Konstruiere zuerst den Umkreis von Alpha–Delta–Gamma und die Gerade durch Beta–Epsilon.','err');
+        }
+
+        const paperMeshes = []; // Keine Zettel mehr auf dem Schreibtisch
+
+        // ── KURATOR NPC ──
+        const curatorGroup = new THREE.Group();
+        curatorGroup.position.set(-2.0, 0, 2.5);
+        curatorGroup.rotation.y = Math.PI / 6;
+        officeGroup.add(curatorGroup);
+
+        const curSkin  = new THREE.MeshStandardMaterial({ color: 0xd4a070, roughness: 0.65 });
+        const curHair  = new THREE.MeshStandardMaterial({ color: 0xb0a898, roughness: 0.8 });
+        const curSuit  = new THREE.MeshStandardMaterial({ color: 0x1e2d40, roughness: 0.55, metalness: 0.05 });
+        const curWhite = new THREE.MeshStandardMaterial({ color: 0xecf0f1, roughness: 0.5 });
+        const curTieM  = new THREE.MeshStandardMaterial({ color: 0x6c3483, roughness: 0.45 });
+        const curShoeM = new THREE.MeshStandardMaterial({ color: 0x0d0805, roughness: 0.5 });
+        const goldMat  = new THREE.MeshStandardMaterial({ color: 0xb8960c, metalness: 0.85, roughness: 0.2 });
+
+        // Schuhe
+        [-0.11, 0.11].forEach(x => {
+            const s = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, 0.25), curShoeM); s.position.set(x, 0.035, 0.02); curatorGroup.add(s);
+        });
+        // Beine (Unter- & Oberschenkel mit Knie)
+        [-0.11, 0.11].forEach(x => {
+            const shin  = new THREE.Mesh(new THREE.CylinderGeometry(0.074, 0.064, 0.42, 8), curSuit); shin.position.set(x, 0.28, 0); curatorGroup.add(shin);
+            const knee  = new THREE.Mesh(new THREE.SphereGeometry(0.076, 8, 8), curSuit); knee.position.set(x, 0.49, 0); curatorGroup.add(knee);
+            const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.078, 0.28, 8), curSuit); thigh.position.set(x, 0.63, 0); curatorGroup.add(thigh);
+        });
+        // Hüfte
+        const curHips = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.13, 0.26), curSuit); curHips.position.y = 0.80; curatorGroup.add(curHips);
+        // Torso
+        const curBodyM = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.56, 0.28), curSuit); curBodyM.position.y = 1.11; curatorGroup.add(curBodyM);
+        // Hemd
+        const curShirtF = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.50, 0.015), curWhite); curShirtF.position.set(0, 1.11, -0.148); curatorGroup.add(curShirtF);
+        // Krawatte
+        const curTieF = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.40, 0.012), curTieM); curTieF.position.set(0, 1.10, -0.157); curatorGroup.add(curTieF);
+        // Revers (Anzug)
+        [-0.07, 0.07].forEach((x, i) => {
+            const lapel = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.28, 0.015), curSuit); lapel.position.set(x*1.3, 1.22, -0.156); lapel.rotation.z = (i===0?1:-1)*0.18; curatorGroup.add(lapel);
+        });
+        // Einstecktuch
+        const pSquare = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.04, 0.015), new THREE.MeshStandardMaterial({ color: 0xfff8dc })); pSquare.position.set(-0.155, 1.32, -0.150); curatorGroup.add(pSquare);
+        // Schulterpolster
+        [-0.28, 0.28].forEach(x => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.28), curSuit); p.position.set(x, 1.40, 0); curatorGroup.add(p); });
+        // Arme mit Manschetten
+        function buildCurArm() {
+            const g = new THREE.Group();
+            const up = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.060, 0.26, 8), curSuit); up.position.y = -0.13; g.add(up);
+            const el = new THREE.Mesh(new THREE.SphereGeometry(0.062, 8, 8), curSuit); el.position.y = -0.27; g.add(el);
+            const fo = new THREE.Mesh(new THREE.CylinderGeometry(0.060, 0.054, 0.24, 8), curSuit); fo.position.y = -0.43; g.add(fo);
+            const cu = new THREE.Mesh(new THREE.CylinderGeometry(0.063, 0.063, 0.04, 8), curWhite); cu.position.y = -0.57; g.add(cu);
+            const ha = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.08), curSkin); ha.position.y = -0.62; g.add(ha);
+            return g;
+        }
+        const curArmL = buildCurArm(); curArmL.position.set(-0.305, 1.34, 0); curatorGroup.add(curArmL);
+        const curArmR = buildCurArm(); curArmR.position.set( 0.305, 1.34, 0); curatorGroup.add(curArmR);
+        // Hals
+        const curNeckM = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.068, 0.14, 8), curSkin); curNeckM.position.y = 1.44; curatorGroup.add(curNeckM);
+        // Kopf
+        const curHeadM = new THREE.Mesh(new THREE.BoxGeometry(0.33, 0.34, 0.30), curSkin); curHeadM.position.y = 1.68; curatorGroup.add(curHeadM);
+        // Ohren
+        [-0.175, 0.175].forEach(x => { const e = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.08, 0.06), curSkin); e.position.set(x, 1.68, 0); curatorGroup.add(e); });
+        // Augen (weiß + Pupille)
+        [-0.082, 0.082].forEach(x => {
+            const w = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffffff })); w.position.set(x, 1.695, -0.152); curatorGroup.add(w);
+            const p = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), new THREE.MeshBasicMaterial({ color: 0x2c3e50 })); p.position.set(x, 1.695, -0.159); curatorGroup.add(p);
+            const br = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.018, 0.007), curHair); br.position.set(x, 1.74, -0.154); curatorGroup.add(br);
+        });
+        // Nase
+        const curNoseM = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, 0.025), new THREE.MeshStandardMaterial({ color: 0xc49060 })); curNoseM.position.set(0, 1.665, -0.162); curatorGroup.add(curNoseM);
+        // Schnurrbart
+        const curMust = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.030, 0.016), curHair); curMust.position.set(0, 1.645, -0.157); curatorGroup.add(curMust);
+        // Mund
+        const curMouthM = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.016, 0.008), new THREE.MeshBasicMaterial({ color: 0x8b5e3c })); curMouthM.position.set(0, 1.624, -0.155); curatorGroup.add(curMouthM);
+        // Brille (rund, Gold)
+        [-0.086, 0.086].forEach(x => {
+            const fr = new THREE.Mesh(new THREE.TorusGeometry(0.044, 0.008, 8, 16), goldMat); fr.rotation.x = Math.PI/2; fr.position.set(x, 1.695, -0.167); curatorGroup.add(fr);
+        });
+        const curBridge = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.008, 0.008), goldMat); curBridge.position.set(0, 1.695, -0.167); curatorGroup.add(curBridge);
+        [-0.132, 0.132].forEach(x => { const t = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.007, 0.11), goldMat); t.position.set(x, 1.695, -0.115); curatorGroup.add(t); });
+        // Haare (grau, schütter oben, Seiten voll)
+        const cHT = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.055, 0.24), curHair); cHT.position.set(0, 1.87, 0.01); curatorGroup.add(cHT);
+        [-0.185, 0.185].forEach(x => { const hs = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.30, 0.28), curHair); hs.position.set(x, 1.68, 0.01); curatorGroup.add(hs); });
+        const cHB = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.30, 0.055), curHair); cHB.position.set(0, 1.68, 0.178); curatorGroup.add(cHB);
 
         let activeDocumentNearMe = null; let isDocumentOpen = false;
-        function openDocument(doc) { isDocumentOpen = true; const overlay = document.getElementById('document-overlay'); document.getElementById('doc-title').innerText = doc.title; document.getElementById('doc-content').innerText = doc.content; overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; }
-        function closeDocument() { isDocumentOpen = false; document.getElementById('document-overlay').classList.remove('open'); }
+        function openDocument(doc) {
+            isDocumentOpen = true;
+            document.getElementById('doc-title').innerText = doc.title;
+            document.getElementById('doc-content').innerText = doc.content;
+            const isSophia = !!doc._sophia;
+            document.getElementById('sophia-choices').classList.toggle('visible', isSophia);
+            document.getElementById('sophia-input-area').classList.remove('visible');
+            document.getElementById('doc-close-hint').style.display = isSophia ? 'none' : '';
+            if (isSophia) document.getElementById('sophia-price-input').value = '';
+            document.getElementById('document-overlay').classList.add('open');
+            for (let key in keys) keys[key] = false;
+            touchVelocity.x = 0; touchVelocity.z = 0;
+        }
+        function closeDocument() {
+            isDocumentOpen = false;
+            document.getElementById('document-overlay').classList.remove('open');
+            document.getElementById('sophia-choices').classList.remove('visible');
+            document.getElementById('sophia-input-area').classList.remove('visible');
+            document.getElementById('doc-close-hint').style.display = '';
+        }
+        function showSophiaPriceInput() {
+            document.getElementById('sophia-choices').classList.remove('visible');
+            document.getElementById('sophia-input-area').classList.add('visible');
+            document.getElementById('sophia-price-input').focus();
+        }
+        function submitSophiaPrice() {
+            const raw = document.getElementById('sophia-price-input').value.trim().toLowerCase().replace(/\s/g,'');
+            const correct = ['4','4€','4,00€','4.00€'];
+            if (correct.includes(raw)) {
+                closeDocument();
+                playerInventory.push({ name: "Gemäldestück", icon: "🖼️", isReadable: true, content: "Ein Stück eines alten Gemäldes.\nSophia hat es in einer Ecke des Shops gefunden.\nVielleicht gehört es zu einem größeren Bild?" });
+                setTimeout(() => openDocument({ title: "💬 Kassierin Sophia", content: "Das stimmt genau! Vielen Dank, du hast mir sehr geholfen! 🎉\n\nAls kleines Dankeschön gebe ich dir dieses Gemäldestück — ich habe es vorhin in einer Ecke des Shops gefunden.\n\nVielleicht ist es für dich nützlich!", _sophia: false }), 100);
+            } else {
+                closeDocument();
+                setTimeout(() => openDocument({ title: "💬 Kassierin Sophia", content: "Hmm, das scheint nicht ganz richtig zu sein. Schau vielleicht nochmal in die Preisliste am Regal!" }), 100);
+            }
+        }
 
         function createShelf(x, z) {
             const shelf = new THREE.Group(); shelf.position.set(x, 0, z);
@@ -1301,16 +2027,42 @@
         shopGroup.add(createShopShelf(0,   -SHOP_SIZE/2+0.08, 0));
         shopGroup.add(createShopShelf(2.6,  -SHOP_SIZE/2+0.08, 0));
 
+        // Regal-Weltpositionen für Proximity
+        const shopShelfPositions = [
+            new THREE.Vector3(shopXCenter + 0,   0, shopZCenter + (-SHOP_SIZE/2+0.08)),
+            new THREE.Vector3(shopXCenter + 2.6, 0, shopZCenter + (-SHOP_SIZE/2+0.08)),
+        ];
+        const priceListDoc = {
+            title: "🛒 Preisliste – Museum-Shop",
+            content:
+"☕  Mathetasse (mit Mathe-Symbol & Goldrand)\n" +
+"    .......................................  9,99 €\n\n" +
+"📚  Mathebücher\n" +
+"    • 'Zahlen fuer Abenteurer'  ........  14,99 €\n" +
+"    • 'Geometrie erleben'  ...........  12,99 €\n" +
+"    • 'Das grosse Einmaleins'  .........   8,99 €\n\n" +
+"🔷  Geometrische Modelle\n" +
+"    • Kugel (Holz, 8 cm)  .............   7,99 €\n" +
+"    • Pyramide (Metall)  ...............  11,99 €\n" +
+"    • Würfel (Kristallglas)  ...........  13,99 €\n" +
+"    • Ikosaeder (Holz, handbemalt)  ...  15,99 €\n" +
+"    • Oktaeder (Metall, poliert)  ......  12,49 €\n\n" +
+"🌍  Kleiner Globus  ....................  19,99 €\n\n" +
+"🎁  Geschenkset (Tasse + Buch)  ........  21,99 €\n\n" +
+"Alle Preise inkl. MwSt."
+        };
+        let activeShelfNearMe = false;
+
         // ── KASSENBREICH (Ecke rechts vorne) ──
-        const cashCorner = new THREE.Group(); cashCorner.position.set(SHOP_SIZE/2-1.6, 0, SHOP_SIZE/2-1.4);
-        // L-förmiger Tresen: Front-Teil
+        const cashCorner = new THREE.Group(); cashCorner.position.set(3.0, 0, SHOP_SIZE/2-1.0); cashCorner.rotation.y = 0;
+        // L-förmiger Tresen: Front-Teil (entlang Rückwand), Seite (entlang Eingangswand)
         const ccMat  = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.35, metalness: 0.15 });
         const ccWood = new THREE.MeshStandardMaterial({ color: 0x7b4f2a, roughness: 0.4 });
         const ccFront = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.05, 0.6), ccMat); ccFront.position.set(0, 0.525, 0); cashCorner.add(ccFront);
-        const ccSide  = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.05, 1.2), ccMat); ccSide.position.set(-1.3, 0.525, -0.6); cashCorner.add(ccSide);
+        const ccSide  = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.05, 0.6), ccMat); ccSide.position.set(1.35, 0.525, 0); cashCorner.add(ccSide);
         // Platten oben
         const ccTopF  = new THREE.Mesh(new THREE.BoxGeometry(2.04, 0.05, 0.64), ccWood); ccTopF.position.set(0, 1.075, 0); cashCorner.add(ccTopF);
-        const ccTopS  = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.05, 1.24), ccWood); ccTopS.position.set(-1.3, 1.075, -0.6); cashCorner.add(ccTopS);
+        const ccTopS  = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.05, 0.64), ccWood); ccTopS.position.set(1.35, 1.075, 0); cashCorner.add(ccTopS);
         // Chromkante
         const ccEdge  = new THREE.Mesh(new THREE.BoxGeometry(2.04, 0.03, 0.03), chromeMat); ccEdge.position.set(0, 1.1, 0.315); cashCorner.add(ccEdge);
         // Kassenmonitor
@@ -1330,6 +2082,95 @@
         // Schildchen "KASSE"
         const signK=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.16,0.04),new THREE.MeshStandardMaterial({color:0x4a90e2,roughness:0.3})); signK.position.set(0,1.35,0.32); cashCorner.add(signK);
         shopGroup.add(cashCorner);
+
+        // ── NPC KASSIERERIN ──
+        const npcGroup = new THREE.Group();
+        npcGroup.position.set(2.8, 0, SHOP_SIZE/2-0.3);
+        npcGroup.rotation.y = 0;
+
+        const sphSkin  = new THREE.MeshStandardMaterial({ color: 0xf0c090, roughness: 0.65 });
+        const sphHair  = new THREE.MeshStandardMaterial({ color: 0x3d1800, roughness: 0.75 });
+        const sphShirt = new THREE.MeshStandardMaterial({ color: 0x1a3a6e, roughness: 0.55, metalness: 0.05 });
+        const sphApron = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.7 });
+        const sphPants = new THREE.MeshStandardMaterial({ color: 0x1e2a3a, roughness: 0.6 });
+        const sphShoe  = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.5 });
+
+        // Schuhe
+        [-0.11, 0.11].forEach(x => {
+            const s = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, 0.24), sphShoe); s.position.set(x, 0.035, 0.02); npcGroup.add(s);
+        });
+        // Beine (Unter- & Oberschenkel mit Knie)
+        [-0.11, 0.11].forEach(x => {
+            const shin  = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.062, 0.42, 8), sphPants); shin.position.set(x, 0.28, 0); npcGroup.add(shin);
+            const knee  = new THREE.Mesh(new THREE.SphereGeometry(0.074, 8, 8), sphPants); knee.position.set(x, 0.49, 0); npcGroup.add(knee);
+            const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.075, 0.28, 8), sphPants); thigh.position.set(x, 0.63, 0); npcGroup.add(thigh);
+        });
+        // Hüfte
+        const sphHips = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.13, 0.24), sphPants); sphHips.position.y = 0.80; npcGroup.add(sphHips);
+        // Torso (Uniform)
+        const sphBody = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.54, 0.26), sphShirt); sphBody.position.y = 1.10; npcGroup.add(sphBody);
+        // Schürze (Unterteil)
+        const sphApronLow = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.44, 0.015), sphApron); sphApronLow.position.set(0, 1.06, 0.137); npcGroup.add(sphApronLow);
+        // Schürzenlatz (oben)
+        const sphApronBib = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.16, 0.015), sphApron); sphApronBib.position.set(0, 1.36, 0.137); npcGroup.add(sphApronBib);
+        [-0.09, 0.09].forEach(x => { const st = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.20, 0.012), sphApron); st.position.set(x, 1.27, 0.138); npcGroup.add(st); });
+        // Kragen
+        const collar = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.055, 0.04), sphShirt); collar.position.set(0, 1.39, 0.12); npcGroup.add(collar);
+        // Schultern
+        [-0.27, 0.27].forEach(x => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.26), sphShirt); p.position.set(x, 1.38, 0); npcGroup.add(p); });
+        // Arme
+        function buildSphArm() {
+            const g = new THREE.Group();
+            const up = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.058, 0.26, 8), sphShirt); up.position.y = -0.13; g.add(up);
+            const el = new THREE.Mesh(new THREE.SphereGeometry(0.058, 8, 8), sphShirt); el.position.y = -0.27; g.add(el);
+            const fo = new THREE.Mesh(new THREE.CylinderGeometry(0.054, 0.048, 0.24, 8), sphSkin); fo.position.y = -0.43; g.add(fo);
+            const ha = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.08), sphSkin); ha.position.y = -0.57; g.add(ha);
+            return g;
+        }
+        const sphArmL = buildSphArm(); sphArmL.position.set(-0.295, 1.33, 0); npcGroup.add(sphArmL);
+        const sphArmR = buildSphArm(); sphArmR.position.set( 0.295, 1.33, 0); npcGroup.add(sphArmR);
+        // Hals
+        const sphNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.064, 0.13, 8), sphSkin); sphNeck.position.y = 1.44; npcGroup.add(sphNeck);
+        // Kopf
+        const sphHead = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.33, 0.29), sphSkin); sphHead.position.y = 1.68; npcGroup.add(sphHead);
+        // Ohren
+        [-0.165, 0.165].forEach(x => { const e = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.07, 0.05), sphSkin); e.position.set(x, 1.68, 0); npcGroup.add(e); });
+        // Augen (weiß + Pupille + Wimpern)
+        [-0.075, 0.075].forEach(x => {
+            const w = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffffff })); w.position.set(x, 1.695, -0.146); npcGroup.add(w);
+            const p = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), new THREE.MeshBasicMaterial({ color: 0x1a1a2e })); p.position.set(x, 1.695, -0.153); npcGroup.add(p);
+            const gl = new THREE.Mesh(new THREE.SphereGeometry(0.010, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); gl.position.set(x+0.012, 1.705, -0.154); npcGroup.add(gl);
+            const br = new THREE.Mesh(new THREE.BoxGeometry(0.068, 0.013, 0.006), sphHair); br.position.set(x, 1.735, -0.150); npcGroup.add(br);
+        });
+        // Nase
+        const sphNose = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.028, 0.018), new THREE.MeshStandardMaterial({ color: 0xe8a878 })); sphNose.position.set(0, 1.666, -0.156); npcGroup.add(sphNose);
+        // Mund & Zähne
+        const sphLips = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.019, 0.008), new THREE.MeshBasicMaterial({ color: 0xd4607a })); sphLips.position.set(0, 1.630, -0.149); npcGroup.add(sphLips);
+        const sphTeeth = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.012, 0.006), new THREE.MeshBasicMaterial({ color: 0xfafafa })); sphTeeth.position.set(0, 1.626, -0.151); npcGroup.add(sphTeeth);
+        // Haare (Bob-Frisur, 4-teilig)
+        const sphHairTop = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.14, 0.33), sphHair); sphHairTop.position.y = 1.835; npcGroup.add(sphHairTop);
+        const sphHairFront = new THREE.Mesh(new THREE.BoxGeometry(0.29, 0.09, 0.055), sphHair); sphHairFront.position.set(0, 1.762, -0.173); npcGroup.add(sphHairFront);
+        [-0.19, 0.19].forEach(x => { const hs = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.35, 0.31), sphHair); hs.position.set(x, 1.665, 0); npcGroup.add(hs); });
+        const sphHairBack = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.35, 0.062), sphHair); sphHairBack.position.set(0, 1.665, 0.183); npcGroup.add(sphHairBack);
+        // Namensschild
+        const sphBadge = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.065, 0.012), new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.3 })); sphBadge.position.set(0.13, 1.22, -0.138); npcGroup.add(sphBadge);
+        const sphBadgeTxt = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.034, 0.005), new THREE.MeshBasicMaterial({ color: 0x1a1a1a })); sphBadgeTxt.position.set(0.13, 1.22, -0.144); npcGroup.add(sphBadgeTxt);
+
+        shopGroup.add(npcGroup);
+
+        // NPC-Weltposition für Proximity (wird beim ersten updateGame gesetzt)
+        const npcWorldPos = new THREE.Vector3();
+        let activeNpcNearMe = false;
+        let activeCuratorNearMe = false;
+        let curatorRewardGiven = false;
+        const curatorDialogRiddle = { title: "💬 Kurator Dr. Albrecht", content: "Ah, ein Besucher! Kommen Sie näher...\n\nIch bin Dr. Albrecht — Kurator, Historiker, und seit einigen Wochen: Rätselsucher.\n\nAuf meinem Schreibtisch liegt eine uralte Seekarte. Sie zeigt Inseln, die seit Jahrhunderten niemand mehr bereist hat. Und doch flüstert sie mir etwas zu:\n\n»Insel Alpha, Kap Delta und Insel Gamma tragen ein unsichtbares Band — ein Kreis, der jeden von ihnen streift. Ziehe eine Linie von Insel Beta — dem westlichen Vorposten — hinüber zu Insel Epsilon im fernen Osten. Wo diese Linie den Kreis berührt — dort, wo Kap Theta am nächsten ruft — liegt das, was die alten Seefahrer hüteten.«\n\nIch selbst komme nicht dahinter. Mein Rücken erlaubt keine langen Konstruktionen mehr...\n\nWenn Sie das Rätsel lösen und mir den Punkt zeigen — ich verspreche Ihnen im Gegenzug ein Stück meiner Sammlung. Ein Fragment eines alten Gemäldes, das schon lange auf den richtigen Finder wartet.\n\nDie Karte liegt auf dem Schreibtisch. Trauen Sie sich!" };
+        const curatorDialogSolved = { title: "💬 Kurator Dr. Albrecht", content: "*Er schaut Sie mit leuchtenden Augen an*\n\nSie haben es wirklich gefunden! Nach all diesen Jahren...\n\nDer Schnittpunkt liegt auf dem Umkreis der drei Inseln — und von den zwei Stellen, wo die große Linie ihn kreuzt, ist es jener, der dem nördlichen Kap am nächsten liegt. Genau wie die alten Seeleute es in der Karte verborgen haben.\n\nWie versprochen: Nehmen Sie dieses Gemäldestück! Es hat lange genug hier verstaubt.\n\n*(Er überreicht Ihnen ein vergilbtes Gemäldefragment.)*\n\nVielen Dank — Sie sind ein wahrer Mathematiker." };
+        const curatorDialogAfter  = { title: "💬 Kurator Dr. Albrecht", content: "Ah, da sind Sie wieder!\n\nDanke nochmals für Ihre Hilfe. Der Schatzpunkt war schon immer da — er wartete nur auf jemanden, der die richtigen Kreise zu ziehen weiß.\n\n*schmunzelt*\n\nPassen Sie gut auf das Gemäldestück auf." };
+
+        const npcDialogs = [
+            { _sophia: true, title: "💬 Kassierin Sophia", content: "Willkommen im Mathe-Museum-Shop!\n\nIch bin Sophia. Die Kasse ist leider kaputt und ich kann nicht mehr ausrechnen, wie viel man zahlen muss.\n\nEs kam eben aber eine Bestellung eines Kunden rein. Er moechte kaufen:\n  • 2x Pyramiden-Modell\n  • 1x Mathebuch 'Geometrie erleben'\n  • 3x Mathetasse\n\nDer ausgeschilderte Preis der Pyramide ist leider noch der um 20% reduzierte Preis — der Kunde hat aber online bestellt und muss daher den normalen Preis zahlen.\n\nAm Ende bekommt er noch 5% Rabatt auf seinen gesamten Einkauf.\n\nKannst du mir sagen, wie viel er am Ende zahlen muss?" },
+        ];
+        let npcDialogIndex = 0;
 
         // ── MITTIGE WARENTISCH ──
         const displayTable = new THREE.Group(); displayTable.position.set(-2.5, 0, 0);
@@ -1757,7 +2598,7 @@
         let modePlacement = false; const playerInventory = []; 
 
         function toggleInventory() {
-            if (isGameWon || isDocumentOpen || isArcadeOverlayOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
+            if (isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
             if (isInventoryOpen) { overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; renderInventoryUI(); } 
             else { overlay.classList.remove('open'); modePlacement = false; }
         }
@@ -1765,7 +2606,7 @@
         function renderInventoryUI() {
             const gridContainer = document.getElementById('inventory-grid'); gridContainer.innerHTML = '';
             document.getElementById('inv-title').innerText = modePlacement ? "🖼️ Welches Bild aufhängen?" : "🎒 Dein Rucksack";
-            for(let i = 0; i < 6; i++) {
+            for(let i = 0; i < 12; i++) {
                 const slot = document.createElement('div'); slot.className = 'inventory-slot';
                 if(playerInventory[i] !== undefined) {
                     const itemVal = playerInventory[i]; slot.className = 'inventory-slot filled selectable';
@@ -1786,6 +2627,8 @@
         function triggerInteraction() {
             if (isGameWon) return;
             if (isArcadeOverlayOpen) { closeArcadeGame(); return; }
+            if (isMapOpen) { closeMap(); return; }
+            if (isLibraryOpen) { closeLibrary(); return; }
             if (isDocumentOpen) { closeDocument(); return; }
             if (window._activeLightSwitch) {
                 const sw = window._activeLightSwitch;
@@ -1794,6 +2637,26 @@
                 sw.ledMesh.material.color.set(on ? 0x00ff44 : 0x333333);
                 sw.ledMesh.material.emissive.set(on ? 0x00ff44 : 0x000000);
                 sw.ledMesh.material.emissiveIntensity = on ? 1.5 : 0;
+                return;
+            }
+            if (activeNpcNearMe) {
+                openDocument(npcDialogs[npcDialogIndex % npcDialogs.length]);
+                npcDialogIndex++;
+                return;
+            }
+            if (activeShelfNearMe) { openDocument(priceListDoc); return; }
+            if (activeMapNearMe) { openMap(); return; }
+            if (activeBookshelfNearMe) { openLibrary(); return; }
+            if (activeCuratorNearMe) {
+                if (mapSolved && !curatorRewardGiven) {
+                    curatorRewardGiven = true;
+                    playerInventory.push({ name: "Gemäldestück", icon: "🖼️", isReadable: true, content: "Ein vergilbtes Stück eines alten Gemäldes.\nDr. Albrecht hat es dir für das Lösen des Kartenrätsels übergeben.\nVielleicht gehört es zu einem größeren Bild?" });
+                    openDocument(curatorDialogSolved);
+                } else if (mapSolved) {
+                    openDocument(curatorDialogAfter);
+                } else {
+                    openDocument(curatorDialogRiddle);
+                }
                 return;
             }
             if (activeDocumentNearMe !== null) { openDocument(activeDocumentNearMe); return; }
@@ -1843,17 +2706,17 @@
 
         // --- 12. STEUERUNGS-SYSTEM ---
         let cameraAngleH = Math.PI; let cameraAngleV = 0.3; let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
-        window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+        window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
         window.addEventListener('mouseup', () => isMouseDown = false);
         window.addEventListener('mousemove', (e) => {
-            if (!isMouseDown || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
+            if (!isMouseDown || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return;
             cameraAngleH += (e.clientX - previousMousePosition.x) * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + (e.clientY - previousMousePosition.y) * 0.005));
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         window.addEventListener('keydown', (e) => { 
             if (isGameWon) return; if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } 
-            if (isDocumentOpen || isArcadeOverlayOpen) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
+            if (isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
             if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
         });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
@@ -1875,12 +2738,12 @@
 
         const dpadIds = new Set(['dpad-up','dpad-down','dpad-left','dpad-right','dpad','dpad-center']);
         window.addEventListener('touchstart', (e) => {
-            if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return;
+            if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return;
             if(dpadIds.has(e.target.id) || e.target.closest('#dpad')) return; // D-Pad ignorieren
             isTouching = true; touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
         });
         window.addEventListener('touchmove', (e) => {
-            if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
+            if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return;
             let diffX = e.touches[0].clientX - touchStartPos.x; let diffY = e.touches[0].clientY - touchStartPos.y;
             cameraAngleH += diffX * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.003));
             touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
@@ -1891,7 +2754,7 @@
         const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
-            if (isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen) return;
+            if (isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return;
             doorGroup.rotation.y += (doorTargetAngle - doorGroup.rotation.y) * 0.1;
 
             let moveX = 0; let moveZ = 0;
@@ -1920,7 +2783,7 @@
                     // Kartenständer
                     if (relShopX > 2.5 - 0.45 && relShopX < 2.5 + 0.45 && relShopZ > 1.8 - 0.45 && relShopZ < 1.8 + 0.45) allowed = false;
                     // Kasse / Tresen (L-Form, ~2.4 breit, ~1.8 tief)
-                    if (relShopX > 2.0 && relShopX < 4.6 && relShopZ > 2.4 && relShopZ < 4.6) allowed = false;
+                    if (relShopX > 1.8 && relShopX < 5.2 && relShopZ > 3.4 && relShopZ < 5.0) allowed = false;
                     // Display-Tisch (rund, Radius 0.8)
                     if (Math.sqrt((relShopX + 2.5) ** 2 + relShopZ ** 2) < 0.9) allowed = false;
                     // Spielautomat (rotiert 90°, ~0.7 breit, ~1.2 tief)
@@ -1999,6 +2862,24 @@
             }
             window._activeLightSwitch = activeSwitchNearMe || null;
 
+            // NPC-Proximity
+            npcGroup.getWorldPosition(npcWorldPos); npcWorldPos.y = 0;
+            activeNpcNearMe = playerPos2D.distanceTo(npcWorldPos) < 2.2;
+
+            // Kurator-Proximity
+            const curatorWorldPos = new THREE.Vector3();
+            curatorGroup.getWorldPosition(curatorWorldPos); curatorWorldPos.y = 0;
+            activeCuratorNearMe = playerPos2D.distanceTo(curatorWorldPos) < 2.2;
+
+            // Regal-Proximity (Shop)
+            activeShelfNearMe = shopShelfPositions.some(p => playerPos2D.distanceTo(p) < 2.2);
+            // Bücherregal-Proximity (Büro)
+            activeBookshelfNearMe = officeShelfPositions.some(p => playerPos2D.distanceTo(p) < 2.2);
+
+            // Landkarten-Proximity
+            mapMesh.getWorldPosition(mapWorldPos); mapWorldPos.y = 0;
+            activeMapNearMe = playerPos2D.distanceTo(mapWorldPos) < 2.0;
+
             if (minPaperDist < 2.0) {
                 activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
                 promptBtn.innerText = `📄 ${closestPaper.title} lesen (R)`; promptBtn.style.background = "rgba(142, 68, 173, 0.85)"; promptBtn.style.borderColor = "#9b59b6";
@@ -2024,6 +2905,36 @@
                 promptBtn.style.display = 'block';
                 promptBtn.innerText = "💡 Lichtschalter betätigen (R)";
                 promptBtn.style.background = "rgba(241, 196, 15, 0.85)"; promptBtn.style.borderColor = "#f39c12";
+            }
+            else if (activeNpcNearMe) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "🧑‍💼 Sophia ansprechen (R)";
+                promptBtn.style.background = "rgba(46, 213, 115, 0.85)"; promptBtn.style.borderColor = "#2ed573";
+            }
+            else if (activeShelfNearMe) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "📋 Preisliste ansehen (R)";
+                promptBtn.style.background = "rgba(26, 58, 110, 0.88)"; promptBtn.style.borderColor = "#4a90e2";
+            }
+            else if (activeMapNearMe) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "🗺️ Landkarte untersuchen (R)";
+                promptBtn.style.background = "rgba(90, 55, 10, 0.90)"; promptBtn.style.borderColor = "#b8960c";
+            }
+            else if (activeBookshelfNearMe) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "📚 Bücherregal durchsuchen (R)";
+                promptBtn.style.background = "rgba(30, 50, 80, 0.90)"; promptBtn.style.borderColor = "#2471a3";
+            }
+            else if (activeCuratorNearMe) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "🎩 Dr. Albrecht ansprechen (R)";
+                promptBtn.style.background = "rgba(52, 73, 94, 0.88)"; promptBtn.style.borderColor = "#7f8c8d";
             }
             else {
                 isNearDoor = false; activeDocumentNearMe = null; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; let closest = null; let minDist = Infinity;
