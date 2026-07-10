@@ -303,8 +303,8 @@
             border: 1px solid #3a3020; background: rgba(80,55,10,.4); color: #c8a840;
             padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer;
         }
-        #map-board-wrap { position: relative; flex-shrink: 0; }
-        #map-board { width: 100%; height: auto; display: block; touch-action: none; cursor: crosshair; }
+        #map-board-wrap { position: relative; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+        #map-board { width: auto; height: auto; max-width: 100%; max-height: 100%; aspect-ratio: 900 / 620; display: block; touch-action: none; cursor: crosshair; }
         #map-status {
             margin: 6px 12px 2px; padding: 7px 12px; border-radius: 8px;
             background: #1e1e24; border: 1px solid #2a3148; min-height: 34px;
@@ -357,6 +357,65 @@
         .lib-author { color:#5a6280; font-size:.75rem; }
         .lib-subject { margin-top:auto; font-size:.70rem; color:#8b94ad; background:#0e1020; padding:3px 8px; border-radius:4px; align-self:flex-start; letter-spacing:.03em; }
         #library-hint { color:#3a4060; font-size:.76rem; text-align:center; padding:8px 12px; font-style:italic; flex-shrink:0; }
+        /* ── QUIZ ── */
+        #quiz-overlay { position:absolute; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.88); display:flex; justify-content:center; align-items:center; z-index:270; opacity:0; pointer-events:none; transition:opacity 0.3s ease; padding:16px; }
+        #quiz-overlay.open { opacity:1; pointer-events:auto; }
+        #quiz-box { width:100%; max-width:540px; background:#12152a; border:1px solid #2a3060; border-radius:18px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.85); }
+        #quiz-header { background:#0d1022; padding:14px 20px; border-bottom:1px solid #1e2448; display:flex; justify-content:space-between; align-items:center; }
+        #quiz-header h2 { margin:0; color:#4a90e2; font-size:1rem; }
+        #quiz-progress { color:#3a4870; font-size:.82rem; }
+        #quiz-body { padding:24px 24px 20px; }
+        #quiz-question { color:#d0d8f0; font-size:1.05rem; font-weight:600; line-height:1.5; margin-bottom:20px; min-height:52px; }
+        #quiz-feedback { font-size:.85rem; min-height:20px; margin-bottom:12px; text-align:center; font-weight:600; }
+        #quiz-feedback.correct { color:#2ed573; }
+        #quiz-feedback.wrong   { color:#ff6b81; }
+        .quiz-opts { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+        .quiz-opt { background:#1a2040; border:1px solid #2a3060; color:#a0aac0; border-radius:10px; padding:12px 14px; cursor:pointer; font-size:.88rem; text-align:left; transition:background .15s,border-color .15s; }
+        .quiz-opt:hover:not(:disabled) { background:#222a58; border-color:#4a70c0; color:#d0d8f0; }
+        .quiz-opt.correct { background:rgba(46,213,115,.18); border-color:#2ed573; color:#2ed573; }
+        .quiz-opt.wrong   { background:rgba(255,107,129,.12); border-color:#ff4757; color:#ff6b81; }
+        .quiz-opt:disabled { cursor:default; }
+        #quiz-next { display:none; width:100%; background:linear-gradient(180deg,#4a90e2,#2e6abf); color:#fff; border:none; border-radius:10px; padding:11px; font-size:.9rem; font-weight:700; cursor:pointer; }
+        #quiz-next:hover { background:linear-gradient(180deg,#5aa0f2,#3e7acf); }
+        #quiz-namestep { display:none; padding:24px 24px 20px; }
+        #quiz-namestep-intro { color:#a0aac0; font-size:.9rem; line-height:1.5; margin-bottom:18px; }
+        .quiz-name-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+        .quiz-name-input, #quiz-class-input { background:#1a2040; border:1px solid #2a3060; color:#d0d8f0; border-radius:10px; padding:11px 14px; font-size:.88rem; width:100%; box-sizing:border-box; font-family:inherit; }
+        .quiz-name-input::placeholder, #quiz-class-input::placeholder { color:#5a6280; }
+        .quiz-name-input:focus, #quiz-class-input:focus { outline:none; border-color:#4a70c0; }
+        #quiz-class-input { margin-bottom:8px; }
+        #quiz-namestep-error { color:#ff6b81; font-size:.82rem; min-height:18px; margin:4px 0 8px; text-align:center; }
+        #quiz-namestep-next { width:100%; background:linear-gradient(180deg,#4a90e2,#2e6abf); color:#fff; border:none; border-radius:10px; padding:11px; font-size:.9rem; font-weight:700; cursor:pointer; }
+        #quiz-namestep-next:hover { background:linear-gradient(180deg,#5aa0f2,#3e7acf); }
+        /* ── MINIMAP ── */
+        #visit-timer {
+            position: absolute; bottom: 210px; right: 20px; z-index: 90;
+            background: rgba(6,8,18,0.88); border: 1px solid #252a42;
+            border-radius: 8px; padding: 5px 11px; pointer-events: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,.6);
+            text-align: center; min-width: 80px;
+        }
+        #visit-timer-label {
+            color: #3a4560; font-size: .58rem; letter-spacing: .10em;
+            text-transform: uppercase; margin-bottom: 2px;
+        }
+        #visit-timer-value {
+            color: #c8d0e8; font-size: .88rem; font-family: monospace; font-weight: 600;
+            letter-spacing: .06em;
+        }
+        #minimap-wrap {
+            position: absolute; bottom: 20px; right: 20px; z-index: 90;
+            background: rgba(6,8,18,0.88); border: 1px solid #252a42;
+            border-radius: 10px; padding: 6px 6px 4px; pointer-events: auto;
+            box-shadow: 0 4px 16px rgba(0,0,0,.6); cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #minimap-label {
+            color: #3a4560; font-size: .60rem; text-align: center;
+            letter-spacing: .10em; text-transform: uppercase; margin-bottom: 3px;
+        }
+        #minimap-canvas { display: block; border-radius: 5px; }
+
         #win-overlay {
             position: absolute;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -424,6 +483,13 @@
 
     <div id="interaction-prompt" onclick="triggerInteraction()">Tippen zum Interagieren</div>
     <button id="inventory-btn" onclick="toggleInventory()">🎒 Inventar</button>
+    <div id="visit-timer">
+        <div id="visit-timer-value">00:00</div>
+    </div>
+    <div id="minimap-wrap">
+        <div id="minimap-label">Karte</div>
+        <canvas id="minimap-canvas" width="170" height="158"></canvas>
+    </div>
 
     <!-- D-Pad Tablet-Steuerung -->
     <div id="dpad">
@@ -501,6 +567,35 @@
           <button class="map-tool" style="background:linear-gradient(180deg,#2ed573,#22b262);color:#06210f;border-color:#26de81;font-weight:800" onclick="mapCheck()">✓ Prüfen</button>
         </div>
         <div id="map-close-hint">Klicke ✕ oder drücke R, um die Karte zu schließen</div>
+      </div>
+    </div>
+
+    <div id="quiz-overlay">
+      <div id="quiz-box">
+        <div id="quiz-header">
+          <h2>🏛️ Anmeldung — Mathe-Museum</h2>
+          <span id="quiz-progress">Frage 1 von 5</span>
+        </div>
+        <div id="quiz-namestep">
+          <div id="quiz-namestep-intro">Wer betritt das Museum? Trage mindestens einen Namen ein und deine Klasse.</div>
+          <div class="quiz-name-row">
+            <input type="text" class="quiz-name-input" id="quiz-name-0" placeholder="Name 1" maxlength="30">
+            <input type="text" class="quiz-name-input" id="quiz-name-1" placeholder="Name 2" maxlength="30">
+          </div>
+          <div class="quiz-name-row">
+            <input type="text" class="quiz-name-input" id="quiz-name-2" placeholder="Name 3" maxlength="30">
+            <input type="text" class="quiz-name-input" id="quiz-name-3" placeholder="Name 4" maxlength="30">
+          </div>
+          <input type="text" id="quiz-class-input" placeholder="Klasse (z. B. 8a)" maxlength="20">
+          <div id="quiz-namestep-error"></div>
+          <button id="quiz-namestep-next" onclick="quizNameStepNext()">Weiter →</button>
+        </div>
+        <div id="quiz-body">
+          <div id="quiz-question"></div>
+          <div id="quiz-feedback"></div>
+          <div class="quiz-opts" id="quiz-opts"></div>
+          <button id="quiz-next" onclick="quizNext()">Weiter →</button>
+        </div>
       </div>
     </div>
 
@@ -917,6 +1012,76 @@
             // Kapitell
             const cap = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.18, 0.38), new THREE.MeshStandardMaterial({ color: 0xc8c2b4, roughness: 0.4 })); cap.position.set(px, 6.09, pz); scene.add(cap);
         });
+
+        // ── MUSEUMSLEITER-NPC (vor dem leeren Bilderrahmen) ──
+        let directorGroup = new THREE.Group();
+        directorGroup.position.set(2.2, 0, 6.0);
+        directorGroup.rotation.y = -Math.PI * 0.85; // schaut leicht zum Rahmen
+        (()=>{
+            // Dr. Faber — distinguierter älterer Museumsleiter: warmer Tweed-Dreiteiler,
+            // Fliege, Taschenuhr, Glatze mit schlohweißem Haarkranz + Vollbart.
+            const dSkin=new THREE.MeshStandardMaterial({color:0xdca878,roughness:0.62});
+            const dSuit=new THREE.MeshStandardMaterial({color:0x4a3b28,roughness:0.62}); // warmes Tweed-Braun
+            const dVest=new THREE.MeshStandardMaterial({color:0x6b5335,roughness:0.55}); // Weste, heller
+            const dWhite=new THREE.MeshStandardMaterial({color:0xf5f2ea,roughness:0.5});
+            const dBow=new THREE.MeshStandardMaterial({color:0x7a1f2b,roughness:0.45});  // bordeauxrote Fliege
+            const dHair=new THREE.MeshStandardMaterial({color:0xf2f0ea,roughness:0.85}); // schlohweiß
+            const dGold=new THREE.MeshStandardMaterial({color:0xd4af37,roughness:0.3,metalness:0.7});
+            // Schuhe (braun)
+            [-0.1,0.1].forEach(x=>{const s=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.075,0.28),new THREE.MeshStandardMaterial({color:0x2b1a0f,roughness:0.5}));s.position.set(x,0.037,0.02);directorGroup.add(s);});
+            // Beine
+            [-0.105,0.105].forEach(x=>{const l=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.066,0.78,8),dSuit);l.position.set(x,0.50,0);directorGroup.add(l);});
+            // Hüfte
+            const hips=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.15,0.28),dSuit);hips.position.y=0.90;directorGroup.add(hips);
+            // Körper (fülliger/gedrungener als Albrecht)
+            const body=new THREE.Mesh(new THREE.BoxGeometry(0.54,0.60,0.32),dSuit);body.position.y=1.20;directorGroup.add(body);
+            // Weste (Vorderseite)
+            const vest=new THREE.Mesh(new THREE.BoxGeometry(0.30,0.52,0.02),dVest);vest.position.set(0,1.18,-0.150);directorGroup.add(vest);
+            // Schmaler Hemdstreifen
+            const shirt=new THREE.Mesh(new THREE.BoxGeometry(0.10,0.48,0.012),dWhite);shirt.position.set(0,1.18,-0.162);directorGroup.add(shirt);
+            // Fliege
+            [-0.05,0.05].forEach(x=>{const b=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.05,0.02),dBow);b.position.set(x,1.44,-0.166);b.rotation.z=(x<0?1:-1)*0.25;directorGroup.add(b);});
+            const bowKnot=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.045,0.025),dBow);bowKnot.position.set(0,1.44,-0.167);directorGroup.add(bowKnot);
+            // Taschenuhrkette + Uhr (gold)
+            const chain=new THREE.Mesh(new THREE.TorusGeometry(0.07,0.006,6,16,Math.PI),dGold);chain.position.set(0.02,1.12,-0.156);chain.rotation.z=0.25;directorGroup.add(chain);
+            const watch=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.012,12),dGold);watch.position.set(0.115,1.07,-0.156);directorGroup.add(watch);
+            // Arme
+            [-0.34,0.34].forEach(x=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.06,0.62,8),dSuit);a.position.set(x,1.12,0);directorGroup.add(a);});
+            // Manschetten
+            [-0.34,0.34].forEach(x=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(0.062,0.062,0.04,8),dWhite);c.position.set(x,0.84,0);directorGroup.add(c);});
+            // Hände
+            [-0.34,0.34].forEach(x=>{const h=new THREE.Mesh(new THREE.SphereGeometry(0.058,8,8),dSkin);h.position.set(x,0.79,0);directorGroup.add(h);});
+            // Hals
+            const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.065,0.13,8),dSkin);neck.position.y=1.55;directorGroup.add(neck);
+            // Kopf (etwas breiter)
+            const head=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.35,0.31),dSkin);head.position.y=1.79;directorGroup.add(head);
+            // Ohren
+            [-0.178,0.178].forEach(x=>{const e=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.09,0.06),dSkin);e.position.set(x,1.78,0.01);directorGroup.add(e);});
+            // Glatze: kahl oben, weißer Haarkranz an Seiten & hinten
+            [-0.205,0.205].forEach(x=>{const hs=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.20,0.31),dHair);hs.position.set(x,1.74,0.01);directorGroup.add(hs);});
+            const hairBack=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.20,0.06),dHair);hairBack.position.set(0,1.74,0.185);directorGroup.add(hairBack);
+            // Buschige weiße Augenbrauen
+            [-0.09,0.09].forEach(x=>{const br=new THREE.Mesh(new THREE.BoxGeometry(0.10,0.024,0.02),dHair);br.position.set(x,1.835,-0.158);directorGroup.add(br);});
+            // Augen (weiß + Pupille)
+            [-0.085,0.085].forEach(x=>{
+                const w=new THREE.Mesh(new THREE.SphereGeometry(0.032,8,8),dWhite);w.position.set(x,1.80,-0.150);directorGroup.add(w);
+                const p=new THREE.Mesh(new THREE.SphereGeometry(0.018,8,8),new THREE.MeshBasicMaterial({color:0x30425a}));p.position.set(x,1.80,-0.160);directorGroup.add(p);
+            });
+            // Markante Nase
+            const nose=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.075,0.045),new THREE.MeshStandardMaterial({color:0xcf9868,roughness:0.6}));nose.position.set(0,1.765,-0.170);directorGroup.add(nose);
+            // Brille (rund, Gold, markant)
+            const bridge=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.008,0.008),dGold);bridge.position.set(0,1.80,-0.172);directorGroup.add(bridge);
+            [-0.088,0.088].forEach(x=>{const gl=new THREE.Mesh(new THREE.TorusGeometry(0.05,0.007,8,16),dGold);gl.rotation.x=Math.PI/2;gl.position.set(x,1.80,-0.172);directorGroup.add(gl);});
+            // Voller weißer Vollbart + Schnurrbart
+            const mustache=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.035,0.03),dHair);mustache.position.set(0,1.735,-0.156);directorGroup.add(mustache);
+            const beard=new THREE.Mesh(new THREE.BoxGeometry(0.31,0.20,0.11),dHair);beard.position.set(0,1.66,-0.135);directorGroup.add(beard);
+            const beardLow=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.14,0.09),dHair);beardLow.position.set(0,1.55,-0.120);directorGroup.add(beardLow);
+            // Orden am Revers
+            const medal=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.008,12),dGold);medal.position.set(-0.17,1.34,-0.150);directorGroup.add(medal);
+        })();
+        scene.add(directorGroup);
+        let activeDirectorNearMe = false;
+        const directorWorldPos = new THREE.Vector3();
 
         // Schalter: bündig an der Innenwand (Wandinnenfl. + halbe Box-Tiefe 0.02)
         // Hauptraum: linke Wand, Innenseite bei x=-ROOM_SIZE/2=-12, Schalter zeigt nach +x
@@ -1425,6 +1590,8 @@
         let isMapOpen = false;
         const mapWorldPos = new THREE.Vector3();
         let activeMapNearMe = false;
+        const frameWorldPos = new THREE.Vector3(0, 0, BLOCK_SIZE/2+0.06);
+        let activeFrameNearMe = false;
         function openMap(){
             isMapOpen=true;
             mapRecompute();mapRender();
@@ -1484,6 +1651,165 @@
             openDocument({title:'📖 '+b.title, content:b.content});
         }
 
+        // ── TICKET & DREHKREUZ ──
+        let hasTicket = false;
+        let isQuizOpen = false;
+        let quizCurrentQ = 0;
+        let quizAnswered = false;
+
+        const receptionQuestions = [
+            { q: 'Platzhalter-Frage 1: Was ist 7 × 8?', opts: ['48','54','56','64'], correct: 2 },
+            { q: 'Platzhalter-Frage 2: Wie viele Ecken hat ein Würfel?', opts: ['6','8','10','12'], correct: 1 },
+            { q: 'Platzhalter-Frage 3: Was ist die Quadratwurzel von 144?', opts: ['10','11','12','14'], correct: 2 },
+            { q: 'Platzhalter-Frage 4: Was ergibt 15 % von 80?', opts: ['8','10','12','15'], correct: 2 },
+            { q: 'Platzhalter-Frage 5: Wie viele Grad hat ein rechter Winkel?', opts: ['45°','60°','90°','180°'], correct: 2 },
+        ];
+
+        let visitorNames = [];
+        let visitorClass = '';
+
+        // ── ERGEBNIS-LOGGING (Google Sheets via Apps Script) ──
+        // Trage hier die URL deiner Apps-Script-Web-App ein. Bleibt sie leer,
+        // ist das Logging komplett deaktiviert (z. B. für lokale Tests).
+        const LOG_URL = '';
+
+        // Zufällige Session-ID, damit gleichnamige Gruppen unterscheidbar sind
+        const SESSION_ID = Math.random().toString(16).slice(2, 6) + '-' + Date.now().toString(36).slice(-4);
+        let quizGivenAnswers = [];          // gewählte Antworten der Anmeldung (A/B/C/D)
+        const loggedCheckpoints = new Set(); // verhindert Doppel-Logs
+        // Checkpoints, die für den "Abschluss" nötig sind — hier später einfach anpassen:
+        const REQUIRED_CHECKPOINTS = ['Sophia-Preis', 'Schatzkarte', 'Bilderwand', 'Memory'];
+
+        function _elapsedStr() {
+            const s = Math.floor((Date.now() - _timerStart) / 1000);
+            const m = Math.floor(s / 60);
+            return `${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+        }
+
+        function _sendPayload(payload) {
+            // text/plain vermeidet CORS-Preflight; Apps Script liest e.postData.contents
+            return fetch(LOG_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+        }
+
+        function _flushLogBuffer() {
+            if (!LOG_URL) return;
+            let buf;
+            try { buf = JSON.parse(localStorage.getItem('mm_log_buffer') || '[]'); } catch(e) { buf = []; }
+            if (!buf.length) return;
+            localStorage.setItem('mm_log_buffer', '[]');
+            buf.forEach(p => _sendPayload(p).catch(() => {
+                // wieder puffern, wenn es erneut scheitert
+                const b = JSON.parse(localStorage.getItem('mm_log_buffer') || '[]');
+                b.push(p); localStorage.setItem('mm_log_buffer', JSON.stringify(b));
+            }));
+        }
+
+        function logEvent(event, detail) {
+            if (!LOG_URL) return;
+            const payload = {
+                ts: new Date().toISOString(),
+                session: SESSION_ID,
+                names: visitorNames.join(', '),
+                klasse: visitorClass,
+                event: event,
+                detail: detail || '',
+                spielzeit: _elapsedStr()
+            };
+            _sendPayload(payload).then(_flushLogBuffer).catch(() => {
+                // Offline-Fallback: puffern und beim nächsten Event nachsenden
+                const b = JSON.parse(localStorage.getItem('mm_log_buffer') || '[]');
+                b.push(payload); localStorage.setItem('mm_log_buffer', JSON.stringify(b));
+            });
+        }
+
+        function logCheckpoint(name, detail) {
+            if (loggedCheckpoints.has(name)) return;
+            loggedCheckpoints.add(name);
+            logEvent('Checkpoint', name + (detail ? ' — ' + detail : ''));
+            // Alle Pflicht-Checkpoints geschafft → Abschluss mit Gesamtzeit
+            if (REQUIRED_CHECKPOINTS.every(c => loggedCheckpoints.has(c))) {
+                logEvent('Abschluss', 'Alle Checkpoints gelöst');
+            }
+        }
+
+        function openQuiz(){
+            isQuizOpen=true; quizCurrentQ=0; quizAnswered=false; quizGivenAnswers=[];
+            document.getElementById('quiz-overlay').classList.add('open');
+            for(let k in keys)keys[k]=false; touchVelocity.x=0; touchVelocity.z=0;
+            document.getElementById('quiz-namestep').style.display='block';
+            document.getElementById('quiz-body').style.display='none';
+            document.getElementById('quiz-progress').textContent='';
+            document.getElementById('quiz-namestep-error').textContent='';
+            for(let i=0;i<4;i++) document.getElementById('quiz-name-'+i).value='';
+            document.getElementById('quiz-class-input').value='';
+        }
+        function quizNameStepNext(){
+            const names=[];
+            for(let i=0;i<4;i++){
+                const v=document.getElementById('quiz-name-'+i).value.trim();
+                if(v) names.push(v);
+            }
+            if(names.length===0){
+                document.getElementById('quiz-namestep-error').textContent='Bitte trage mindestens einen Namen ein.';
+                return;
+            }
+            visitorNames=names;
+            visitorClass=document.getElementById('quiz-class-input').value.trim();
+            document.getElementById('quiz-namestep').style.display='none';
+            document.getElementById('quiz-body').style.display='block';
+            renderQuizQuestion();
+        }
+        function closeQuiz(){ isQuizOpen=false; document.getElementById('quiz-overlay').classList.remove('open'); }
+
+        function renderQuizQuestion(){
+            const q=receptionQuestions[quizCurrentQ];
+            document.getElementById('quiz-progress').textContent=`Frage ${quizCurrentQ+1} von ${receptionQuestions.length}`;
+            document.getElementById('quiz-question').textContent=q.q;
+            document.getElementById('quiz-feedback').textContent=''; document.getElementById('quiz-feedback').className='';
+            document.getElementById('quiz-next').style.display='none';
+            quizAnswered=false;
+            const optsEl=document.getElementById('quiz-opts');
+            optsEl.innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="quizSelect(${i})">${String.fromCharCode(65+i)}) ${o}</button>`).join('');
+        }
+
+        function quizSelect(idx){
+            if(quizAnswered)return;
+            quizAnswered=true;
+            quizGivenAnswers[quizCurrentQ]=String.fromCharCode(65+idx); // A/B/C/D merken
+            const correct=receptionQuestions[quizCurrentQ].correct;
+            const btns=document.querySelectorAll('.quiz-opt');
+            btns.forEach(b=>b.disabled=true);
+            btns[idx].style.background='rgba(100,120,180,0.5)';
+            document.getElementById('quiz-next').style.display='block';
+        }
+
+        function quizNext(){
+            quizCurrentQ++;
+            if(quizCurrentQ>=receptionQuestions.length){
+                closeQuiz();
+                hasTicket=true;
+                // Anmeldung loggen: gewählte Antworten + wie viele davon richtig waren
+                const richtig=receptionQuestions.reduce((n,q,i)=>n+(quizGivenAnswers[i]===String.fromCharCode(65+q.correct)?1:0),0);
+                logEvent('Anmeldung', 'Antworten: '+quizGivenAnswers.join(', ')+' ('+richtig+'/'+receptionQuestions.length+' richtig)');
+                playerInventory.push({name:'Eintrittsticket',icon:'🎟️',isReadable:true,content:'Ein offizielles Eintrittsticket des Mathe-Museums.\n\nAusgestellt an der Anmeldung.\nGilt für alle Ausstellungsräume und den Shop.'});
+                setTimeout(()=>openDocument({title:'🎟️ Eintrittsticket erhalten!',content:'Frau Berger lächelt Sie an:\n\n„Herzlich willkommen im Mathe-Museum! Hier ist Ihr Eintrittsticket — damit können Sie nun alle Ausstellungsräume und den Shop besuchen.\n\nViel Spaß beim Entdecken!"'}),80);
+            } else { renderQuizQuestion(); }
+        }
+
+        // Wärter-NPCs & Empfangs-NPC werden nach lobbyGroup erstellt (s. unten)
+        let receptionNPC, guardNPCMain;
+        let _guardHintCooldown=0;
+        function showTurnstileHint(){
+            if(Date.now()<_guardHintCooldown)return;
+            _guardHintCooldown=Date.now()+2500;
+            openDocument({title:'💂 Wachmann Konrad Stein',content:'Konrad Stein tritt vor Sie:\n\n„Halt! Hier kommen Sie ohne gültiges Eintrittsticket nicht weiter.\n\nBitte gehen Sie zur Anmeldung am Empfang — dort erhalten Sie Ihr Ticket für alle Ausstellungsräume und den Shop.\n\nDie Anmeldung finden Sie direkt hinter mir!"'});
+        }
+        // Kopf
+        let activeReceptionNearMe=false;
+        const receptionWorldPos=new THREE.Vector3();
+        let activeGuardNearMe=false;
+        const guardWorldPos=new THREE.Vector3();
+
         // Office-Regal Weltpositionen (officeGroup bei x=17)
         const officeShelfPositions=[
             new THREE.Vector3(17+(-2.5),0,-4.7),
@@ -1532,6 +1858,7 @@
             // 2) Marker korrekt?
             if(mDist(mapMarkedPoint,mapTreasure)<TOL){
                 mapSolved=true; mapRender();
+                logCheckpoint('Schatzkarte');
                 mapSetStatus('🏆','Richtig! Du hast den Schatzpunkt gefunden. Geh jetzt zu Kurator Dr. Albrecht und berichte ihm — er wartet auf dich!','ok');
                 return;
             }
@@ -1662,11 +1989,12 @@
             const correct = ['4','4€','4,00€','4.00€'];
             if (correct.includes(raw)) {
                 closeDocument();
+                logCheckpoint('Sophia-Preis');
                 playerInventory.push({ name: "Gemäldestück", icon: "🖼️", isReadable: true, content: "Ein Stück eines alten Gemäldes.\nSophia hat es in einer Ecke des Shops gefunden.\nVielleicht gehört es zu einem größeren Bild?" });
-                setTimeout(() => openDocument({ title: "💬 Kassierin Sophia", content: "Das stimmt genau! Vielen Dank, du hast mir sehr geholfen! 🎉\n\nAls kleines Dankeschön gebe ich dir dieses Gemäldestück — ich habe es vorhin in einer Ecke des Shops gefunden.\n\nVielleicht ist es für dich nützlich!", _sophia: false }), 100);
+                setTimeout(() => openDocument({ title: "💬 Kassiererin Sophia", content: "Das stimmt genau! Vielen Dank, du hast mir sehr geholfen! 🎉\n\nAls kleines Dankeschön gebe ich dir dieses Gemäldestück — ich habe es vorhin in einer Ecke des Shops gefunden.\n\nVielleicht ist es für dich nützlich!", _sophia: false }), 100);
             } else {
                 closeDocument();
-                setTimeout(() => openDocument({ title: "💬 Kassierin Sophia", content: "Hmm, das scheint nicht ganz richtig zu sein. Schau vielleicht nochmal in die Preisliste am Regal!" }), 100);
+                setTimeout(() => openDocument({ title: "💬 Kassiererin Sophia", content: "Hmm, das scheint nicht ganz richtig zu sein. Schau vielleicht nochmal in die Preisliste am Regal!" }), 100);
             }
         }
 
@@ -1838,7 +2166,162 @@
 
             return counter;
         }
-        lobbyGroup.add(createTicketCounter(-2.5)); lobbyGroup.add(createTicketCounter(2.5));
+        lobbyGroup.add(createTicketCounter(2.5));
+
+        // ── WÄRTER-NPCs ──
+        (()=>{
+            function buildGuard(wx,wz,rotY){
+                // Wachmann Konrad Stein — stämmiger Museumswächter in dunkelblauer
+                // Uniform mit goldenen Knöpfen, Schulterklappen, Mützenabzeichen,
+                // Schnauzbart, Funkgerät am Gürtel und Namensschild.
+                const g=new THREE.Group(); g.position.set(wx,0,wz); g.rotation.y=rotY;
+                const gUniform=new THREE.MeshStandardMaterial({color:0x1c2c4a,roughness:0.55}); // dunkelblau (Marine)
+                const gUniformDk=new THREE.MeshStandardMaterial({color:0x141f36,roughness:0.6}); // dunklere Akzente
+                const gBelt=new THREE.MeshStandardMaterial({color:0x2a1a0c,roughness:0.45}); // schwarzbraunes Leder
+                const gSkin=new THREE.MeshStandardMaterial({color:0xd9a878,roughness:0.6});
+                const gCap=new THREE.MeshStandardMaterial({color:0x101828,roughness:0.5});
+                const gGold=new THREE.MeshStandardMaterial({color:0xd4af37,roughness:0.28,metalness:0.75});
+                const gWhite=new THREE.MeshStandardMaterial({color:0xf2f2f6,roughness:0.5});
+                const gHair=new THREE.MeshStandardMaterial({color:0x4a4a52,roughness:0.85}); // grau-meliert
+                // Schuhe (poliert)
+                [-0.1,0.1].forEach(x=>{const s=new THREE.Mesh(new THREE.BoxGeometry(0.15,0.08,0.27),new THREE.MeshStandardMaterial({color:0x0a0a0c,roughness:0.3,metalness:0.2}));s.position.set(x,0.04,0.03);g.add(s);});
+                // Beine (mit Bügelfalte-Andeutung durch dunklere Naht)
+                [-0.11,0.11].forEach(x=>{const l=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.062,0.74,10),gUniform);l.position.set(x,0.48,0);g.add(l);});
+                // Kräftiger Torso
+                const body=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.60,0.30),gUniform);body.position.y=1.10;g.add(body);
+                // Uniformkragen
+                [-0.09,0.09].forEach((x,i)=>{const c=new THREE.Mesh(new THREE.BoxGeometry(0.11,0.10,0.02),gUniformDk);c.position.set(x,1.37,-0.152);c.rotation.z=(i===0?1:-1)*0.35;g.add(c);});
+                // Hemd + Krawatte
+                const shirt=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.50,0.016),gWhite);shirt.position.set(0,1.10,-0.156);g.add(shirt);
+                const tie=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.40,0.014),gUniformDk);tie.position.set(0,1.07,-0.164);g.add(tie);
+                const tieKnot=new THREE.Mesh(new THREE.BoxGeometry(0.045,0.05,0.02),gUniformDk);tieKnot.position.set(0,1.32,-0.166);g.add(tieKnot);
+                // Reihe goldener Knöpfe
+                [1.28,1.16,1.04,0.92].forEach(y=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.01,10),gGold);b.rotation.x=Math.PI/2;b.position.set(0.10,y,-0.156);g.add(b);});
+                // Brusttasche mit Klappe
+                const pocket=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.11,0.012),gUniformDk);pocket.position.set(-0.14,1.02,-0.154);g.add(pocket);
+                // Schulterklappen (Epauletten) mit Goldstreifen
+                [-0.22,0.22].forEach(x=>{
+                    const ep=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.05,0.16),gUniformDk);ep.position.set(x,1.40,0);g.add(ep);
+                    const st=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.012,0.03),gGold);st.position.set(x,1.427,-0.05);g.add(st);
+                });
+                // Gürtel mit goldener Koppelschließe
+                const belt=new THREE.Mesh(new THREE.BoxGeometry(0.54,0.08,0.32),gBelt);belt.position.y=0.82;g.add(belt);
+                const buckle=new THREE.Mesh(new THREE.BoxGeometry(0.10,0.07,0.02),gGold);buckle.position.set(0,0.82,-0.166);g.add(buckle);
+                // Funkgerät an der Hüfte (mit Antenne)
+                const radio=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.14,0.05),new THREE.MeshStandardMaterial({color:0x0c0c0e,roughness:0.5}));radio.position.set(0.27,0.90,-0.02);g.add(radio);
+                const antenna=new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.008,0.12,6),new THREE.MeshStandardMaterial({color:0x1a1a1a}));antenna.position.set(0.27,1.02,-0.02);g.add(antenna);
+                // Taschenlampe an der anderen Seite
+                const flash=new THREE.Mesh(new THREE.CylinderGeometry(0.028,0.03,0.16,10),new THREE.MeshStandardMaterial({color:0x2a2a2e,roughness:0.4,metalness:0.5}));flash.position.set(-0.28,0.86,0.04);flash.rotation.x=0.2;g.add(flash);
+                const flashHead=new THREE.Mesh(new THREE.CylinderGeometry(0.036,0.03,0.04,10),gGold);flashHead.position.set(-0.28,0.94,0.03);g.add(flashHead);
+                // Arme mit Manschetten + Goldborte am Ärmel
+                [-0.33,0.33].forEach(x=>{
+                    const a=new THREE.Mesh(new THREE.CylinderGeometry(0.068,0.056,0.60,8),gUniform);a.position.set(x,1.04,0);g.add(a);
+                    const braid=new THREE.Mesh(new THREE.CylinderGeometry(0.058,0.058,0.03,10),gGold);braid.position.set(x,0.78,0);g.add(braid);
+                    const hand=new THREE.Mesh(new THREE.SphereGeometry(0.055,8,8),gSkin);hand.position.set(x,0.73,0);g.add(hand);
+                });
+                // Hals
+                const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.066,0.14,8),gSkin);neck.position.y=1.44;g.add(neck);
+                // Kopf (etwas breiter, kräftig)
+                const head=new THREE.Mesh(new THREE.BoxGeometry(0.33,0.32,0.30),gSkin);head.position.y=1.66;g.add(head);
+                // Ohren
+                [-0.17,0.17].forEach(x=>{const e=new THREE.Mesh(new THREE.BoxGeometry(0.035,0.07,0.06),gSkin);e.position.set(x,1.66,0.01);g.add(e);});
+                // Buschige Augenbrauen
+                [-0.08,0.08].forEach(x=>{const br=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.022,0.02),gHair);br.position.set(x,1.715,-0.15);g.add(br);});
+                // Augen (weiß + Pupille)
+                [-0.08,0.08].forEach(x=>{
+                    const w=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,8),gWhite);w.position.set(x,1.675,-0.144);g.add(w);
+                    const p=new THREE.Mesh(new THREE.SphereGeometry(0.017,8,8),new THREE.MeshBasicMaterial({color:0x2a2016}));p.position.set(x,1.675,-0.152);g.add(p);
+                });
+                // Kräftige Nase
+                const nose=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.07,0.04),new THREE.MeshStandardMaterial({color:0xcf9c6c,roughness:0.6}));nose.position.set(0,1.645,-0.158);g.add(nose);
+                // Grauer Schnauzbart
+                const mustache=new THREE.Mesh(new THREE.BoxGeometry(0.15,0.035,0.03),gHair);mustache.position.set(0,1.60,-0.15);g.add(mustache);
+                // Mund (ernst)
+                const mouth=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.014,0.008),new THREE.MeshBasicMaterial({color:0x8a4a3a}));mouth.position.set(0,1.575,-0.148);g.add(mouth);
+                // Koteletten (grau)
+                [-0.165,0.165].forEach(x=>{const sb=new THREE.Mesh(new THREE.BoxGeometry(0.025,0.10,0.05),gHair);sb.position.set(x,1.63,-0.02);g.add(sb);});
+                // Schirmmütze: Schirm, Band, Deckel
+                const brim=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.035,0.20),gCap);brim.position.set(0,1.815,-0.13);g.add(brim);
+                const brimEdge=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.02,0.03),gGold);brimEdge.position.set(0,1.805,-0.225);g.add(brimEdge);
+                const capBand=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.06,0.33),gUniformDk);capBand.position.set(0,1.84,0);g.add(capBand);
+                const capTop=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.15,0.34),gCap);capTop.position.set(0,1.94,0);g.add(capTop);
+                const capTopEdge=new THREE.Mesh(new THREE.BoxGeometry(0.37,0.03,0.35),gUniformDk);capTopEdge.position.set(0,2.015,0);g.add(capTopEdge);
+                // Mützenabzeichen (goldenes Emblem vorn)
+                const capBadge=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,0.012,12),gGold);capBadge.rotation.x=Math.PI/2;capBadge.position.set(0,1.85,-0.168);g.add(capBadge);
+                const capBadgeCtr=new THREE.Mesh(new THREE.SphereGeometry(0.014,8,8),new THREE.MeshStandardMaterial({color:0xc0392b,roughness:0.4}));capBadgeCtr.position.set(0,1.85,-0.176);g.add(capBadgeCtr);
+                // Namensschild „K. STEIN"
+                const nameTag=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.045,0.01),gWhite);nameTag.position.set(0.13,1.19,-0.156);g.add(nameTag);
+                const nameStripe=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.012,0.011),gGold);nameStripe.position.set(0.13,1.207,-0.156);g.add(nameStripe);
+                // Glänzende Dienstmarke am Revers
+                const badge=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.008,10),gGold);badge.rotation.x=Math.PI/2;badge.position.set(-0.15,1.20,-0.155);g.add(badge);
+                const badgeStar=new THREE.Mesh(new THREE.SphereGeometry(0.014,8,8),gWhite);badgeStar.position.set(-0.15,1.20,-0.162);g.add(badgeStar);
+                return g;
+            }
+            // Wächter in der Ecke zwischen Shop-Durchgang und Museumseingang — für beide zuständig
+            guardNPCMain=buildGuard(-LOBBY_SIZE/2+0.8, ROOM_SIZE/2+1.4, Math.PI*1.25);
+            scene.add(guardNPCMain);
+        })();
+
+        // ── EMPFANGS-NPC ──
+        (()=>{
+            // Frau Sophie Berger — Empfang: freundliche Erscheinung, Blazer mit Halstuch,
+            // kastanienbrauner Pferdeschwanz, Namensschild.
+            receptionNPC=new THREE.Group();
+            receptionNPC.position.set(2.5,0,5.6);
+            receptionNPC.rotation.y=0;
+            const rSkin=new THREE.MeshStandardMaterial({color:0xf0c090,roughness:0.6});
+            const rHair=new THREE.MeshStandardMaterial({color:0x6b3410,roughness:0.75}); // kastanienbraun
+            const rUniform=new THREE.MeshStandardMaterial({color:0x1a3a6e,roughness:0.5});
+            const rWhite=new THREE.MeshStandardMaterial({color:0xf5f5fb,roughness:0.5});
+            const rScarf=new THREE.MeshStandardMaterial({color:0xc0392b,roughness:0.5}); // rotes Halstuch
+            const rGold=new THREE.MeshStandardMaterial({color:0xd4af37,roughness:0.3,metalness:0.6});
+            // Schuhe
+            [-0.1,0.1].forEach(x=>{const s=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.06,0.22),new THREE.MeshStandardMaterial({color:0x111,roughness:0.5}));s.position.set(x,0.03,0.02);receptionNPC.add(s);});
+            // Beine
+            [-0.1,0.1].forEach(x=>{const l=new THREE.Mesh(new THREE.CylinderGeometry(0.058,0.05,0.58,8),rSkin);l.position.set(x,0.37,0);receptionNPC.add(l);});
+            // Rock (konisch)
+            const skirt=new THREE.Mesh(new THREE.CylinderGeometry(0.19,0.25,0.34,12),rUniform);skirt.position.y=0.81;receptionNPC.add(skirt);
+            // Torso (Blazer)
+            const rBody=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.50,0.24),rUniform);rBody.position.y=1.17;receptionNPC.add(rBody);
+            // Bluse
+            const rShirt=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.46,0.016),rWhite);rShirt.position.set(0,1.16,-0.126);receptionNPC.add(rShirt);
+            // Revers
+            [-0.06,0.06].forEach((x,i)=>{const lp=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.24,0.014),rUniform);lp.position.set(x*1.4,1.25,-0.128);lp.rotation.z=(i===0?1:-1)*0.2;receptionNPC.add(lp);});
+            // Halstuch (Knoten + Enden)
+            [-0.05,0.05].forEach(x=>{const k=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.07,0.02),rScarf);k.position.set(x,1.34,-0.130);k.rotation.z=(x<0?1:-1)*0.4;receptionNPC.add(k);});
+            const knot=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.04,0.025),rScarf);knot.position.set(0,1.34,-0.132);receptionNPC.add(knot);
+            // Arme
+            [-0.25,0.25].forEach(x=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(0.052,0.046,0.52,8),rUniform);a.position.set(x,1.15,0);receptionNPC.add(a);});
+            // Hände
+            [-0.25,0.25].forEach(x=>{const h=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,8),rSkin);h.position.set(x,0.87,0);receptionNPC.add(h);});
+            // Hals
+            const rNeck=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.055,0.12,8),rSkin);rNeck.position.y=1.45;receptionNPC.add(rNeck);
+            // Kopf
+            const rHead=new THREE.Mesh(new THREE.BoxGeometry(0.29,0.32,0.27),rSkin);rHead.position.y=1.66;receptionNPC.add(rHead);
+            // Ohren + kleine goldene Ohrringe
+            [-0.152,0.152].forEach(x=>{const e=new THREE.Mesh(new THREE.BoxGeometry(0.035,0.07,0.055),rSkin);e.position.set(x,1.66,0.01);receptionNPC.add(e);
+                const ear=new THREE.Mesh(new THREE.SphereGeometry(0.014,6,6),rGold);ear.position.set(x,1.61,0.01);receptionNPC.add(ear);});
+            // Haare: Pony + Seiten + Hinterkopf + Pferdeschwanz
+            const hFront=new THREE.Mesh(new THREE.BoxGeometry(0.31,0.10,0.30),rHair);hFront.position.set(0,1.80,0.02);receptionNPC.add(hFront);
+            [-0.15,0.15].forEach(x=>{const hs=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.26,0.29),rHair);hs.position.set(x,1.64,0.03);receptionNPC.add(hs);});
+            const hBack=new THREE.Mesh(new THREE.BoxGeometry(0.30,0.30,0.06),rHair);hBack.position.set(0,1.64,0.17);receptionNPC.add(hBack);
+            const pony=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.035,0.34,8),rHair);pony.position.set(0,1.53,0.21);receptionNPC.add(pony);
+            // Augenbrauen
+            [-0.07,0.07].forEach(x=>{const br=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.016,0.015),new THREE.MeshStandardMaterial({color:0x4a2408,roughness:0.8}));br.position.set(x,1.725,-0.132);receptionNPC.add(br);});
+            // Augen (weiß + Pupille)
+            [-0.072,0.072].forEach(x=>{
+                const w=new THREE.Mesh(new THREE.SphereGeometry(0.028,8,8),rWhite);w.position.set(x,1.685,-0.126);receptionNPC.add(w);
+                const p=new THREE.Mesh(new THREE.SphereGeometry(0.016,8,8),new THREE.MeshBasicMaterial({color:0x3a2a1a}));p.position.set(x,1.685,-0.134);receptionNPC.add(p);
+            });
+            // Nase
+            const rNose=new THREE.Mesh(new THREE.BoxGeometry(0.035,0.045,0.03),new THREE.MeshStandardMaterial({color:0xe0b080,roughness:0.6}));rNose.position.set(0,1.65,-0.138);receptionNPC.add(rNose);
+            // Lächeln
+            const rMouth=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.016,0.008),new THREE.MeshBasicMaterial({color:0xb0304a}));rMouth.position.set(0,1.61,-0.134);receptionNPC.add(rMouth);
+            // Namensschild
+            const badge=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.05,0.01),new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.4}));badge.position.set(-0.10,1.23,-0.126);receptionNPC.add(badge);
+            const badgeStripe=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.014,0.011),rGold);badgeStripe.position.set(-0.10,1.245,-0.126);receptionNPC.add(badgeStripe);
+            lobbyGroup.add(receptionNPC);
+        })();
 
         const vendingMachines = [];
         function createVendingMachine(id, x, z, rotY, givesMoney) {
@@ -1950,6 +2433,53 @@
             return bench;
         }
         lobbyGroup.add(createLobbyBench(-1.5)); lobbyGroup.add(createLobbyBench(1.5));
+
+        // ── BÜCHERREGAL in der Lobby (ersetzt 2. Empfangsschalter) ──
+        (()=>{
+            const lobbyShelf = createShelf(0, 0);
+            lobbyShelf.position.set(-2.5, 0, LOBBY_SIZE/2 - 0.5);
+            lobbyShelf.rotation.y = Math.PI; // Bücher zeigen nach Süden (zum Spieler)
+            lobbyGroup.add(lobbyShelf);
+            // Weltposition für Proximity: lobbyGroup ist bei (0,0,18)
+            officeShelfPositions.push(new THREE.Vector3(-2.5, 0, 18 + LOBBY_SIZE/2 - 0.5));
+        })();
+
+        // ── GROSSER BILDERRAHMEN an der Nordwand (gegenüber vom Eingang) ──
+        (()=>{
+            const fw=3.6, fh=2.8, fd=0.09, ft=0.13;
+            const frameMat=new THREE.MeshStandardMaterial({color:0xb8860b,roughness:0.25,metalness:0.8});
+            const innerMat=new THREE.MeshStandardMaterial({color:0xf0ede6,roughness:0.55});
+            const accentMat=new THREE.MeshStandardMaterial({color:0xffd700,roughness:0.2,metalness:0.9});
+            const fg=new THREE.Group();
+            // Nordfläche des centerBlock (BLOCK_SIZE/2=4), dem Museumseingang zugewandt
+            fg.position.set(0, 3.1, BLOCK_SIZE/2+0.06);
+
+            // Leinwand (heller Hintergrund)
+            const canvas=new THREE.Mesh(new THREE.BoxGeometry(fw-ft*2,fh-ft*2,0.02),innerMat);
+            fg.add(canvas);
+
+            // Rahmenbalken: oben, unten, links, rechts
+            const top=new THREE.Mesh(new THREE.BoxGeometry(fw,ft,fd),frameMat);top.position.y=(fh-ft)/2;fg.add(top);
+            const bot=new THREE.Mesh(new THREE.BoxGeometry(fw,ft,fd),frameMat);bot.position.y=-(fh-ft)/2;fg.add(bot);
+            const lft=new THREE.Mesh(new THREE.BoxGeometry(ft,fh,fd),frameMat);lft.position.x=-(fw-ft)/2;fg.add(lft);
+            const rgt=new THREE.Mesh(new THREE.BoxGeometry(ft,fh,fd),frameMat);rgt.position.x=(fw-ft)/2;fg.add(rgt);
+
+            // Zierleiste (innere Goldkante)
+            const it=ft*0.35, iw=fw-ft*2+it*2, ih=fh-ft*2+it*2;
+            const itop=new THREE.Mesh(new THREE.BoxGeometry(iw,it,fd+0.01),accentMat);itop.position.y=(fh-ft*2)/2-it/2+it;fg.add(itop);
+            const ibot=new THREE.Mesh(new THREE.BoxGeometry(iw,it,fd+0.01),accentMat);ibot.position.y=-((fh-ft*2)/2-it/2+it);fg.add(ibot);
+            const ilft=new THREE.Mesh(new THREE.BoxGeometry(it,ih,fd+0.01),accentMat);ilft.position.x=-((fw-ft*2)/2-it/2+it);fg.add(ilft);
+            const irgt=new THREE.Mesh(new THREE.BoxGeometry(it,ih,fd+0.01),accentMat);irgt.position.x=(fw-ft*2)/2-it/2+it;fg.add(irgt);
+
+            // Eckverzierungen (kleine Quadrate)
+            const cx=(fw-ft)/2, cy=(fh-ft)/2;
+            [[cx,cy],[-cx,cy],[cx,-cy],[-cx,-cy]].forEach(([ex,ey])=>{
+                const ec=new THREE.Mesh(new THREE.BoxGeometry(ft*1.1,ft*1.1,fd+0.01),accentMat);
+                ec.position.set(ex,ey,0);fg.add(ec);
+            });
+
+            scene.add(fg);
+        })();
 
         // --- 8. EINRICHTUNG MUSEUMSSHOP & AUTOMAT ---
         const shopGroup = new THREE.Group(); shopGroup.position.set(shopXCenter, 0, shopZCenter); scene.add(shopGroup);
@@ -2168,7 +2698,7 @@
         const curatorDialogAfter  = { title: "💬 Kurator Dr. Albrecht", content: "Ah, da sind Sie wieder!\n\nDanke nochmals für Ihre Hilfe. Der Schatzpunkt war schon immer da — er wartete nur auf jemanden, der die richtigen Kreise zu ziehen weiß.\n\n*schmunzelt*\n\nPassen Sie gut auf das Gemäldestück auf." };
 
         const npcDialogs = [
-            { _sophia: true, title: "💬 Kassierin Sophia", content: "Willkommen im Mathe-Museum-Shop!\n\nIch bin Sophia. Die Kasse ist leider kaputt und ich kann nicht mehr ausrechnen, wie viel man zahlen muss.\n\nEs kam eben aber eine Bestellung eines Kunden rein. Er moechte kaufen:\n  • 2x Pyramiden-Modell\n  • 1x Mathebuch 'Geometrie erleben'\n  • 3x Mathetasse\n\nDer ausgeschilderte Preis der Pyramide ist leider noch der um 20% reduzierte Preis — der Kunde hat aber online bestellt und muss daher den normalen Preis zahlen.\n\nAm Ende bekommt er noch 5% Rabatt auf seinen gesamten Einkauf.\n\nKannst du mir sagen, wie viel er am Ende zahlen muss?" },
+            { _sophia: true, title: "💬 Kassiererin Sophia", content: "Willkommen im Mathe-Museum-Shop!\n\nIch bin Sophia. Die Kasse ist leider kaputt und ich kann nicht mehr ausrechnen, wie viel man zahlen muss.\n\nEs kam eben aber eine Bestellung eines Kunden rein. Er moechte kaufen:\n  • 2x Pyramiden-Modell\n  • 1x Mathebuch 'Geometrie erleben'\n  • 3x Mathetasse\n\nDer ausgeschilderte Preis der Pyramide ist leider noch der um 20% reduzierte Preis — der Kunde hat aber online bestellt und muss daher den normalen Preis zahlen.\n\nAm Ende bekommt er noch 5% Rabatt auf seinen gesamten Einkauf.\n\nKannst du mir sagen, wie viel er am Ende zahlen muss?" },
         ];
         let npcDialogIndex = 0;
 
@@ -2366,6 +2896,7 @@
                 selectedCards = [];
                 if (matchedPairsCount === 8) {
                     document.getElementById('arcade-win-message').style.display = 'block';
+                    logCheckpoint('Memory', arcadeMovesCount + ' Versuche');
                     if(!hasWonTicketBefore) {
                         hasWonTicketBefore = true;
                         playerInventory.push({ name: "🎫 Goldenes VIP-Ticket", icon: "🎫", isReadable: true, content: "Ein goldenes Ticket vom Arcade-Automaten!\nEs gewährt Eintritt in alle geheimen Archive des Mathe-Museums." });
@@ -2598,7 +3129,7 @@
         let modePlacement = false; const playerInventory = []; 
 
         function toggleInventory() {
-            if (isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
+            if (isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || isQuizOpen) return; isInventoryOpen = !isInventoryOpen; const overlay = document.getElementById('inventory-overlay');
             if (isInventoryOpen) { overlay.classList.add('open'); for (let key in keys) keys[key] = false; touchVelocity.x = 0; touchVelocity.z = 0; renderInventoryUI(); } 
             else { overlay.classList.remove('open'); modePlacement = false; }
         }
@@ -2629,6 +3160,7 @@
             if (isArcadeOverlayOpen) { closeArcadeGame(); return; }
             if (isMapOpen) { closeMap(); return; }
             if (isLibraryOpen) { closeLibrary(); return; }
+            if (isQuizOpen) { return; }
             if (isDocumentOpen) { closeDocument(); return; }
             if (window._activeLightSwitch) {
                 const sw = window._activeLightSwitch;
@@ -2645,7 +3177,24 @@
                 return;
             }
             if (activeShelfNearMe) { openDocument(priceListDoc); return; }
+            if (activeGuardNearMe) {
+                openDocument({title:'💂 Wachmann Konrad Stein', content:'Konrad Stein nickt Ihnen ernst zu:\n\n„Guten Tag. Mein Name ist Konrad Stein, ich bin der Wachmann hier.\n\nIch passe auf, dass niemand ohne gültiges Eintrittsticket das Museum oder den Shop betritt.\n\nIhr Ticket erhalten Sie am Empfang — meine Kollegin Frau Berger hilft Ihnen gerne weiter."'});
+                return;
+            }
+            if (activeDirectorNearMe) {
+                openDocument({title:'💬 Dr. Heinrich Faber — Museumsleiter', content:'Der ältere Herr dreht sich zu Ihnen um und seufzt tief.\n\n„Ah, Sie bemerken es also auch... dieser leere Rahmen.\n\nDas Gemälde ›Harmonie der Mathematik‹ — unser wertvollstes Ausstellungsstück — ist verschwunden. Spurlos. Vor einigen Wochen bemerkte ich es zuerst, doch niemand weiß, wie es geschehen konnte.\n\nDer Künstler soll darin die verborgene Schönheit der Mathematik eingefangen haben — Kreise, Geraden, Proportionen — alles in perfekter Harmonie.\n\nWenn Sie irgendeinen Hinweis finden... ich wäre Ihnen außerordentlich dankbar."'});
+                return;
+            }
+            if (activeFrameNearMe) {
+                openDocument({title:'🖼️ Leerer Bilderrahmen', content:'Ein prächtiger, vergoldeter Rahmen — doch die Leinwand dahinter ist leer.\n\n*Eine kleine Messingtafel am unteren Rand trägt die Aufschrift:*\n\n„Harmonie der Mathematik"\n— Unbekannter Meister, 18. Jh. —\n\nHier sollte das berühmte Gemälde „Harmonie der Mathematik" hängen.\nEs ist leider nicht da...'});
+                return;
+            }
             if (activeMapNearMe) { openMap(); return; }
+            if (activeReceptionNearMe) {
+                if (!hasTicket) { openQuiz(); }
+                else { openDocument({title:'💬 Frau Berger — Empfang',content:'„Willkommen zurück! Ich hoffe, Sie genießen Ihren Besuch im Mathe-Museum.\n\nBei Fragen stehe ich gerne zur Verfügung!"'}); }
+                return;
+            }
             if (activeBookshelfNearMe) { openLibrary(); return; }
             if (activeCuratorNearMe) {
                 if (mapSolved && !curatorRewardGiven) {
@@ -2697,7 +3246,7 @@
             }
         }
 
-        function checkWinCondition() { if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) { isGameWon = true; document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open'); } }
+        function checkWinCondition() { if (exhibits.map(ex => ex.currentNumber).every((val, index) => val === [1, 2, 3, 4, 5][index])) { isGameWon = true; logCheckpoint('Bilderwand'); document.getElementById('interaction-prompt').style.display = 'none'; document.getElementById('win-overlay').classList.add('open'); } }
         function restartGame() {
             isGameWon = false; playerInventory.length = 0; hasWonTicketBefore = false; const mixed = [4, 1, 5, 2, 3]; exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
             vendingMachines.forEach(vm => { if (vm.givesMoney) vm.hasMoney = true; }); trashCanData.hasPaper = true; isArcadeActivated = false;
@@ -2706,17 +3255,17 @@
 
         // --- 12. STEUERUNGS-SYSTEM ---
         let cameraAngleH = Math.PI; let cameraAngleV = 0.3; let isMouseDown = false; let previousMousePosition = { x: 0, y: 0 };
-        window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+        window.addEventListener('mousedown', (e) => { if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || isQuizOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return; isMouseDown = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
         window.addEventListener('mouseup', () => isMouseDown = false);
         window.addEventListener('mousemove', (e) => {
-            if (!isMouseDown || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return;
+            if (!isMouseDown || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || isQuizOpen) return;
             cameraAngleH += (e.clientX - previousMousePosition.x) * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + (e.clientY - previousMousePosition.y) * 0.005));
             previousMousePosition = { x: e.clientX, y: e.clientY };
         });
         const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         window.addEventListener('keydown', (e) => { 
             if (isGameWon) return; if (e.key.toLowerCase() === 'r') { triggerInteraction(); return; } 
-            if (isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
+            if (isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || isQuizOpen) return; if (e.key.toLowerCase() === 'e') { toggleInventory(); return; } 
             if (!isInventoryOpen && e.key in keys) keys[e.key] = true; 
         });
         window.addEventListener('keyup', (e) => { if (e.key in keys) keys[e.key] = false; });
@@ -2738,12 +3287,12 @@
 
         const dpadIds = new Set(['dpad-up','dpad-down','dpad-left','dpad-right','dpad','dpad-center']);
         window.addEventListener('touchstart', (e) => {
-            if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return;
+            if(isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || isQuizOpen || ['interaction-prompt', 'inventory-btn', 'restart-btn'].includes(e.target.id)) return;
             if(dpadIds.has(e.target.id) || e.target.closest('#dpad')) return; // D-Pad ignorieren
             isTouching = true; touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
         });
         window.addEventListener('touchmove', (e) => {
-            if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return;
+            if (!isTouching || isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || isQuizOpen) return;
             let diffX = e.touches[0].clientX - touchStartPos.x; let diffY = e.touches[0].clientY - touchStartPos.y;
             cameraAngleH += diffX * 0.005; cameraAngleV = Math.max(0.05, Math.min(Math.PI / 2.2, cameraAngleV + diffY * 0.003));
             touchStartPos.x = e.touches[0].clientX; touchStartPos.y = e.touches[0].clientY;
@@ -2754,7 +3303,7 @@
         const moveSpeed = 0.08; const playerRadius = 0.4; 
 
         function updateGame() {
-            if (isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen) return;
+            if (isInventoryOpen || isGameWon || isDocumentOpen || isArcadeOverlayOpen || isMapOpen || isLibraryOpen || isQuizOpen) return;
             doorGroup.rotation.y += (doorTargetAngle - doorGroup.rotation.y) * 0.1;
 
             let moveX = 0; let moveZ = 0;
@@ -2773,7 +3322,8 @@
                 // SHOP-BEREICH (KOLLISION)
                 // FEHLERBEHEBUNG: Vorher stand hier nur (nextX < -LOBBY_SIZE / 2). 
                 // Das hat auch die linke Seite des Hauptraums blockiert!
-                if (nextZ > ROOM_SIZE / 2 && nextX < -LOBBY_SIZE / 2) {
+                if (nextZ > ROOM_SIZE / 2 && nextX < -LOBBY_SIZE / 2 && !hasTicket) { allowed = false; showTurnstileHint(); }
+                else if (nextZ > ROOM_SIZE / 2 && nextX < -LOBBY_SIZE / 2) {
                     let minShopX = shopXCenter - SHOP_SIZE / 2 + playerRadius;
                     let maxShopZ = shopZCenter + SHOP_SIZE / 2 - playerRadius; let minShopZ = shopZCenter - SHOP_SIZE / 2 + playerRadius;
                     if (nextX < minShopX || nextZ > maxShopZ || nextZ < minShopZ) allowed = false;
@@ -2793,6 +3343,8 @@
                 else if (nextZ > ROOM_SIZE / 2) {
                     let maxLobbyX = LOBBY_SIZE / 2 - playerRadius; let maxLobbyZ = ROOM_SIZE / 2 + LOBBY_SIZE - playerRadius;
                     if (nextX > maxLobbyX || nextZ > maxLobbyZ) allowed = false;
+                    // Drehkreuz: ohne Ticket kein Ausgang
+                    if (!hasTicket && nextZ < ROOM_SIZE / 2 + 1.2) { allowed = false; showTurnstileHint(); }
                     if (nextX < -maxLobbyX && (nextZ < ROOM_SIZE/2 + 4 || nextZ > ROOM_SIZE/2 + LOBBY_SIZE - 4)) allowed = false; 
                     if (nextZ < ROOM_SIZE / 2 + playerRadius && (nextX < -2 || nextX > 2)) allowed = false;
                     if (nextZ > ROOM_SIZE / 2 + LOBBY_SIZE - 2.0) { if ((nextX > -3.8 && nextX < -1.2) || (nextX > 1.2 && nextX < 3.8)) allowed = false; }
@@ -2875,10 +3427,18 @@
             activeShelfNearMe = shopShelfPositions.some(p => playerPos2D.distanceTo(p) < 2.2);
             // Bücherregal-Proximity (Büro)
             activeBookshelfNearMe = officeShelfPositions.some(p => playerPos2D.distanceTo(p) < 2.2);
+            // Empfangs-NPC Proximity
+            receptionNPC.getWorldPosition(receptionWorldPos); receptionWorldPos.y=0;
+            activeReceptionNearMe = playerPos2D.distanceTo(receptionWorldPos) < 2.2;
+            guardNPCMain.getWorldPosition(guardWorldPos); guardWorldPos.y=0;
+            activeGuardNearMe = playerPos2D.distanceTo(guardWorldPos) < 2.2;
 
             // Landkarten-Proximity
             mapMesh.getWorldPosition(mapWorldPos); mapWorldPos.y = 0;
             activeMapNearMe = playerPos2D.distanceTo(mapWorldPos) < 2.0;
+            activeFrameNearMe = playerPos2D.distanceTo(frameWorldPos) < 2.2;
+            directorGroup.getWorldPosition(directorWorldPos); directorWorldPos.y=0;
+            activeDirectorNearMe = playerPos2D.distanceTo(directorWorldPos) < 2.2;
 
             if (minPaperDist < 2.0) {
                 activeDocumentNearMe = closestPaper; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null; promptBtn.style.display = 'block';
@@ -2918,11 +3478,41 @@
                 promptBtn.innerText = "📋 Preisliste ansehen (R)";
                 promptBtn.style.background = "rgba(26, 58, 110, 0.88)"; promptBtn.style.borderColor = "#4a90e2";
             }
+            else if (activeGuardNearMe) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "💂 Wächter ansprechen (R)";
+                promptBtn.style.background = "rgba(20,50,20,0.92)"; promptBtn.style.borderColor = "#4a7a4a";
+            }
+            else if (activeDirectorNearMe) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "🎩 Dr. Faber ansprechen (R)";
+                promptBtn.style.background = "rgba(30,25,55,0.92)"; promptBtn.style.borderColor = "#7a6aa0";
+            }
+            else if (activeFrameNearMe) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "🖼️ Bilderrahmen untersuchen (R)";
+                promptBtn.style.background = "rgba(90,70,10,0.92)"; promptBtn.style.borderColor = "#b8960c";
+            }
             else if (activeMapNearMe) {
                 activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
                 promptBtn.style.display = 'block';
                 promptBtn.innerText = "🗺️ Landkarte untersuchen (R)";
                 promptBtn.style.background = "rgba(90, 55, 10, 0.90)"; promptBtn.style.borderColor = "#b8960c";
+            }
+            else if (activeReceptionNearMe && !hasTicket) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "🏛️ Anmeldung (R)";
+                promptBtn.style.background = "rgba(26,58,110,0.92)"; promptBtn.style.borderColor = "#4a90e2";
+            }
+            else if (activeReceptionNearMe && hasTicket) {
+                activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
+                promptBtn.style.display = 'block';
+                promptBtn.innerText = "💬 Frau Berger — Empfang (R)";
+                promptBtn.style.background = "rgba(26,58,110,0.92)"; promptBtn.style.borderColor = "#4a90e2";
             }
             else if (activeBookshelfNearMe) {
                 activeDocumentNearMe = null; activeExhibitNearMe = null; isNearDoor = false; activeVendingNearMe = null; activeTrashNearMe = null; activeArcadeNearMe = null;
@@ -2958,7 +3548,94 @@
             camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.1, playerGroup.position.z);
         }
 
-        function animate() { requestAnimationFrame(animate); updateGame(); renderer.render(scene, camera); }
+        // ── MINIMAP ──
+        const _mmCanvas = document.getElementById('minimap-canvas');
+        const _mmCtx = _mmCanvas.getContext('2d');
+        const _mmWrap = document.getElementById('minimap-wrap');
+        // Weltkoordinaten-Grenzen
+        const _mmWx0=-17, _mmWx1=23, _mmWz0=-13, _mmWz1=25;
+        const _mmRooms = [
+            {x0:-12,z0:-12,x1:12,z1:12, fill:'#141a30', stroke:'#2a3256', label:'Ausstellungsraum', lx:0,   lz:0  },
+            {x0: 12,z0: -5,x1:22,z1: 5, fill:'#121f14', stroke:'#1e3a20', label:'Büro',             lx:17,  lz:0  },
+            {x0: -6,z0: 12,x1: 6,z1:24, fill:'#1a1530', stroke:'#302a50', label:'Lobby',            lx:0,   lz:18 },
+            {x0:-16,z0: 13,x1:-6,z1:23, fill:'#201210', stroke:'#3a2018', label:'Shop',             lx:-11, lz:18 },
+        ];
+        // NPC-Weltpositionen
+        const _mmNPCs = [
+            {label:'Sophia',    pos:()=>{ const v=new THREE.Vector3(); npcGroup.getWorldPosition(v); return [v.x,v.z]; }},
+            {label:'Dr. Albrecht', pos:()=>{ const v=new THREE.Vector3(); curatorGroup.getWorldPosition(v); return [v.x,v.z]; }},
+            {label:'Empfang',   pos:()=>{ const v=new THREE.Vector3(); receptionNPC.getWorldPosition(v); return [v.x,v.z]; }},
+            {label:'K. Stein',  pos:()=>{ const v=new THREE.Vector3(); guardNPCMain.getWorldPosition(v); return [v.x,v.z]; }},
+            {label:'Dr. Faber', pos:()=>{ const v=new THREE.Vector3(); directorGroup.getWorldPosition(v); return [v.x,v.z]; }},
+        ];
+
+        let _mmBig = false;
+        _mmWrap.addEventListener('click', ()=>{
+            _mmBig = !_mmBig;
+            const w = _mmBig ? 520 : 170, h = _mmBig ? 480 : 158;
+            _mmCanvas.width = w; _mmCanvas.height = h;
+            _mmCanvas.style.width = w + 'px'; _mmCanvas.style.height = h + 'px';
+        });
+
+        function drawMinimap() {
+            const W=_mmCanvas.width, H=_mmCanvas.height;
+            const pad=6;
+            const scl=Math.min((W-pad*2)/(_mmWx1-_mmWx0),(H-pad*2)/(_mmWz1-_mmWz0));
+            const ox=pad+((W-pad*2)-(_mmWx1-_mmWx0)*scl)/2-_mmWx0*scl;
+            const oz=pad+((H-pad*2)-(_mmWz1-_mmWz0)*scl)/2-_mmWz0*scl;
+            const tc=(wx,wz)=>[ox+wx*scl, oz+wz*scl];
+            const fs=_mmBig?9:7;
+            const ctx=_mmCtx;
+            ctx.clearRect(0,0,W,H);
+            ctx.fillStyle='#070a14'; ctx.fillRect(0,0,W,H);
+            _mmRooms.forEach(r=>{
+                const [x0,y0]=tc(r.x0,r.z0),[x1,y1]=tc(r.x1,r.z1);
+                ctx.fillStyle=r.fill; ctx.fillRect(x0,y0,x1-x0,y1-y0);
+                ctx.strokeStyle=r.stroke; ctx.lineWidth=1; ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+                const [lx,ly]=tc(r.lx,r.lz);
+                ctx.fillStyle='#4a5278'; ctx.font=`bold ${fs}px sans-serif`; ctx.textAlign='center';
+                ctx.fillText(r.label,lx,ly+3);
+            });
+            // NPCs als orange Punkte
+            const nr=_mmBig?5:2.5;
+            _mmNPCs.forEach(({label,pos})=>{
+                try{
+                    const [nx,nz]=pos();
+                    const [cx,cy]=tc(nx,nz);
+                    ctx.fillStyle='#ff8c00';
+                    ctx.beginPath(); ctx.arc(cx,cy,nr,0,Math.PI*2); ctx.fill();
+                    ctx.strokeStyle='#000'; ctx.lineWidth=0.6; ctx.stroke();
+                    if(_mmBig){
+                        ctx.fillStyle='#ffb347';
+                        ctx.font='bold 9px sans-serif'; ctx.textAlign='left';
+                        ctx.strokeStyle='rgba(0,0,0,0.7)'; ctx.lineWidth=2.5;
+                        ctx.strokeText(label, cx+nr+3, cy+4);
+                        ctx.fillText(label, cx+nr+3, cy+4);
+                    }
+                }catch(e){}
+            });
+            // Spieler
+            const px=playerGroup.position.x, pz=playerGroup.position.z;
+            const [cx,cy]=tc(px,pz);
+            const a=cameraAngleH, len=_mmBig?10:6;
+            const fx=cx-Math.sin(a)*len, fy=cy-Math.cos(a)*len;
+            ctx.strokeStyle='rgba(255,210,0,0.5)'; ctx.lineWidth=1.5;
+            ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(fx,fy); ctx.stroke();
+            ctx.fillStyle='#ffd700';
+            ctx.beginPath(); ctx.arc(cx,cy,_mmBig?5:3.5,0,Math.PI*2); ctx.fill();
+            ctx.strokeStyle='#000'; ctx.lineWidth=0.8; ctx.stroke();
+        }
+
+        const _timerStart = Date.now();
+        const _timerEl = document.getElementById('visit-timer-value');
+        function updateTimer() {
+            const s = Math.floor((Date.now() - _timerStart) / 1000);
+            const m = Math.floor(s / 60);
+            const h = Math.floor(m / 60);
+            if (h > 0) _timerEl.textContent = `${String(h).padStart(2,'0')}:${String(m%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+            else _timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+        }
+        function animate() { requestAnimationFrame(animate); updateGame(); renderer.render(scene, camera); drawMinimap(); updateTimer(); }
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         animate();
         setTimeout(() => document.getElementById('ui-layer').classList.add('hidden'), 30000);
