@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Mathe-Museum - Arcade Memory Update</title>
+    <title>Mathe-Museum</title>
     <style>
         body {
             margin: 0;
@@ -276,8 +276,10 @@
             color: #2c3e50;
             border: 8px double #8e44ad;
             border-radius: 4px;
-            padding: 40px;
+            padding: 26px 30px;
             width: 80%; max-width: 450px;
+            /* nie bis an den Bildschirmrand: lange Dialoge (z. B. Sophias Aufgabe) scrollen innen */
+            max-height: 82vh; overflow-y: auto;
             box-shadow: 0 15px 35px rgba(0,0,0,0.7);
             transform: scale(0.8) rotate(-1deg);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -287,7 +289,7 @@
         .document-box h2 { margin-top: 0; font-family: 'Times New Roman', serif; border-bottom: 2px dashed #8e44ad; padding-bottom: 10px; color: #6c5ce7; }
         .document-box p { font-size: 1.1rem; line-height: 1.6; white-space: pre-wrap; }
         .document-box p.doc-mono { font-family: 'Consolas','Courier New',monospace; font-size: 0.92rem; line-height: 1.45; }
-        .document-close-hint { margin-top: 30px; font-size: 0.85rem; color: #7f8c8d; text-align: center; font-style: italic; }
+        .document-close-hint { margin-top: 18px; font-size: 0.85rem; color: #7f8c8d; text-align: center; font-style: italic; }
         #sophia-choices { display: none; margin-top: 22px; gap: 10px; flex-direction: column; }
         #sophia-choices.visible { display: flex; }
         .sophia-choice-btn { padding: 10px 16px; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-family: 'Georgia', serif; transition: background 0.2s; }
@@ -596,8 +598,7 @@
 <body>
 
     <div id="ui-layer">
-        <h1>🏛️ Mathe-Museum v11.4</h1>
-        <p>Erkunde das Museum. Finde das funktionierende Memory-Spiel am Retro-Automaten im Shop!</p>
+        <h1>🏛️ Mathe-Museum</h1>
         <div class="controls-hint">
             💻 PC-STEUERUNG:<br>
             • Laufen: W, A, S, D / Pfeile<br>
@@ -697,7 +698,6 @@
         </div>
         <div class="map-secondary">
           <button class="map-tool ghost" onclick="mapUndo()" title="Rückgängig">↩︎</button>
-          <button class="map-tool ghost" onclick="mapHint()" title="Tipp">💡</button>
           <button class="map-tool" onclick="mapClearAll()">🗑️ Alles löschen</button>
           <button class="map-tool" style="background:linear-gradient(180deg,#2ed573,#22b262);color:#06210f;border-color:#26de81;font-weight:800" onclick="mapCheck()">✓ Prüfen</button>
         </div>
@@ -2428,15 +2428,6 @@
         let mapSolved = false;
         let mapMarkedPoint = null;
 
-        const mapHints=[
-            'Konstruiere den Umkreis des Dreiecks Alpha–Delta–Gamma. Schlage zuerst die Mittelsenkrechte von Alpha–Delta: Zirkel von Alpha nach Delta, dann von Delta nach Alpha — gleicher Radius!',
-            'Die Schnittpunkte der zwei Kreise verbindest du mit dem Lineal → Mittelsenkrechte von Alpha–Delta. Wiederhole für Delta–Gamma.',
-            'Der Schnittpunkt der zwei Mittelsenkrechten ist der Mittelpunkt M des Umkreises. Schlage jetzt den Umkreis: M → Alpha (oder Delta oder Gamma).',
-            'Zeichne eine Gerade durch Insel Beta und Insel Epsilon. Von den zwei Schnittpunkten mit dem Umkreis liegt der Schatz an dem, der näher an Kap Theta ist. Markiere ihn mit 📍 und klicke Prüfen!'
-        ];
-        let mapHintStep=0;
-        function mapHint(){mapSetStatus('💡',mapHints[mapHintStep%mapHints.length],'warn');mapHintStep++;}
-
         function mapCheck(){
             const TOL=22;
             // 1) Kein Marker gesetzt → Hinweis
@@ -2451,17 +2442,8 @@
                 mapSetStatus('🏆','Richtig! Du hast den Schatzpunkt gefunden. Geh jetzt zu Kurator Dr. Albrecht und berichte ihm — er wartet auf dich!','ok');
                 return;
             }
-            // 3) Konstruktion-Zwischenstand
-            const hasCC=mapObjects.some(o=>o.type==='circle'&&mDist({x:o.x,y:o.y},mapTargetCC)<TOL*2&&Math.abs(o.r-mapTargetCC.r)<TOL*2);
-            const B_isl=mapIslandData[1], E_isl=mapIslandData[4];
-            const hasLine=mapObjects.some(o=>{
-                if(o.type!=='line')return false;
-                return mProjLine(B_isl,o.a,o.b).d<TOL && mProjLine(E_isl,o.a,o.b).d<TOL;
-            });
-            if(hasCC&&hasLine) mapSetStatus('❌','Nicht ganz — du hast Umkreis und Gerade, aber der markierte Punkt ist falsch. Welcher Schnittpunkt liegt näher an Kap Theta?','err');
-            else if(hasCC)     mapSetStatus('📏','Guter Umkreis! Zeichne noch eine Gerade durch Beta und Epsilon, dann markiere den richtigen Schnittpunkt.','warn');
-            else if(hasLine)   mapSetStatus('🧭','Gute Gerade! Konstruiere noch den Umkreis von Alpha–Delta–Gamma.','warn');
-            else               mapSetStatus('🤔','Noch nicht. Konstruiere zuerst den Umkreis von Alpha–Delta–Gamma und die Gerade durch Beta–Epsilon.','err');
+            // 3) Falsch — ohne Erklärung, wie zu konstruieren ist
+            mapSetStatus('❌','Das ist noch nicht der richtige Punkt.','err');
         }
 
         const paperMeshes = []; // Keine Zettel mehr auf dem Schreibtisch
@@ -2806,7 +2788,7 @@
                     content:'Der Code stimmt — die schwere Tür schwingt auf.\n\nIm Inneren liegt ein Stück des verschwundenen Gemäldes „Harmonie der Mathematik". Du steckst es ein.'}); }, 900);
             } else {
                 fb.className='tresor-feedback err';
-                fb.textContent='❌ Falscher Code. Prüfe deine Zahlen und den Rechenweg (Klammer zuerst!).';
+                fb.textContent='❌ Falscher Code. Prüfe deine Zahlen und den Rechenweg.';
             }
         }
 
@@ -3138,13 +3120,19 @@
         lobbyGroup.add(createLobbyBench(1.5, Math.PI));
 
         // ── TOPFPFLANZEN neben den Bänken ──
-        function createPottedPlant(x, z) {
-            const plant = new THREE.Group(); plant.position.set(x, 0, z);
+        // Terrakotta-Topf mit Erde — Basis für die Pflanze UND für die grüne Tresor-Zahl,
+        // damit beide identisch aussehen
+        function createFlowerPot() {
+            const g = new THREE.Group();
             const potMat = new THREE.MeshStandardMaterial({ color: 0xb35a3c, roughness: 0.7 });
             const rimMat = new THREE.MeshStandardMaterial({ color: 0x9c4a30, roughness: 0.65 });
-            const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.16, 0.36, 14), potMat); pot.position.y = 0.18; pot.castShadow = true; plant.add(pot);
-            const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.23, 0.06, 14), rimMat); rim.position.y = 0.36; plant.add(rim);
-            const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.03, 14), new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.95 })); soil.position.y = 0.37; plant.add(soil);
+            const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.16, 0.36, 14), potMat); pot.position.y = 0.18; pot.castShadow = true; g.add(pot);
+            const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.23, 0.06, 14), rimMat); rim.position.y = 0.36; g.add(rim);
+            const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.03, 14), new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.95 })); soil.position.y = 0.37; g.add(soil);
+            return g;
+        }
+        function createPottedPlant(x, z) {
+            const plant = createFlowerPot(); plant.position.set(x, 0, z);
             // Blätter: mehrere geneigte Kegel in zwei Grüntönen
             const leafA = new THREE.MeshStandardMaterial({ color: 0x2e7d4f, roughness: 0.6 });
             const leafB = new THREE.MeshStandardMaterial({ color: 0x3fa06a, roughness: 0.6 });
@@ -3559,6 +3547,13 @@
             { _sophia: true, title: "💬 Kassiererin Sophia", content: "Willkommen im Mathe-Museum-Shop!\n\nIch bin Sophia. Die Kasse ist leider kaputt und ich kann nicht mehr ausrechnen, wie viel man zahlen muss.\n\nEs kam eben aber eine Bestellung eines Kunden rein. Er moechte kaufen:\n  • 2x Pyramiden-Modell\n  • 1x Mathebuch 'Geometrie erleben'\n  • 3x Mathetasse\n\nDer ausgeschilderte Preis der Pyramide ist leider noch der um 20% reduzierte Preis — der Kunde hat aber online bestellt und muss daher den normalen Preis zahlen.\n\nAm Ende bekommt er noch 5% Rabatt auf seinen gesamten Einkauf.\n\nKannst du mir sagen, wie viel er am Ende zahlen muss?" },
         ];
         let npcDialogIndex = 0;
+        // Nach gelöstem Rätsel stellt Sophia die Aufgabe nicht erneut, sondern bedankt sich.
+        // (_sophia bleibt aus → keine Antwort-Buttons mehr)
+        const sophiaThanksDialog = { title: "💬 Kassiererin Sophia", content:
+            "Sophia strahlt dich an, als sie dich wiedersieht.\n\n" +
+            "„Da bist du ja wieder! Nochmal vielen Dank für deine Hilfe — der Kunde hat seine 76,00 € bezahlt.\n\n" +
+            "Die Kasse ist zwar immer noch kaputt, aber jetzt weiß ich ja, wie man es ausrechnet.\n\n" +
+            "Schau dich ruhig weiter im Shop um!\"" };
 
         // ── MITTIGE WARENTISCH ──
         const displayTable = new THREE.Group(); displayTable.position.set(-2.5, 0, 0);
@@ -4104,13 +4099,20 @@
         // Rote 6 an der VORDERSEITE (+x) der Säule des roten Würfel-Exponats (Hauptraum, x=5), größer
         const digitA = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.44), makeTresorDigit('6', '#ff5a5f'));
         digitA.position.set(5.37, 0.62, 0); digitA.rotation.y = Math.PI / 2; scene.add(digitA);
-        // Grüne 4 als freistehende Zahl in der Lobby (dort, wo vorher die Pflanze stand)
+        // Grüne 4 in einem Blumentopf in der Lobby — wächst wie eine Pflanze aus der Erde
         (()=>{
-            const standMat = new THREE.MeshStandardMaterial({ color: 0x8a8f98, roughness: 0.35, metalness: 0.7 });
-            const base = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.05, 16), standMat); base.position.set(-2.4, 0.025, 16.5); base.castShadow = true; scene.add(base);
-            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.62, 10), standMat); pole.position.set(-2.4, 0.36, 16.5); scene.add(pole);
+            const g = createFlowerPot(); g.position.set(-2.4, 0, 16.5);
+            const stemMat = new THREE.MeshStandardMaterial({ color: 0x2e7d4f, roughness: 0.6 });
+            const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.024, 0.36, 8), stemMat);
+            stem.position.y = 0.56; stem.castShadow = true; g.add(stem);
+            // ein paar kleine Blätter am Stiel, damit es zur Nachbarpflanze passt
+            [[-1, 0.52], [1, 0.62], [-1, 0.72]].forEach(([s, y]) => {
+                const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.16, 6), stemMat);
+                leaf.position.set(s * 0.07, y, 0); leaf.rotation.z = s * 1.1; leaf.castShadow = true; g.add(leaf);
+            });
             const num = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), makeTresorDigit('4', '#2ed573'));
-            num.position.set(-2.4, 0.92, 16.5); scene.add(num);   // DoubleSide → von beiden Seiten lesbar
+            num.position.y = 0.99; g.add(num);   // DoubleSide → von beiden Seiten lesbar
+            scene.add(g);
         })();
 
         // === Wandbilder (freie Wände; Rückwand-Bilder & leerer Rahmen bleiben unberührt) ===
@@ -4654,7 +4656,7 @@ loadRound();
         const WAAGE_ROUNDS=[
             {x:5, bagsL:2, cubesL:3, bagsR:0, cubesR:13},   // 2x+3 = 13
             {x:4, bagsL:3, cubesL:2, bagsR:1, cubesR:10},   // 3x+2 = x+10
-            {x:4, bagsL:4, cubesL:5, bagsR:2, cubesR:13},   // 4x+5 = 2x+13
+            {x:4, bagsL:4, cubesL:5, bagsR:1, cubesR:17},   // 4x+5 = x+17  → −x, −5, dann ÷3 (nicht ÷2)
         ];
         let waageRoundIdx=0;
         let waageTarget='both';   // 'L' | 'both' | 'R' — Zielseite der Umformung
@@ -5200,6 +5202,7 @@ loadRound();
             }
             if (activeSpiegelNearMe) { openSpiegel(); return; }
             if (activeNpcNearMe) {
+                if (loggedCheckpoints.has('Sophia-Preis')) { openDocument(sophiaThanksDialog); return; }
                 openDocument(npcDialogs[npcDialogIndex % npcDialogs.length]);
                 npcDialogIndex++;
                 return;
