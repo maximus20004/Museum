@@ -2055,15 +2055,15 @@
 '    Summe aller Werte : Anzahl der Werte\n\n'+
 '    Werte: 2, 6, 4, 1, 5\n'+
 '    (2+6+4+1+5) : 5 = 18 : 5 = 3,6\n\n'+
-'ZENTRALWERT (Median)\n'+
+'Median\n'+
 '    Werte der GRÖSSE NACH ordnen und den\n'+
 '    mittleren Wert ablesen.\n\n'+
 '    2, 6, 4, 1, 5   →   1, 2, [4], 5, 6\n'+
 '                              ↑\n'+
-'                         Zentralwert = 4\n\n'+
+'                         Median = 4\n\n'+
 '    Bei gerader Anzahl: Mittelwert der beiden\n'+
 '    mittleren Werte.\n\n'+
-'Der Zentralwert ist unempfindlich gegen\n'+
+'Der Median ist unempfindlich gegen\n'+
 'einzelne „Ausreißer" — der Mittelwert nicht.'
             },
         ];
@@ -2159,12 +2159,12 @@
         }
 
         const receptionQuestions = [
-            { q: 'Bestimme den Median (Zentralwert) von: 8, 3, 5, 9, 4', opts: ['4','5','6','8'], correct: 1 },
-            { q: 'Was sind 30 % von 90?', opts: ['18','24','27','30'], correct: 2 },
-            { q: 'Löse die Gleichung 3x − 4 = 11. Wie groß ist x?', opts: ['3','5','7','15'], correct: 1 },
-            { q: 'Spiegle den Punkt P an der eingezeichneten Achse. Wo liegt der Bildpunkt P′?', opts: ['(3|2)','(−3|−2)','(3|−2)','(−3|2)'], correct: 0, gfx: () => _gfxReflection(-3, 2, 'y') },
-            { q: 'Die Geraden g und h sind parallel. Wie groß ist der markierte Wechselwinkel (?)?', opts: ['70°','110°','20°','35°'], correct: 0, gfx: () => _gfxAngles(70) },
-            { q: 'Der Mittelpunkt des Umkreises eines Dreiecks ist der Schnittpunkt der …', opts: ['Seitenhalbierenden','Mittelsenkrechten','Winkelhalbierenden','Höhen'], correct: 1 },
+            { q: 'Bestimme den Median von: 8, 3, 5, 9, 4', opts: ['4','5','3','6'], correct: 1 },
+            { q: 'Berechne: 30 % von 90', opts: ['18','24','27','30'], correct: 2 },
+            { q: 'Löse die Gleichung 3x − 4 = 11. Gib an, wie groß x ist.', opts: ['3','5','7','15'], correct: 1 },
+            { q: 'Spiegle den Punkt P an der eingezeichneten Achse. Gib an, wo der Bildpunkt P′ liegt.', opts: ['(3|2)','(−3|−2)','(3|−2)','(−3|2)'], correct: 0, gfx: () => _gfxReflection(-3, 2, 'y') },
+            { q: 'Die Geraden g und h sind parallel. Gib an, wie groß der markierte Winkel ist.', opts: ['70°','110°','20°','35°'], correct: 0, gfx: () => _gfxAngles(70) },
+            { q: 'Der Mittelpunkt des Umkreises eines Dreiecks ist der Schnittpunkt der …', opts: ['Seiten','Mittelsenkrechten','Winkelhalbierenden','Höhen'], correct: 1 },
         ];
 
         let visitorNames = [];
@@ -2701,7 +2701,7 @@
 
         const trashCanData = {
             hasPaper: true, title: "🗑️ Zerknüllter Zettel",
-            content: "🔒 NOTIZ VON DR. ALBRECHT:\n\nDie Bilderwand entriegelt sich nur, wenn die fünf Säle in der richtigen Reihenfolge hängen.\n\nDer Schlüssel ist die typische Besucherzahl jedes Saals — also der MEDIAN der Besucher von Montag bis Freitag (der mittlere Wert, wenn man die fünf Zahlen der Größe nach ordnet).\n\nHänge die Säle von links nach rechts nach ihrem Median AUFSTEIGEND — vom kleinsten zum größten. Dann springt das Schloss auf.",
+            content: "🔒 NOTIZ VON DR. ALBRECHT:\n\nDie Bilderwand entriegelt sich nur, wenn die fünf Säle in der richtigen Reihenfolge hängen.\n\nDer Schlüssel ist der MEDIAN der Besucher von Montag bis Freitag.\n\nHänge die Säle von links nach rechts nach ihrem Median AUFSTEIGEND — vom kleinsten zum größten. Dann springt das Schloss auf.",
             getWorldPos: function() { let target = new THREE.Vector3(); return trashCanGroup.getWorldPosition(target); }
         };
         let activeTrashNearMe = null;
@@ -3269,11 +3269,11 @@
 
         // ── ABSCHLUSSTEST (Echtheitsprüfung durch Dr. Faber) ──
         const finalTestQuestions = [
-            { q: 'Bestimme den Median (Zentralwert) von: 12, 5, 8, 3, 6', opts:['5','6','8','7'], correct: 1 },
-            { q: 'Was sind 25 % von 80?', opts:['16','20','25','32'], correct: 1 },
-            { q: 'Löse die Gleichung 4x + 3 = 23. Wie groß ist x?', opts:['4','5','6','20'], correct: 1 },
-            { q: 'Spiegle den Punkt P an der eingezeichneten Achse. Wo liegt der Bildpunkt P′?', opts:['(2|−3)','(−2|3)','(−2|−3)','(2|3)'], correct: 0, gfx: () => _gfxReflection(2, 3, 'x') },
-            { q: 'Die Geraden g und h sind parallel. Wie groß ist der markierte Wechselwinkel (?)?', opts:['55°','125°','35°','90°'], correct: 0, gfx: () => _gfxAngles(55) },
+            { q: 'Bestimme den Median von: 12, 5, 8, 3, 6', opts:['5','6','8','7'], correct: 1 },
+            { q: 'Berechne: 25 % von 80', opts:['16','20','25','32'], correct: 1 },
+            { q: 'Löse die Gleichung 4x + 3 = 23. Gib an, wie groß x ist.', opts:['4','5','6','20'], correct: 1 },
+            { q: 'Spiegle den Punkt P an der eingezeichneten Achse. Gib an, wo der Bildpunkt P′ liegt.', opts:['(2|−3)','(−2|3)','(−2|−3)','(2|3)'], correct: 0, gfx: () => _gfxReflection(2, 3, 'x') },
+            { q: 'Die Geraden g und h sind parallel. Gib an, wie groß der markierte Winkel ist.', opts:['55°','125°','35°','90°'], correct: 0, gfx: () => _gfxAngles(55) },
             { q: 'Der Umkreismittelpunkt eines Dreiecks hat zu den drei Ecken …', opts:['den gleichen Abstand','verschiedene Abstände','immer Abstand 1','keinen Abstand'], correct: 0 },
         ];
         let isFinalTestOpen=false, finalTestPassed=false, finalTestPending=false;
