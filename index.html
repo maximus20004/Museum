@@ -398,6 +398,13 @@
         .quiz-opts { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
         .quiz-opt { background:#1a2040; border:1px solid #2a3060; color:#a0aac0; border-radius:10px; padding:12px 14px; cursor:pointer; font-size:.88rem; text-align:left; transition:background .15s,border-color .15s; }
         .quiz-opt:hover:not(:disabled) { background:#222a58; border-color:#4a70c0; color:#d0d8f0; }
+        /* Freitext-Antwort (Fragen ohne Auswahl): Feld über die volle Breite */
+        .quiz-opts.free { grid-template-columns: 1fr; }
+        .quiz-free-input { background:#1a2040; border:1px solid #2a3060; color:#d0d8f0; border-radius:10px;
+            padding:12px 14px; font-size:1rem; width:100%; box-sizing:border-box; font-family:inherit; }
+        .quiz-free-input::placeholder { color:#5a6280; }
+        .quiz-free-input:focus { outline:none; border-color:#4a70c0; }
+        #finaltest-opts .quiz-free-input:focus { border-color:#8a5be2; }
         /* Gewählte Antwort — bleibt sichtbar, bleibt aber anklickbar (Wechseln erlaubt) */
         .quiz-opt.selected { background:rgba(100,120,180,.5); border-color:#7aa0e0; color:#eaf0ff; }
         .quiz-opt.selected:hover { background:rgba(110,132,196,.6); border-color:#8fb4f0; }
@@ -2128,7 +2135,7 @@
             x.fillText('P('+px+'|'+py+')', X(px)+(px<0?-8:8), Y(py)-8);
             return c.toDataURL('image/png');
         }
-        // Zwei parallele Geraden g,h + Transversale; gegebener Winkel + gesuchter Wechselwinkel (?)
+        // Zwei parallele Geraden g,h + Transversale; gegebener Winkel + gesuchter Wechselwinkel α
         function _gfxAngles(given){
             const { c, x } = _quizPanel(320, 200);
             const gY = 58, hY = 150, x0 = 24, x1 = 296;
@@ -2137,8 +2144,6 @@
             x.beginPath(); x.moveTo(x0,hY); x.lineTo(x1,hY); x.stroke();
             x.fillStyle = '#8fa0c0'; x.font = 'bold 13px sans-serif'; x.textAlign = 'left';
             x.fillText('g', x1-16, gY-8); x.fillText('h', x1-16, hY+18);
-            x.strokeStyle = '#00d4ff'; x.lineWidth = 2;
-            [gY,hY].forEach(yy=>{ const mx=64; x.beginPath(); x.moveTo(mx-6,yy-5); x.lineTo(mx,yy); x.lineTo(mx-6,yy+5); x.stroke(); });
             const A = { x:150, y:gY };
             const th = given*Math.PI/180;
             const dir = { x:Math.cos(th), y:Math.sin(th) };
@@ -2153,17 +2158,18 @@
             // Wechselwinkel an B (zwischen −x-Richtung und Transversale nach oben)
             x.strokeStyle = '#00d4ff'; x.lineWidth = 2.5;
             x.beginPath(); x.arc(B.x, B.y, 26, Math.PI, Math.PI+th); x.stroke();
-            x.fillStyle = '#00d4ff'; x.font = 'bold 17px sans-serif';
-            x.fillText('?', B.x-38*Math.cos(th/2), B.y-38*Math.sin(th/2)+4);
+            x.fillStyle = '#00d4ff'; x.font = 'italic bold 20px Georgia, serif';
+            x.fillText('α', B.x-38*Math.cos(th/2), B.y-38*Math.sin(th/2)+5);
             return c.toDataURL('image/png');
         }
 
         const receptionQuestions = [
-            { q: 'Bestimme den Median von: 8, 3, 5, 9, 4', opts: ['4','5','3','6'], correct: 1 },
-            { q: 'Berechne: 30 % von 90', opts: ['18','24','27','30'], correct: 2 },
-            { q: 'Löse die Gleichung 3x − 4 = 11. Gib an, wie groß x ist.', opts: ['3','5','7','15'], correct: 1 },
+            // free:true → Freitextfeld statt Auswahl. opts/correct bleiben nur fürs Protokoll erhalten.
+            { q: 'Bestimme den Median von: 8, 3, 5, 9, 4', opts: ['4','5','3','6'], correct: 1, free: true },
+            { q: 'Berechne: 30 % von 90', opts: ['18','24','27','30'], correct: 2, free: true },
+            { q: 'Löse die Gleichung 3x − 4 = 11. Gib an, wie groß x ist.', opts: ['3','5','7','15'], correct: 1, free: true },
             { q: 'Spiegle den Punkt P an der eingezeichneten Achse. Gib an, wo der Bildpunkt P′ liegt.', opts: ['(3|2)','(−3|−2)','(3|−2)','(−3|2)'], correct: 0, gfx: () => _gfxReflection(-3, 2, 'y') },
-            { q: 'Die Geraden g und h sind parallel. Gib an, wie groß der markierte Winkel ist.', opts: ['70°','110°','20°','35°'], correct: 0, gfx: () => _gfxAngles(70) },
+            { q: 'Die Geraden g und h sind parallel. Gib an, wie groß der Winkel α ist.', opts: ['70°','110°','20°','35°'], correct: 0, free: true, gfx: () => _gfxAngles(70) },
             { q: 'Der Mittelpunkt des Umkreises eines Dreiecks ist der Schnittpunkt der …', opts: ['Seiten','Mittelsenkrechten','Winkelhalbierenden','Höhen'], correct: 1 },
         ];
 
@@ -2180,6 +2186,44 @@
         let SESSION_ID = Math.random().toString(16).slice(2, 6) + '-' + Date.now().toString(36).slice(-4);
         let quizGivenAnswers = [];          // gewählte Antworten der Anmeldung (A/B/C/D)
         const loggedCheckpoints = new Set(); // verhindert Doppel-Logs
+
+        // ── Fehlversuche je Rätselstation ──
+        // Ab dem 2. Fehlversuch wird zusätzlich auf das Bücherregal in der Lobby verwiesen.
+        // Gilt nur für die Stationen mit Gemäldestück, nicht für Anmeldung/Abschlusstest.
+        const wrongTries = {};
+        const BOOK_HINT = '📚 Tipp: Im Bücherregal in der Lobby kannst du den Stoff dazu nachlesen.';
+        function noteWrongTry(station){
+            wrongTries[station] = (wrongTries[station] || 0) + 1;
+            return wrongTries[station] >= 2;   // true → Hinweis anzeigen
+        }
+
+        // Ab dem 11. Fehlversuch fliegt man kurz aus der Aufgabe und wird zur Bibliothek geschickt.
+        // Danach wieder alle 10 Fehlversuche (11., 21., …) — der Zähler läuft weiter, damit der
+        // Bücherregal-Hinweis oben erhalten bleibt.
+        const EJECT_AT = 10;
+        const EJECT_TEXT = 'Die Station schaltet sich kurz ab und wirft dich hinaus.\n\n'
+            + 'Du hast es jetzt sehr oft mit verschiedenen Antworten probiert. Weiterraten bringt dich hier nicht ans Ziel.\n\n'
+            + 'Geh in die Lobby zum Bücherregal und lies den Stoff zu dieser Aufgabe in Ruhe nach. '
+            + 'Überlege dir dann einen Rechenweg — und komm erst zurück, wenn du weißt, wie du auf die Lösung kommst.';
+        function maybeEject(station){
+            const n = wrongTries[station] || 0;
+            if(!(n > EJECT_AT && (n - EJECT_AT - 1) % 10 === 0)) return false;
+            // kurz warten, damit die Fehlermeldung der Station noch gelesen werden kann
+            setTimeout(function(){
+                if(station==='tresor') closeTresor();
+                else if(station==='spiegel') closeSpiegel();
+                else if(station==='karte') closeMap();
+                else if(station==='lichtlabor') closeLichtlabor();
+                else if(station==='sophia') closeDocument();
+                setTimeout(function(){ openDocument({ title:'📚 Ab ins Bücherregal', content: EJECT_TEXT }); }, 150);
+            }, 1200);
+            return true;
+        }
+
+        // const landet nicht auf window — für den Zugriff aus dem Lichtlabor-iframe explizit setzen
+        window.noteWrongTry = noteWrongTry;
+        window.maybeEject = maybeEject;
+        window.BOOK_HINT = BOOK_HINT;
         // Checkpoints, die für den "Abschluss" nötig sind — hier später einfach anpassen:
         const REQUIRED_CHECKPOINTS = ['Sophia-Preis', 'Schatzkarte', 'Bilderwand', 'Memory', 'Tresor', 'Lichtlabor', 'Gleichungswaage', 'Symmetrie', 'Abschlusstest'];
 
@@ -2347,6 +2391,19 @@
         }
         function closeQuiz(){ isQuizOpen=false; document.getElementById('quiz-overlay').classList.remove('open'); }
 
+        // Antwort-Vergleich nur fürs Protokoll (Freitext: Groß/Klein, Leerzeichen, ° und Komma egal)
+        function _normAnswer(s){ return String(s).toLowerCase().replace(/\s+/g,'').replace(/°/g,'').replace(',','.'); }
+        function quizAnswerCorrect(q, given){
+            if(given===undefined||given===null||given==='') return false;
+            return q.free ? _normAnswer(given)===_normAnswer(q.opts[q.correct])
+                          : given===String.fromCharCode(65+q.correct);
+        }
+        function finalAnswerCorrect(q, given){
+            if(given===undefined||given===null||given==='') return false;
+            return q.free ? _normAnswer(given)===_normAnswer(q.opts[q.correct])
+                          : given===q.correct;
+        }
+
         function renderQuizQuestion(){
             const q=receptionQuestions[quizCurrentQ];
             document.getElementById('quiz-progress').textContent=`Frage ${quizCurrentQ+1} von ${receptionQuestions.length}`;
@@ -2357,7 +2414,23 @@
             document.getElementById('quiz-next').style.display='none';
             quizAnswered=false;
             const optsEl=document.getElementById('quiz-opts');
-            optsEl.innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="quizSelect(${i})">${String.fromCharCode(65+i)}) ${o}</button>`).join('');
+            if(q.free){
+                optsEl.classList.add('free');
+                optsEl.innerHTML=`<input type="text" class="quiz-free-input" id="quiz-free" placeholder="Deine Antwort" autocomplete="off"
+                    oninput="quizFreeInput(this.value)" onkeydown="if(event.key==='Enter'&&this.value.trim()) quizNext();">`;
+                setTimeout(()=>{ const el=document.getElementById('quiz-free'); if(el) el.focus(); },50);
+            } else {
+                optsEl.classList.remove('free');
+                optsEl.innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="quizSelect(${i})">${String.fromCharCode(65+i)}) ${o}</button>`).join('');
+            }
+        }
+
+        // Freitext: „Weiter" erscheint, sobald etwas eingetragen ist (richtig oder falsch egal)
+        function quizFreeInput(v){
+            const ok=v.trim().length>0;
+            quizAnswered=ok;
+            quizGivenAnswers[quizCurrentQ]=v.trim();
+            document.getElementById('quiz-next').style.display=ok?'block':'none';
         }
 
         function quizSelect(idx){
@@ -2377,7 +2450,7 @@
                 closeQuiz();
                 hasTicket=true;
                 // Anmeldung loggen: gewählte Antworten + wie viele davon richtig waren
-                const richtig=receptionQuestions.reduce((n,q,i)=>n+(quizGivenAnswers[i]===String.fromCharCode(65+q.correct)?1:0),0);
+                const richtig=receptionQuestions.reduce((n,q,i)=>n+(quizAnswerCorrect(q,quizGivenAnswers[i])?1:0),0);
                 logEvent('Anmeldung', 'Antworten: '+quizGivenAnswers.join(', ')+' ('+richtig+'/'+receptionQuestions.length+' richtig)');
                 setTimeout(saveGame, 200); // Ticket + Inventar direkt sichern
                 playerInventory.push({name:'Eintrittsticket',icon:'🎟️',isReadable:true,content:'Ein offizielles Eintrittsticket des Mathe-Museums.\n\nAusgestellt an der Anmeldung.\nGilt für alle Ausstellungsräume und den Shop.'});
@@ -2443,7 +2516,8 @@
                 return;
             }
             // 3) Falsch — ohne Erklärung, wie zu konstruieren ist
-            mapSetStatus('❌','Das ist noch nicht der richtige Punkt.','err');
+            mapSetStatus('❌','Das ist noch nicht der richtige Punkt.'+(noteWrongTry('karte')?' '+BOOK_HINT:''),'err');
+            maybeEject('karte');
         }
 
         const paperMeshes = []; // Keine Zettel mehr auf dem Schreibtisch
@@ -2570,7 +2644,10 @@
                 setTimeout(() => openDocument({ title: "💬 Kassiererin Sophia", content: "Das stimmt genau! Vielen Dank, du hast mir sehr geholfen! 🎉\n\nAls kleines Dankeschön gebe ich dir dieses Gemäldestück — ich habe es vorhin in einer Ecke des Shops gefunden.\n\nVielleicht ist es für dich nützlich!", _sophia: false }), 100);
             } else {
                 closeDocument();
-                setTimeout(() => openDocument({ title: "💬 Kassiererin Sophia", content: "Hmm, das scheint nicht ganz richtig zu sein. Schau dir vielleicht nochmal die ausgeschilderten Preise an!" }), 100);
+                const sophiaMiss = "Hmm, das scheint nicht ganz richtig zu sein. Schau dir vielleicht nochmal die ausgeschilderten Preise an!"
+                    + (noteWrongTry('sophia') ? "\n\n" + BOOK_HINT : "");
+                setTimeout(() => openDocument({ title: "💬 Kassiererin Sophia", content: sophiaMiss }), 100);
+                maybeEject('sophia');
             }
         }
 
@@ -2788,7 +2865,8 @@
                     content:'Der Code stimmt — die schwere Tür schwingt auf.\n\nIm Inneren liegt ein Stück des verschwundenen Gemäldes „Harmonie der Mathematik". Du steckst es ein.'}); }, 900);
             } else {
                 fb.className='tresor-feedback err';
-                fb.textContent='❌ Falscher Code. Prüfe deine Zahlen und den Rechenweg.';
+                fb.textContent='❌ Falscher Code. Prüfe deine Zahlen und den Rechenweg.'+(noteWrongTry('tresor')?' '+BOOK_HINT:'');
+                maybeEject('tresor');
             }
         }
 
@@ -3269,11 +3347,12 @@
 
         // ── ABSCHLUSSTEST (Echtheitsprüfung durch Dr. Faber) ──
         const finalTestQuestions = [
-            { q: 'Bestimme den Median von: 12, 5, 8, 3, 6', opts:['5','6','8','7'], correct: 1 },
-            { q: 'Berechne: 25 % von 80', opts:['16','20','25','32'], correct: 1 },
-            { q: 'Löse die Gleichung 4x + 3 = 23. Gib an, wie groß x ist.', opts:['4','5','6','20'], correct: 1 },
+            // free:true → Freitextfeld statt Auswahl. opts/correct bleiben nur fürs Protokoll erhalten.
+            { q: 'Bestimme den Median von: 12, 5, 8, 3, 6', opts:['5','6','8','7'], correct: 1, free: true },
+            { q: 'Berechne: 25 % von 80', opts:['16','20','25','32'], correct: 1, free: true },
+            { q: 'Löse die Gleichung 4x + 3 = 23. Gib an, wie groß x ist.', opts:['4','5','6','20'], correct: 1, free: true },
             { q: 'Spiegle den Punkt P an der eingezeichneten Achse. Gib an, wo der Bildpunkt P′ liegt.', opts:['(2|−3)','(−2|3)','(−2|−3)','(2|3)'], correct: 0, gfx: () => _gfxReflection(2, 3, 'x') },
-            { q: 'Die Geraden g und h sind parallel. Gib an, wie groß der markierte Winkel ist.', opts:['55°','125°','35°','90°'], correct: 0, gfx: () => _gfxAngles(55) },
+            { q: 'Die Geraden g und h sind parallel. Gib an, wie groß der Winkel α ist.', opts:['55°','125°','35°','90°'], correct: 0, free: true, gfx: () => _gfxAngles(55) },
             { q: 'Der Umkreismittelpunkt eines Dreiecks hat zu den drei Ecken …', opts:['den gleichen Abstand','verschiedene Abstände','immer Abstand 1','keinen Abstand'], correct: 0 },
         ];
         let isFinalTestOpen=false, finalTestPassed=false, finalTestPending=false;
@@ -3295,7 +3374,25 @@
             const fb=document.getElementById('finaltest-feedback'); fb.textContent=''; fb.className='';
             document.getElementById('finaltest-next').style.display='none';
             finalAnswered=false;
-            document.getElementById('finaltest-opts').innerHTML=q.opts.map((o,i)=>'<button class="quiz-opt" onclick="finalSelect('+i+')">'+String.fromCharCode(65+i)+') '+o+'</button>').join('');
+            const fOpts=document.getElementById('finaltest-opts');
+            if(q.free){
+                fOpts.classList.add('free');
+                fOpts.innerHTML='<input type="text" class="quiz-free-input" id="finaltest-free" placeholder="Deine Antwort" autocomplete="off"'
+                    +' oninput="finalFreeInput(this.value)" onkeydown="if(event.key===\'Enter\'&&this.value.trim()) finalNext();">';
+                setTimeout(()=>{ const el=document.getElementById('finaltest-free'); if(el) el.focus(); },50);
+            } else {
+                fOpts.classList.remove('free');
+                fOpts.innerHTML=q.opts.map((o,i)=>'<button class="quiz-opt" onclick="finalSelect('+i+')">'+String.fromCharCode(65+i)+') '+o+'</button>').join('');
+            }
+        }
+        // Freitext: „Weiter" erscheint, sobald etwas eingetragen ist (richtig oder falsch egal)
+        function finalFreeInput(v){
+            const ok=v.trim().length>0;
+            finalAnswered=ok;
+            finalGivenAnswers[finalCurrentQ]=v.trim();
+            const nx=document.getElementById('finaltest-next');
+            nx.style.display=ok?'block':'none';
+            nx.textContent=(finalCurrentQ>=finalTestQuestions.length-1)?'Prüfung abschließen →':'Weiter →';
         }
         function finalSelect(idx){
             // Antwort darf bis zum Klick auf „Weiter" beliebig oft gewechselt werden
@@ -3312,7 +3409,7 @@
             finalCurrentQ++;
             if(finalCurrentQ>=finalTestQuestions.length){
                 // Zum Protokoll (nicht sichtbar) — der Erfolg hängt NICHT von der Anzahl richtiger Antworten ab
-                const richtig=finalTestQuestions.reduce((n,q,i)=>n+(finalGivenAnswers[i]===q.correct?1:0),0);
+                const richtig=finalTestQuestions.reduce((n,q,i)=>n+(finalAnswerCorrect(q,finalGivenAnswers[i])?1:0),0);
                 logEvent('Abschlusstest', richtig+'/'+finalTestQuestions.length+' richtig (Gemälde immer aufgehängt)');
                 closeFinalTest();
                 finalTestSuccess();
@@ -4174,7 +4271,7 @@
 
   Vorausgesetztes Vorwissen: Scheitel-/Neben-/Stufen-/Wechselwinkel an geschnittenen
   Parallelen (Jgst. 7, LB Figurengeometrie). KEIN sin/cos/tan — der Winkel wird über die
-  Winkelsätze erschlossen, nicht trigonometrisch berechnet.
+  Winkelbeziehungen erschlossen, nicht trigonometrisch berechnet.
 
   Spielprinzip: Ein Laser läuft als Transversale schräg durch zwei PARALLELE Spiegelschienen.
   An Schiene B sitzt eine drehbare Blende mit Schlitz. Die Plakette an Schiene A nennt den Winkel,
@@ -4213,8 +4310,7 @@
   .dot{width:12px;height:12px;border-radius:50%;background:#26314e;border:1px solid #3a4a6e}
   .dot.done{background:var(--ok);border-color:var(--ok);box-shadow:0 0 8px rgba(46,213,115,.6)}
   .dot.active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px rgba(0,212,255,.6)}
-  .panels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-  @media(max-width:640px){.panels{grid-template-columns:1fr}}
+  .panels{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
   .card h3{margin:0 0 8px;font-size:.82rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
   .plaque{background:var(--panel2);border:1px solid #3a4a6e;border-radius:8px;padding:12px;
@@ -4239,8 +4335,6 @@
   .feedback.ok{background:rgba(46,213,115,.12);color:#b6f5cd;border:1px solid var(--ok)}
   .feedback.err{background:rgba(255,71,87,.1);color:#ffc9cf;border:1px solid #ff4757}
   .feedback.warn{background:rgba(255,159,67,.1);color:#ffe0b8;border:1px solid var(--warn)}
-  .reason{margin-top:10px;font-size:.85rem;line-height:1.6;color:#c4cfe8}
-  .reason b{color:var(--accent)}
   .overlay{position:fixed;inset:0;background:rgba(6,10,20,.94);display:none;align-items:center;
     justify-content:center;z-index:50;padding:20px}
   .overlay.open{display:flex}
@@ -4274,20 +4368,6 @@
   </div>
 
   <div class="panels">
-    <div class="card">
-      <h3>📛 Gehäuse-Plakette (Schiene A)</h3>
-      <div class="plaque" id="plaque"></div>
-      <div class="reason">
-        Der Lichtstrahl verläuft <b>geradlinig</b> und schneidet beide Schienen; die Schienen sind
-        exakt <b>parallel</b>. Der gold markierte Winkel steht je nach Runde als <b>Stufen-</b>,
-        <b>Wechsel-</b> oder <b>Nebenwinkel</b> zum gesuchten Winkel <b style="color:#00d4ff">φ</b>
-        (blau markiert):<br>
-        • <b>Stufen-</b> und <b>Wechselwinkel</b> sind <b>gleich groß</b> → φ = angegebener Winkel.<br>
-        • <b>Nebenwinkel</b> ergänzen sich zu <b>180°</b> → φ = 180° − angegebener Winkel.<br>
-        Achte auf die Plakette und stelle die Blende auf <b>φ</b> ein, dann läuft das Licht zum Sensor.
-      </div>
-    </div>
-
     <div class="card">
       <h3>🎛️ Blende an Schiene B einstellen</h3>
       <div class="plaque" style="margin-bottom:10px">
@@ -4326,16 +4406,13 @@
 //  Die Plakette zeigt einen davon abgeleiteten Winkel; die Schüler rechnen zurück.
 // ─────────────────────────────────────────────────────────────────────────
 const ROUNDS = [
-  { theta:48, given:48, digit:4, rel:'stufen',
-    plaque:'Der gold markierte Winkel (<span class="big">48°</span>) an Schiene A ist der <b>Stufenwinkel</b> des gesuchten Winkels φ. An parallelen Schienen sind Stufenwinkel <b>gleich groß</b>.',
-    story:'<b>Dr. Faber:</b> „Der Dieb hat den Lichtstrahl umgelenkt, der einst das Gemälde beleuchtete. Justiert die Blende an der zweiten Schiene. Die Schienen verlaufen exakt <b>parallel</b> — nutzt die Winkelsätze!"' },
-  { theta:62, given:62, digit:6, rel:'wechsel',
-    plaque:'Der gold markierte Winkel (<span class="big">62°</span>) ist der <b>Wechselwinkel</b> des gesuchten Winkels φ. Wechselwinkel an Parallelen sind <b>gleich groß</b>.',
-    story:'<b>Dr. Faber:</b> „Weiter zur zweiten Schiene. Diesmal liegt der angegebene Winkel als <b>Wechselwinkel</b> — was folgt daraus für φ?"' },
-  { theta:71, given:109, digit:7, rel:'neben',
-    plaque:'Der gold markierte Winkel (<span class="big">109°</span>) ist der <b>Nebenwinkel</b> des gesuchten Winkels φ. Nebenwinkel ergänzen sich zu <b>180°</b>.',
-    story:'<b>Dr. Faber:</b> „Letzte Justage! Diesmal ist der angegebene Winkel der <b>Nebenwinkel</b> von φ — den müsst ihr erst ausrechnen. Stellt die Blende richtig ein, dann ist das Gemäldestück euer."' }
+  { theta:48, given:48,  digit:4, rel:'stufen'  },
+  { theta:62, given:62,  digit:6, rel:'wechsel' },
+  { theta:71, given:109, digit:7, rel:'neben'   }
 ];
+// In allen Runden derselbe Text — er nennt die Winkelart bewusst nicht.
+const STORY = '<b>Dr. Faber:</b> „Der Saboteur hat den Lichtstrahl umgelenkt, der einst das Gemälde beleuchtete. '
+            + 'Justiert die Blende an der zweiten Schiene. Die Schienen verlaufen exakt <b>parallel</b> — nutzt die Winkelbeziehungen!"';
 
 // ── Szenen-Geometrie (feste Bildkoordinaten, Canvas 880×480) ──
 const CW=880, CH=480;
@@ -4375,8 +4452,6 @@ function draw(beamState){
   // Schienen (parallel)
   drawRail(g.pA, g.rail, 'A');
   drawRail(g.pB, g.rail, 'B');
-  drawParallelMarks(g);
-
   // Emitter
   drawEmitter(g.emit, g.beam);
 
@@ -4410,22 +4485,6 @@ function drawRail(p, dir, label){
   ctx.fillText('Schiene '+label, lp.x, lp.y);
 }
 
-function drawParallelMarks(g){
-  // kleine Doppelpfeile (∥) zur Kennzeichnung der Parallelität
-  [g.pA,g.pB].forEach(p=>{
-    const m=add(p,g.rail,-RAIL_HALF*0.45);
-    const perp=rot(g.rail,Math.PI/2);
-    for(let k=0;k<2;k++){
-      const base=add(m,g.rail,k*10);
-      ctx.strokeStyle='#00d4ff'; ctx.lineWidth=2;
-      ctx.beginPath();
-      ctx.moveTo(base.x-perp.x*6-g.rail.x*5, base.y-perp.y*6-g.rail.y*5);
-      ctx.lineTo(base.x, base.y);
-      ctx.lineTo(base.x-perp.x*6+g.rail.x*5, base.y-perp.y*6+g.rail.y*5);
-      ctx.stroke();
-    }
-  });
-}
 
 function drawEmitter(p, beam){
   ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(Math.atan2(beam.y,beam.x));
@@ -4539,8 +4598,7 @@ function drawBeam(g, state){
 // ── Ablauf ──
 function loadRound(){
   const r=ROUNDS[roundIdx];
-  document.getElementById('story').innerHTML=r.story;
-  document.getElementById('plaque').innerHTML=r.plaque;
+  document.getElementById('story').innerHTML=STORY;
   document.getElementById('answer').value='';
   document.getElementById('feedback').className='feedback';
   document.getElementById('feedback').textContent='';
@@ -4593,7 +4651,16 @@ function onHit(){
 function onMiss(v,correct){
   const fb=document.getElementById('feedback');
   fb.className='feedback err';
-  fb.textContent='❌ Der Strahl wird an der Blende blockiert — der Schlitz zeigt nicht in Strahlrichtung.';
+  let msg='❌ Der Strahl wird an der Blende blockiert — der Schlitz zeigt nicht in Strahlrichtung.';
+  // Der Fehlversuch-Zähler liegt im Hauptspiel, damit er ein Schließen der Station übersteht.
+  // Im eigenständigen Betrieb (ohne Museum) entfällt der Hinweis.
+  try{
+    if(window.parent!==window){
+      if(window.parent.noteWrongTry('lichtlabor')) msg+=' '+window.parent.BOOK_HINT;
+      window.parent.maybeEject('lichtlabor');   // schließt bei zu vielen Fehlversuchen die Station
+    }
+  }catch(e){}
+  fb.textContent=msg;
 }
 
 function finish(){
@@ -4622,6 +4689,11 @@ loadRound();
 </html>
 `;
         function openLichtlabor(){
+            // Bereits gelöst → Aufgabe nicht erneut stellen, nur Rückmeldung geben
+            if(lichtlaborSolved){
+                openDocument({title:'🔦 Lichtlabor', content:'Die Blenden sind an allen drei Schienen korrekt justiert — der Laserstrahl läuft wieder sauber bis zum Sensor, der grün leuchtet.\n\nHier ist alles repariert. Das Gemäldestück hast du bereits an dich genommen.'});
+                return;
+            }
             isLichtlaborOpen=true;
             const _llf=document.getElementById('lichtlabor-frame'); _llf.removeAttribute('src'); _llf.srcdoc=LICHTLABOR_HTML; // eingebetteter Code
             document.getElementById('lichtlabor-overlay').classList.add('open');
@@ -4967,7 +5039,8 @@ loadRound();
                 }
             } else {
                 const missing=[...target].filter(k=>!spiegelStudentCells.has(k)).length;
-                fb.className='sg-feedback err'; fb.textContent='❌ Noch nicht symmetrisch'+(missing?` — es fehlen ${missing} Feld(er)`:'')+'.';
+                fb.className='sg-feedback err'; fb.textContent='❌ Noch nicht symmetrisch'+(missing?` — es fehlen ${missing} Feld(er)`:'')+'.'+(noteWrongTry('spiegel')?' '+BOOK_HINT:'');
+                maybeEject('spiegel');
             }
         }
 
@@ -5216,7 +5289,7 @@ loadRound();
                 const TOTAL_PIECES = 8;
                 let faberContent;
                 if (pieces === 0) {
-                    faberContent = 'Der ältere Herr dreht sich zu Ihnen um und seufzt tief.\n\n„Ah, Sie bemerken es also auch... dieser leere Rahmen dort.\n\nDas Prunkstück unserer Ausstellung — das Gemälde ›Harmonie der Mathematik‹ — ist verschwunden. Spurlos. Es war das wertvollste Stück des ganzen Museums.\n\nDer Künstler soll darin die verborgene Schönheit der Mathematik eingefangen haben — Kreise, Geraden, Proportionen, Gleichungen — alles in perfekter Harmonie.\n\nMan munkelt, ein Dieb habe es in einzelne Stücke zerlegt und überall im Museum versteckt — hinter den mathematischen Rätseln der Ausstellung.\n\nBitte, helfen Sie mir: Lösen Sie die Rätsel, finden Sie die Gemäldestücke und bringen Sie mir unser Prunkstück zurück!"';
+                    faberContent = 'Der ältere Herr dreht sich zu Ihnen um und seufzt tief.\n\n„Ah, Sie bemerken es also auch... dieser leere Rahmen dort.\n\nDas Prunkstück unserer Ausstellung — das Gemälde ›Harmonie der Mathematik‹ — ist verschwunden. Spurlos. Es war das wertvollste Stück des ganzen Museums.\n\nDer Künstler soll darin die verborgene Schönheit der Mathematik eingefangen haben — Kreise, Geraden, Proportionen, Gleichungen — alles in perfekter Harmonie.\n\nMan munkelt, ein Saboteur habe es in einzelne Stücke zerlegt und überall im Museum versteckt — hinter den mathematischen Rätseln der Ausstellung.\n\nBitte, helfen Sie mir: Lösen Sie die Rätsel, finden Sie die Gemäldestücke und bringen Sie mir unser Prunkstück zurück!"';
                 } else if (pieces < TOTAL_PIECES) {
                     faberContent = 'Dr. Faber blickt auf die Gemäldestücke in Ihrem Rucksack, seine Augen leuchten.\n\n„Ausgezeichnet! Sie haben bereits ' + pieces + ' von ' + TOTAL_PIECES + ' Teilen der ›Harmonie der Mathematik‹ gefunden!\n\nJedes Stück steckte hinter einem der mathematischen Rätsel. Suchen Sie weiter — ' + (TOTAL_PIECES - pieces) + ' Teil' + (TOTAL_PIECES - pieces === 1 ? '' : 'e') + ' fehlt noch irgendwo im Museum.\n\nWir kommen der Sache näher, ich spüre es!"';
                 } else if (finalTestPassed) {
@@ -5224,7 +5297,7 @@ loadRound();
                 } else {
                     // Alle Stücke da, Echtheit aber noch nicht geprüft → Abschlusstest verlangen
                     finalTestPending = true;
-                    faberContent = 'Dr. Faber blickt auf die sieben Gemäldestücke in Ihren Händen — dann runzelt er besorgt die Stirn.\n\n„Unglaublich, Sie haben alle Teile gefunden! Und doch... eine Sorge lässt mir keine Ruhe: Was, wenn dies eine geschickte Fälschung ist?\n\nBevor ich das Prunkstück in den Ehrenrahmen einsetze, muss ich ganz sichergehen. Erlauben Sie mir eine kleine Echtheitsprüfung — sechs Fragen, so wie einst bei Ihrer Anmeldung. Bestehen Sie sie, setze ich das Gemälde ein.\n\n(Schließen Sie dieses Fenster — dann beginnt die Prüfung.)"';
+                    faberContent = 'Dr. Faber blickt auf die sieben Gemäldestücke in Ihren Händen — dann runzelt er besorgt die Stirn.\n\n„Unglaublich, Sie haben alle Teile gefunden! Und doch... eine Sorge lässt mir keine Ruhe: Was, wenn dies eine geschickte Fälschung ist?\n\nBevor ich das Prunkstück in den Ehrenrahmen einsetze, muss ich ganz sichergehen. Erlauben Sie mir eine kleine Echtheitsprüfung — fünf Fragen, so wie einst bei Ihrer Anmeldung. Bestehen Sie sie, setze ich das Gemälde ein.\n\n(Schließen Sie dieses Fenster — dann beginnt die Prüfung.)"';
                 }
                 openDocument({title:'💬 Dr. Heinrich Faber — Museumsleiter', content: faberContent});
                 return;
@@ -5335,6 +5408,7 @@ loadRound();
             // Timer & Checkpoints neu starten
             _timerStart = Date.now(); _timerStopped = false; _timerFinalMs = 0; if (_timerEl) _timerEl.style.color = '';
             loggedCheckpoints.clear();
+            Object.keys(wrongTries).forEach(k => delete wrongTries[k]);
             playerGroup.position.set(0, 0, ROOM_SIZE / 2 + LOBBY_SIZE - 2); if(isDoorOpen) toggleDoor(); document.getElementById('win-overlay').classList.remove('open');
             saveGame();
         }
