@@ -350,6 +350,10 @@
         .map-tool.active { border-color: #00ffcc; background: rgba(0,255,204,.12); color: #bfffef; }
         .map-tool.ghost  { flex: 0 0 auto; min-width: 0; background: #10131f; }
         .map-secondary { display: flex; gap: 8px; padding: 4px 12px 10px; flex-shrink: 0; }
+        .map-colors { display: flex; align-items: center; gap: 7px; padding: 10px 12px 8px; flex-wrap: wrap; flex-shrink: 0; }
+        .map-colors .mrl { font-size: .78rem; color: #8b94ad; font-weight: 600; }
+        .map-swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); cursor: pointer; padding: 0; }
+        .map-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.35); transform: scale(1.12); }
         .map-viewctrl { position: absolute; top: 10px; right: 14px; display: flex; flex-direction: column; gap: 5px; }
         .map-viewctrl button {
             width: 34px; height: 34px; border-radius: 8px; border: 1px solid #2c3450;
@@ -498,7 +502,7 @@
             #waage-hud .wh-feedback{bottom:unset;top:84px;font-size:.8rem}
         }
         #waage-hud .wh-legend{margin-top:6px;font-size:.72rem;color:#8b97b5}
-        #waage-hud .wh-feedback{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);font-size:.9rem;font-weight:700;padding:6px 14px;border-radius:8px;pointer-events:none;text-align:center}
+        #waage-hud .wh-feedback{position:absolute;left:50%;top:82px;transform:translateX(-50%);z-index:5;font-size:.9rem;font-weight:700;padding:6px 14px;border-radius:8px;pointer-events:none;text-align:center;max-width:90vw}
         #waage-hud .wh-feedback.ok{background:rgba(46,213,115,.16);color:#b6f5cd}
         #waage-hud .wh-feedback.warn{background:rgba(255,159,67,.16);color:#ffe0b8}
         /* ── SPIEGELWAND ── */
@@ -697,6 +701,16 @@
           <button class="map-tool" id="map-tool-compass" onclick="mapSetTool('compass')">🧭 Zirkel <span style="font-size:.72rem;color:#8b94ad;font-weight:500">(Kreis)</span></button>
           <button class="map-tool" id="map-tool-line"    onclick="mapSetTool('line')">📏 Lineal <span style="font-size:.72rem;color:#8b94ad;font-weight:500">(Gerade)</span></button>
           <button class="map-tool" id="map-tool-mark"    onclick="mapSetTool('mark')" style="border-color:#ff6b35;color:#ff6b35">📍 Markieren <span style="font-size:.72rem;color:#8b94ad;font-weight:500">(Schatz?)</span></button>
+          <button class="map-tool" id="map-tool-erase"   onclick="mapSetTool('erase')" style="border-color:#ff5a6a;color:#ff9aa6">🧽 Radierer <span style="font-size:.72rem;color:#8b94ad;font-weight:500">(löschen)</span></button>
+        </div>
+        <div class="map-colors" id="map-colors">
+          <span class="mrl">Farbe:</span>
+          <button class="map-swatch active" style="background:#34c3ff" onclick="mapSetColor('#34c3ff',this)" title="Blau"></button>
+          <button class="map-swatch" style="background:#ffb86c" onclick="mapSetColor('#ffb86c',this)" title="Orange"></button>
+          <button class="map-swatch" style="background:#4ade80" onclick="mapSetColor('#4ade80',this)" title="Grün"></button>
+          <button class="map-swatch" style="background:#f87171" onclick="mapSetColor('#f87171',this)" title="Rot"></button>
+          <button class="map-swatch" style="background:#c084fc" onclick="mapSetColor('#c084fc',this)" title="Violett"></button>
+          <button class="map-swatch" style="background:#fde047" onclick="mapSetColor('#fde047',this)" title="Gelb"></button>
         </div>
         <div class="map-radiusmode" id="map-radiusmode" style="display:none">
           <span class="mrl">Zirkel-Radius:</span>
@@ -1733,7 +1747,7 @@
             if(mPtrs.size===0){if(mapTool==='compass'||mapTool==='line'||mapTool==='mark'){const sh=mapTool==='compass'&&mapRadiusMode==='same'&&mapLastRadius>1;if(mapPending.length===1||sh||mapTool==='mark'){mapMouse=mapToWorld(e.clientX,e.clientY);mapRender();}}return;}
             if(mPtrs.size===1){if(mFD&&Math.hypot(e.clientX-mFD.sx,e.clientY-mFD.sy)>6)mFD.moved=true;if(mapTool==='pan'&&mPanLast){mapPanBy(e.clientX-mPanLast.x,e.clientY-mPanLast.y);mPanLast={x:e.clientX,y:e.clientY};}else if((mapTool==='compass'||mapTool==='line')&&mapPending.length===1){mapMouse=mapToWorld(e.clientX,e.clientY);mapRender();}}
         });
-        function mEndPtr(e){mPtrs.delete(e.pointerId);if(mPtrs.size<2){mPinchActive=false;mPinchLast=null;}if(mapTool==='pan'){mPanLast=null;if(mPtrs.size===0)mSuppressTap=false;return;}if(mPtrs.size===0){if(mFD&&!mFD.moved&&!mSuppressTap){if(mapTool==='compass'||mapTool==='line')mapPlacePoint(mFD.world);else if(mapTool==='mark')mapMarkPoint(mFD.world);}mFD=null;mSuppressTap=false;}}
+        function mEndPtr(e){mPtrs.delete(e.pointerId);if(mPtrs.size<2){mPinchActive=false;mPinchLast=null;}if(mapTool==='pan'){mPanLast=null;if(mPtrs.size===0)mSuppressTap=false;return;}if(mPtrs.size===0){if(mFD&&!mFD.moved&&!mSuppressTap){if(mapTool==='compass'||mapTool==='line')mapPlacePoint(mFD.world);else if(mapTool==='mark')mapMarkPoint(mFD.world);else if(mapTool==='erase')mapEraseAt(mFD.world);}mFD=null;mSuppressTap=false;}}
         mapBoard.addEventListener('pointerup',mEndPtr);mapBoard.addEventListener('pointercancel',mEndPtr);
         mapBoard.addEventListener('wheel',e=>{e.preventDefault();mapZoomAt(mapToWorld(e.clientX,e.clientY),e.deltaY<0?1.12:1/1.12);},{passive:false});
 
@@ -1750,14 +1764,32 @@
         // Punkt setzen
         function mapPlacePoint(world){
             const sp=mapSnap(world),p=sp||{x:world.x,y:world.y};
-            if(mapTool==='compass'&&mapRadiusMode==='same'&&mapLastRadius>1){mapObjects.push({type:'circle',x:p.x,y:p.y,r:mapLastRadius});mapPending=[];mapRecompute();mapPromptStep();mapRender();return;}
+            if(mapTool==='compass'&&mapRadiusMode==='same'&&mapLastRadius>1){mapObjects.push({type:'circle',x:p.x,y:p.y,r:mapLastRadius,color:mapColor});mapPending=[];mapRecompute();mapPromptStep();mapRender();return;}
             mapPending.push(p);
-            if(mapTool==='compass'&&mapPending.length===2){const r=mDist(mapPending[0],mapPending[1]);if(r>1)mapObjects.push({type:'circle',x:mapPending[0].x,y:mapPending[0].y,r});mapPending=[];mapRecompute();}
-            else if(mapTool==='line'&&mapPending.length===2){if(mDist(mapPending[0],mapPending[1])>1)mapObjects.push({type:'line',a:mapPending[0],b:mapPending[1]});mapPending=[];mapRecompute();}
+            if(mapTool==='compass'&&mapPending.length===2){const r=mDist(mapPending[0],mapPending[1]);if(r>1)mapObjects.push({type:'circle',x:mapPending[0].x,y:mapPending[0].y,r,color:mapColor});mapPending=[];mapRecompute();}
+            else if(mapTool==='line'&&mapPending.length===2){if(mDist(mapPending[0],mapPending[1])>1)mapObjects.push({type:'line',a:mapPending[0],b:mapPending[1],color:mapColor});mapPending=[];mapRecompute();}
             mapPromptStep();mapRender();
         }
         function mapUndo(){mapObjects.pop();mapPending=[];mapRecompute();mapPromptStep();mapRender();}
         function mapClearAll(){mapObjects=[];mapPending=[];mapMarkedPoint=null;mapRecompute();mapPromptStep();mapRender();}
+        // Farbe für neue Konstruktionen
+        let mapColor='#34c3ff';
+        function mapSetColor(c,el){
+            mapColor=c;
+            document.querySelectorAll('#map-colors .map-swatch').forEach(b=>b.classList.remove('active'));
+            if(el)el.classList.add('active');
+            mapRender();
+        }
+        // Radierer: nächste Gerade/Kreis unter dem Klick löschen
+        function mapEraseAt(world){
+            const tol=mapPxLen(12);
+            let bestIdx=-1, bestD=Infinity;
+            mapObjects.forEach((o,i)=>{
+                const d = o.type==='circle' ? Math.abs(mDist(world,{x:o.x,y:o.y})-o.r) : mProjLine(world,o.a,o.b).d;
+                if(d<bestD){ bestD=d; bestIdx=i; }
+            });
+            if(bestIdx>=0 && bestD<=tol){ mapObjects.splice(bestIdx,1); mapPending=[]; mapRecompute(); mapPromptStep(); mapRender(); }
+        }
         function mapMarkPoint(p){
             const sp=mapSnap(p)||p;
             mapMarkedPoint={x:sp.x,y:sp.y};
@@ -1772,8 +1804,10 @@
             document.getElementById('map-tool-compass').classList.toggle('active',t==='compass');
             document.getElementById('map-tool-line').classList.toggle('active',t==='line');
             document.getElementById('map-tool-mark').classList.toggle('active',t==='mark');
+            document.getElementById('map-tool-erase').classList.toggle('active',t==='erase');
             document.getElementById('map-btn-pan').classList.toggle('active',t==='pan');
             document.getElementById('map-radiusmode').style.display=(t==='compass')?'flex':'none';
+            document.getElementById('map-colors').style.display=(t==='compass'||t==='line')?'flex':'none';
             mapPromptStep();mapRender();
         }
         function mapSetRadiusMode(m){
@@ -1792,6 +1826,8 @@
                 mapSetStatus('📏',mapPending.length===0?'Lineal: Setze den ersten Punkt.':'Lineal: Setze den zweiten Punkt.','');
             }else if(mapTool==='mark'){
                 mapSetStatus('📍',mapMarkedPoint?'Markierung gesetzt. Klicke „✓ Prüfen" oder wähle einen neuen Punkt.':'Markieren: Klicke auf den Punkt, den du als Schatz vermutест.','');
+            }else if(mapTool==='erase'){
+                mapSetStatus('🧽','Radierer: Klicke auf eine Gerade oder einen Kreis, um sie einzeln zu löschen.','');
             }else mapSetStatus('🗺️','Wähle ein Werkzeug, um auf der Karte zu konstruieren.','');
         }
         function mapSetStatus(icon,text,cls){
@@ -1818,13 +1854,13 @@
             }
             // Konstruktionsobjekte
             mapObjects.forEach(o=>{
-                if(o.type==='circle') E.push(`<circle cx="${o.x}" cy="${o.y}" r="${o.r}" fill="none" stroke="#34c3ff" stroke-width="${sw(1.8)}" opacity=".88"/>`);
-                else{const dx=o.b.x-o.a.x,dy=o.b.y-o.a.y,L=Math.hypot(dx,dy)||1,F=30000;E.push(`<line x1="${o.a.x-dx/L*F}" y1="${o.a.y-dy/L*F}" x2="${o.b.x+dx/L*F}" y2="${o.b.y+dy/L*F}" stroke="#ffb86c" stroke-width="${sw(1.8)}" opacity=".88"/>`);}
+                if(o.type==='circle') E.push(`<circle cx="${o.x}" cy="${o.y}" r="${o.r}" fill="none" stroke="${o.color||'#34c3ff'}" stroke-width="${sw(1.8)}" opacity=".88"/>`);
+                else{const dx=o.b.x-o.a.x,dy=o.b.y-o.a.y,L=Math.hypot(dx,dy)||1,F=30000;E.push(`<line x1="${o.a.x-dx/L*F}" y1="${o.a.y-dy/L*F}" x2="${o.b.x+dx/L*F}" y2="${o.b.y+dy/L*F}" stroke="${o.color||'#ffb86c'}" stroke-width="${sw(1.8)}" opacity=".88"/>`);}
             });
             // Vorschau während Zeichen
-            if(mapPending.length===1&&mapMouse){const sp=mapSnap(mapMouse)||mapMouse;if(mapTool==='compass')E.push(`<circle cx="${mapPending[0].x}" cy="${mapPending[0].y}" r="${mDist(mapPending[0],sp)}" fill="none" stroke="#34c3ff" stroke-width="${sw(1.4)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".55"/>`);else if(mapTool==='line')E.push(`<line x1="${mapPending[0].x}" y1="${mapPending[0].y}" x2="${sp.x}" y2="${sp.y}" stroke="#ffb86c" stroke-width="${sw(1.6)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".6"/>`);}
+            if(mapPending.length===1&&mapMouse){const sp=mapSnap(mapMouse)||mapMouse;if(mapTool==='compass')E.push(`<circle cx="${mapPending[0].x}" cy="${mapPending[0].y}" r="${mDist(mapPending[0],sp)}" fill="none" stroke="${mapColor}" stroke-width="${sw(1.4)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".55"/>`);else if(mapTool==='line')E.push(`<line x1="${mapPending[0].x}" y1="${mapPending[0].y}" x2="${sp.x}" y2="${sp.y}" stroke="${mapColor}" stroke-width="${sw(1.6)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".6"/>`);}
             // Gleicher-Radius-Vorschau
-            if(mapTool==='compass'&&mapRadiusMode==='same'&&mapLastRadius>1&&mapPending.length===0&&mapMouse){const sp=mapSnap(mapMouse)||mapMouse;E.push(`<circle cx="${sp.x}" cy="${sp.y}" r="${mapLastRadius}" fill="none" stroke="#34c3ff" stroke-width="${sw(1.4)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".5"/>`);E.push(`<circle cx="${sp.x}" cy="${sp.y}" r="${sw(3)}" fill="#34c3ff" opacity=".75"/>`);}
+            if(mapTool==='compass'&&mapRadiusMode==='same'&&mapLastRadius>1&&mapPending.length===0&&mapMouse){const sp=mapSnap(mapMouse)||mapMouse;E.push(`<circle cx="${sp.x}" cy="${sp.y}" r="${mapLastRadius}" fill="none" stroke="${mapColor}" stroke-width="${sw(1.4)}" stroke-dasharray="${sw(5)} ${sw(5)}" opacity=".5"/>`);E.push(`<circle cx="${sp.x}" cy="${sp.y}" r="${sw(3)}" fill="${mapColor}" opacity=".75"/>`);}
             // Schnittpunkte
             mapAux.forEach(p=>E.push(`<circle cx="${p.x}" cy="${p.y}" r="${sw(3.5)}" fill="#9aa6c0" opacity=".95"/>`));
             // Gesetzter erster Punkt
@@ -3154,6 +3190,12 @@
             const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.58, 0.05), frameMatVM); frameLeft.position.set(-0.48, 1.2, 0.59); vm.add(frameLeft);
             const frameRight = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.58, 0.05), frameMatVM); frameRight.position.set(0.48, 1.2, 0.59); vm.add(frameRight);
 
+            // Seitenverkleidung des Schaukastens (sonst sieht man die Dosen von der Seite offen)
+            const shLeft  = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.56, 0.20), bodyMat); shLeft.position.set(-0.485, 1.2, 0.5);  vm.add(shLeft);
+            const shRight = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.56, 0.20), bodyMat); shRight.position.set(0.465, 1.2, 0.5);  vm.add(shRight);
+            const shTop   = new THREE.Mesh(new THREE.BoxGeometry(1.00, 0.05, 0.20), bodyMat); shTop.position.set(0, 1.975, 0.5);      vm.add(shTop);
+            const shBot   = new THREE.Mesh(new THREE.BoxGeometry(1.00, 0.05, 0.20), bodyMat); shBot.position.set(0, 0.425, 0.5);       vm.add(shBot);
+
             // Bedienpanel rechts (Tasten + Münzschlitz + Ausgabe)
             const panel = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.4, 0.05), new THREE.MeshStandardMaterial({ color: 0x1c2738, roughness: 0.5 })); panel.position.set(0.52, 1.4, 0.42); vm.add(panel);
             for (let b = 0; b < 6; b++) {
@@ -3540,22 +3582,31 @@
             new THREE.Vector3(shopXCenter + 0,   0, shopZCenter + (-SHOP_SIZE/2+0.08)),
             new THREE.Vector3(shopXCenter + 2.6, 0, shopZCenter + (-SHOP_SIZE/2+0.08)),
         ];
+        // Preiszeile: Label links, Preis rechtsbündig (feste Spaltenbreite, Monospace)
+        const _P_W = 43;
+        function _priceLine(label, price){
+            const p = price.padStart(7);                 // z. B. " 9,00 €", "15,00 €"
+            let dots = _P_W - label.length - p.length - 2;
+            if (dots < 1) dots = 1;
+            return label + ' ' + '.'.repeat(dots) + ' ' + p;
+        }
         const priceListDoc = {
             title: "🛒 Preisliste – Museum-Shop",
+            _mono: true,
             content:
-"☕  Mathetasse (mit Mathe-Symbol & Goldrand)..  9,00 €\n\n" +
-"📚  Mathebücher\n" +
-"    • 'Zahlen fuer Abenteurer'  ........  15,00 €\n" +
-"    • 'Geometrie erleben'  ...........  13,00 €\n" +
-"    • 'Das grosse Einmaleins'  .........   8,00 €\n\n" +
-"🔷  Geometrische Modelle\n" +
-"    • Kugel (Holz, 8 cm)  .............   8,00 €\n" +
-"    • Pyramide (Metall)  ...............  16,00 €\n" +
-"    • Würfel (Kristallglas)  ...........  14,00 €\n" +
-"    • Ikosaeder (Holz, handbemalt)  ...  18,00 €\n" +
-"    • Oktaeder (Metall, poliert)  ......  12,00 €\n\n" +
-"🌍  Kleiner Globus  ....................  20,00 €\n\n" +
-"🎁  Geschenkset (Tasse + Buch)  ........  22,00 €\n\n" +
+_priceLine("Mathetasse (Symbol & Goldrand)", "9,00 €") + "\n\n" +
+"📚 Mathebücher\n" +
+_priceLine("   Zahlen für Abenteurer", "15,00 €") + "\n" +
+_priceLine("   Geometrie erleben", "13,00 €") + "\n" +
+_priceLine("   Das große Einmaleins", "8,00 €") + "\n\n" +
+"🔷 Geometrische Modelle\n" +
+_priceLine("   Kugel (Holz, 8 cm)", "8,00 €") + "\n" +
+_priceLine("   Pyramide (Metall)", "16,00 €") + "\n" +
+_priceLine("   Würfel (Kristallglas)", "14,00 €") + "\n" +
+_priceLine("   Ikosaeder (handbemalt)", "18,00 €") + "\n" +
+_priceLine("   Oktaeder (poliert)", "12,00 €") + "\n\n" +
+_priceLine("Kleiner Globus", "20,00 €") + "\n" +
+_priceLine("Geschenkset (Tasse + Buch)", "22,00 €") + "\n\n" +
 "Alle Preise inkl. MwSt."
         };
         let activeShelfNearMe = false;
@@ -3798,6 +3849,15 @@
         const shopSign = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.5, 0.06), new THREE.MeshStandardMaterial({color:0x1a3a6e,roughness:0.3}));
         shopSign.position.set(1.5, 2.8, -SHOP_SIZE/2+0.1); shopGroup.add(shopSign);
         const shopSignStripe=new THREE.Mesh(new THREE.BoxGeometry(2.4,0.04,0.005),new THREE.MeshBasicMaterial({color:0xffd32a})); shopSignStripe.position.set(1.5,2.57,-SHOP_SIZE/2+0.135); shopGroup.add(shopSignStripe);
+        // Beschriftung "Mathe Souvenirs" auf dem Wandschild
+        (function(){
+            const cv=document.createElement('canvas'); cv.width=832; cv.height=170; const x=cv.getContext('2d');
+            x.fillStyle='#ffd32a'; x.font='bold 96px Georgia, serif'; x.textAlign='center'; x.textBaseline='middle';
+            x.fillText('Mathe Souvenirs', cv.width/2, cv.height/2+4);
+            const tex=new THREE.CanvasTexture(cv);
+            const txt=new THREE.Mesh(new THREE.PlaneGeometry(2.25, 0.46), new THREE.MeshBasicMaterial({map:tex, transparent:true}));
+            txt.position.set(1.5, 2.83, -SHOP_SIZE/2+0.132); shopGroup.add(txt);
+        })();
 
         // SPIELEAUTOMAT (größer & detaillierter, klassische Arcade-Bauform)
         const arcadeCabinet = new THREE.Group(); arcadeCabinet.position.set(-SHOP_SIZE/2 + 0.7, 0, SHOP_SIZE/2 - 1.6); arcadeCabinet.rotation.y = Math.PI / 2;
@@ -3983,7 +4043,7 @@
                     card1.classList.remove('revealed'); card1.innerText = '';
                     card2.classList.remove('revealed'); card2.innerText = '';
                     selectedCards = []; lockBoard = false;
-                }, 1000); 
+                }, 1400);
             }
         }
 
@@ -4845,7 +4905,7 @@ loadRound();
         function waageComputeTarget(){
             const X=WAAGE_ROUNDS[waageRoundIdx].x;
             const diff=(waageState.bagsR*X+waageState.cubesR)-(waageState.bagsL*X+waageState.cubesL);
-            waageBeamTarget=Math.max(-0.26, Math.min(0.26, diff*0.05));
+            waageBeamTarget=Math.max(-0.26, Math.min(0.26, -diff*0.05)); // schwerere Seite kippt nach unten
         }
         function waageTerm(bags,cubes){ const p=[]; if(bags>0)p.push(bags===1?'x':bags+'x'); if(cubes>0||bags===0)p.push(''+cubes); return p.join(' + '); }
         function waageUpdateHUD(){
@@ -4861,7 +4921,7 @@ loadRound();
             if(iso.ok && diff===0){ solveBtn.style.display='inline-block'; solveBtn.textContent='✓ x = '+iso.x+' bestätigen'; }
             else solveBtn.style.display='none';
         }
-        function waageFeedback(cls,msg){ const f=document.getElementById('wh-feedback'); f.className='wh-feedback'+(cls?' '+cls:''); f.textContent=msg; }
+        function waageFeedback(){ /* Meldung deaktiviert — der Zustand ist an Gleichung & Gleichgewichts-Status ablesbar */ }
         function waageIsolatedValue(){
             const s=waageState;
             if(s.bagsL===1 && s.cubesL===0 && s.bagsR===0) return {ok:true, x:s.cubesR};
@@ -4985,6 +5045,7 @@ loadRound();
 
         function spiegelTargetCells(idx){
             const r=SPIEGEL_ROUNDS[idx], set=new Set();
+            if(!r) return set; // Schutz gegen Index außerhalb (z. B. nach der letzten Runde)
             r.given.forEach(([rr,cc])=> set.add(r.type==='achse' ? rr+','+(SPIEGEL_COLS-1-cc) : (SPIEGEL_ROWS-1-rr)+','+(SPIEGEL_COLS-1-cc)) );
             return set;
         }
@@ -5071,6 +5132,7 @@ loadRound();
         }
         function spiegelClear(){ spiegelStudentCells.clear(); spiegelRenderGrid(); }
         function spiegelCheck(){
+            if(spiegelSolved || !SPIEGEL_ROUNDS[spiegelRoundIdx]) return; // schon fertig / kein weiteres Muster
             const target=spiegelTargetCells(spiegelRoundIdx); const fb=document.getElementById('spiegel-feedback');
             let ok = spiegelStudentCells.size===target.size; spiegelStudentCells.forEach(k=>{ if(!target.has(k)) ok=false; });
             if(ok){
@@ -5089,8 +5151,7 @@ loadRound();
                     spiegelStudentCells.clear(); setTimeout(spiegelRenderGrid, 700);
                 }
             } else {
-                const missing=[...target].filter(k=>!spiegelStudentCells.has(k)).length;
-                fb.className='sg-feedback err'; fb.textContent='❌ Noch nicht symmetrisch'+(missing?` — es fehlen ${missing} Feld(er)`:'')+'.'+(noteWrongTry('spiegel')?' '+BOOK_HINT:'');
+                fb.className='sg-feedback err'; fb.textContent='❌ Noch nicht symmetrisch.'+(noteWrongTry('spiegel')?' '+BOOK_HINT:'');
                 maybeEject('spiegel');
             }
         }
@@ -5342,7 +5403,7 @@ loadRound();
                 if (pieces === 0) {
                     faberContent = 'Der ältere Herr dreht sich zu Ihnen um und seufzt tief.\n\n„Ah, Sie bemerken es also auch... dieser leere Rahmen dort.\n\nDas Prunkstück unserer Ausstellung. Das Gemälde ›Harmonie der Mathematik‹ ist verschwunden. Spurlos. Es war das wertvollste Stück des ganzen Museums.\n\nDer Künstler soll darin die verborgene Schönheit der Mathematik eingefangen haben. Kreise, Geraden, Proportionen, Gleichungen, alles in perfekter Harmonie.\n\nMan munkelt, ein Saboteur habe es in einzelne Stücke zerlegt und überall im Museum versteckt, hinter den mathematischen Rätseln der Ausstellung.\n\nBitte, helfen Sie mir: Lösen Sie die Rätsel, finden Sie die Gemäldestücke und bringen Sie mir unser Prunkstück zurück!"';
                 } else if (pieces < TOTAL_PIECES) {
-                    faberContent = 'Dr. Faber blickt auf die Gemäldestücke in Ihrem Rucksack, seine Augen leuchten.\n\n„Ausgezeichnet! Sie haben bereits ' + pieces + ' von ' + TOTAL_PIECES + ' Teilen der ›Harmonie der Mathematik‹ gefunden!\n\nJedes Stück steckte hinter einem der mathematischen Rätsel. Suchen Sie weiter — ' + (TOTAL_PIECES - pieces) + ' Teil' + (TOTAL_PIECES - pieces === 1 ? '' : 'e') + ' fehlen noch irgendwo im Museum.\n\nWir kommen der Sache näher, ich spüre es!"';
+                    faberContent = 'Dr. Faber blickt auf die Gemäldestücke in Ihrem Rucksack, seine Augen leuchten.\n\n„Ausgezeichnet! Sie haben bereits ' + pieces + ' von ' + TOTAL_PIECES + ' Teilen der ›Harmonie der Mathematik‹ gefunden!\n\nJedes Stück steckte hinter einem der mathematischen Rätsel. Suchen Sie weiter — ' + (TOTAL_PIECES - pieces) + ' Teil' + (TOTAL_PIECES - pieces === 1 ? ' fehlt' : 'e fehlen') + ' noch irgendwo im Museum.\n\nWir kommen der Sache näher, ich spüre es!"';
                 } else if (finalTestPassed) {
                     faberContent = 'Dr. Faber betrachtet zufrieden das wiederhergestellte Gemälde an der Wand.\n\n„Da hängt es wieder, die echte ›Harmonie der Mathematik‹. Nochmals: von ganzem Herzen vielen Dank!\n\nIhre benötigte Zeit: ' + _elapsedStr() + '."';
                 } else {
@@ -5640,14 +5701,14 @@ loadRound();
             activeCuratorNearMe = playerPos2D.distanceTo(curatorWorldPos) < 2.2;
 
             // Regal-Proximity (Shop)
-            activeShelfNearMe = shopShelfPositions.some(p => playerPos2D.distanceTo(p) < 2.2);
+            activeShelfNearMe = (playerGroup.position.z > shopZCenter - SHOP_SIZE/2 + 0.1) && shopShelfPositions.some(p => playerPos2D.distanceTo(p) < 2.2);
             // Bücherregal-Proximity (Büro)
             activeBookshelfNearMe = officeShelfPositions.some(p => playerPos2D.distanceTo(p) < 2.2);
             // Empfangs-NPC Proximity
             receptionNPC.getWorldPosition(receptionWorldPos); receptionWorldPos.y=0;
             activeReceptionNearMe = playerPos2D.distanceTo(receptionWorldPos) < 2.2;
             guardNPCMain.getWorldPosition(guardWorldPos); guardWorldPos.y=0;
-            activeGuardNearMe = playerPos2D.distanceTo(guardWorldPos) < 2.2;
+            activeGuardNearMe = (playerGroup.position.x > -LOBBY_SIZE/2 + 0.1 && playerGroup.position.z > ROOM_SIZE/2 + 0.1) && playerPos2D.distanceTo(guardWorldPos) < 2.2;
 
             // Landkarten-Proximity
             mapMesh.getWorldPosition(mapWorldPos); mapWorldPos.y = 0;
