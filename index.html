@@ -2227,6 +2227,29 @@
         // Checkpoints, die für den "Abschluss" nötig sind — hier später einfach anpassen:
         const REQUIRED_CHECKPOINTS = ['Sophia-Preis', 'Schatzkarte', 'Bilderwand', 'Memory', 'Tresor', 'Lichtlabor', 'Gleichungswaage', 'Symmetrie', 'Abschlusstest'];
 
+        // ── Die 8 Rätsel-Stationen (ohne Abschlusstest) — für die Fortschritts-Spalte im Sheet ──
+        const STATIONS = ['Sophia-Preis', 'Schatzkarte', 'Bilderwand', 'Memory', 'Tresor', 'Lichtlabor', 'Gleichungswaage', 'Symmetrie'];
+        function _stationsStr() {
+            const done = STATIONS.filter(s => loggedCheckpoints.has(s));
+            return done.length + '/' + STATIONS.length + (done.length ? ': ' + done.join(', ') : '');
+        }
+        // ── Exakte Antworten lesbar aufbereiten: tatsächlich gewählter Antworttext + ✓/✗ ──
+        // Anmeldung speichert Buchstaben ('C') bzw. Freitext, der Abschlusstest Indizes (2) bzw. Freitext.
+        function _answerText(q, given) {
+            if (given === undefined || given === null || given === '') return '(keine)';
+            if (q.free) return String(given);
+            const idx = (typeof given === 'string') ? given.charCodeAt(0) - 65 : given;
+            return (q.opts && q.opts[idx] !== undefined) ? q.opts[idx] : String(given);
+        }
+        // Eine Zelle je Frage: exakter Antworttext + ✓/✗  → eigene Spalten im Sheet
+        function _answersArray(questions, given, isCorrectFn) {
+            return questions.map((q, i) => _answerText(q, given[i]) + ' ' + (isCorrectFn(q, given[i]) ? '✓' : '✗'));
+        }
+        function _answersSummary(questions, given, isCorrectFn) {
+            const richtig = questions.reduce((n, q, i) => n + (isCorrectFn(q, given[i]) ? 1 : 0), 0);
+            return richtig + '/' + questions.length + ' richtig';
+        }
+
         function _elapsedStr() {
             const s = Math.floor(_effElapsedMs() / 1000);
             const m = Math.floor(s / 60);
@@ -2251,7 +2274,7 @@
             }));
         }
 
-        function logEvent(event, detail) {
+        function logEvent(event, detail, antworten) {
             if (!LOG_URL) return;
             const payload = {
                 ts: new Date().toISOString(),
@@ -2260,7 +2283,10 @@
                 klasse: visitorClass,
                 event: event,
                 detail: detail || '',
-                spielzeit: _elapsedStr()
+                spielzeit: _elapsedStr(),
+                stationen: _stationsStr(),
+                stationenDone: STATIONS.filter(s => loggedCheckpoints.has(s)), // je Station eine Spalte im Sheet
+                antworten: antworten || []   // je Frage eine eigene Spalte im Sheet
             };
             _sendPayload(payload).then(_flushLogBuffer).catch(() => {
                 // Offline-Fallback: puffern und beim nächsten Event nachsenden
@@ -2449,9 +2475,10 @@
             if(quizCurrentQ>=receptionQuestions.length){
                 closeQuiz();
                 hasTicket=true;
-                // Anmeldung loggen: gewählte Antworten + wie viele davon richtig waren
-                const richtig=receptionQuestions.reduce((n,q,i)=>n+(quizAnswerCorrect(q,quizGivenAnswers[i])?1:0),0);
-                logEvent('Anmeldung', 'Antworten: '+quizGivenAnswers.join(', ')+' ('+richtig+'/'+receptionQuestions.length+' richtig)');
+                // Anmeldung loggen: Zusammenfassung + exakte Antworten in eigenen Spalten
+                logEvent('Anmeldung',
+                    _answersSummary(receptionQuestions, quizGivenAnswers, quizAnswerCorrect),
+                    _answersArray(receptionQuestions, quizGivenAnswers, quizAnswerCorrect));
                 setTimeout(saveGame, 200); // Ticket + Inventar direkt sichern
                 playerInventory.push({name:'Eintrittsticket',icon:'🎟️',isReadable:true,content:'Ein offizielles Eintrittsticket des Mathe-Museums.\n\nAusgestellt an der Anmeldung.\nGilt für alle Ausstellungsräume und den Shop.'});
                 setTimeout(()=>openDocument({title:'🎟️ Eintrittsticket erhalten!',content:'Frau Berger lächelt Sie an:\n\n„Herzlich willkommen im Mathe-Museum! Hier ist Ihr Eintrittsticket — damit können Sie nun alle Ausstellungsräume und den Shop besuchen.\n\nViel Spaß beim Entdecken!"'}),80);
@@ -3409,8 +3436,9 @@
             finalCurrentQ++;
             if(finalCurrentQ>=finalTestQuestions.length){
                 // Zum Protokoll (nicht sichtbar) — der Erfolg hängt NICHT von der Anzahl richtiger Antworten ab
-                const richtig=finalTestQuestions.reduce((n,q,i)=>n+(finalAnswerCorrect(q,finalGivenAnswers[i])?1:0),0);
-                logEvent('Abschlusstest', richtig+'/'+finalTestQuestions.length+' richtig (Gemälde immer aufgehängt)');
+                logEvent('Abschlusstest',
+                    _answersSummary(finalTestQuestions, finalGivenAnswers, finalAnswerCorrect),
+                    _answersArray(finalTestQuestions, finalGivenAnswers, finalAnswerCorrect));
                 closeFinalTest();
                 finalTestSuccess();
             } else renderFinalQuestion();
