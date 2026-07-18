@@ -749,7 +749,7 @@
           <span id="finaltest-progress"></span>
         </div>
         <div id="finaltest-body">
-          <div id="finaltest-intro">Dr. Faber: „Ein letzter Test, um sicherzugehen, dass dies kein gefälschtes Werk ist — beantworten Sie mir diese sechs Fragen."</div>
+          <div id="finaltest-intro">Dr. Faber: „Ein letzter Test, um sicherzugehen, dass dies kein gefälschtes Werk ist. Beantworten Sie mir diese sechs Fragen."</div>
           <div id="finaltest-question"></div>
           <img id="finaltest-gfx" class="q-gfx" alt="">
           <div id="finaltest-feedback"></div>
@@ -2204,7 +2204,7 @@
         const EJECT_TEXT = 'Die Station schaltet sich kurz ab und wirft dich hinaus.\n\n'
             + 'Du hast es jetzt sehr oft mit verschiedenen Antworten probiert. Weiterraten bringt dich hier nicht ans Ziel.\n\n'
             + 'Geh in die Lobby zum Bücherregal und lies den Stoff zu dieser Aufgabe in Ruhe nach. '
-            + 'Überlege dir dann einen Rechenweg — und komm erst zurück, wenn du weißt, wie du auf die Lösung kommst.';
+            + 'Überlege dir dann einen Rechenweg und komm erst zurück, wenn du weißt, wie du auf die Lösung kommst.';
         function maybeEject(station){
             const n = wrongTries[station] || 0;
             if(!(n > EJECT_AT && (n - EJECT_AT - 1) % 10 === 0)) return false;
@@ -2377,6 +2377,13 @@
         // Sicherheitsnetz: alle 15 s speichern (fängt Inventar-Änderungen etc. ab)
         setInterval(saveGame, 15000);
 
+        // Heartbeat: alle 60 s die aktuelle Gesamtzeit an die Übersicht schicken,
+        // damit die Spielzeit dort live mitläuft (auch zwischen den Rätseln).
+        // 'Ping' wird im Apps Script nur in die Übersicht geschrieben, nicht ins Log.
+        setInterval(function(){
+            if (hasTicket && visitorNames.length && !_timerStopped) logEvent('Ping', '');
+        }, 60000);
+
         function openQuiz(){
             isQuizOpen=true; quizCurrentQ=0; quizAnswered=false; quizGivenAnswers=[];
             document.getElementById('quiz-overlay').classList.add('open');
@@ -2408,7 +2415,7 @@
             // Alter Spielstand mit denselben Namen + Klasse? → wiederherstellen statt Quiz
             if (tryRestoreGame(names, visitorClass)) {
                 closeQuiz();
-                setTimeout(()=>openDocument({title:'🎟️ Willkommen zurück!',content:'Frau Berger erkennt Sie sofort:\n\n„Schön, dass Sie wieder da sind! Ihr Spielstand wurde wiederhergestellt — Ticket, Fundstücke und alle gelösten Rätsel sind noch da.\n\nViel Spaß beim Weiterspielen!"'}),80);
+                setTimeout(()=>openDocument({title:'🎟️ Willkommen zurück!',content:'Frau Berger erkennt Sie sofort:\n\n„Schön, dass Sie wieder da sind! Ihr Spielstand wurde wiederhergestellt. Ticket, Fundstücke und alle gelösten Rätsel sind noch da.\n\nViel Spaß beim Weiterspielen!"'}),80);
                 return;
             }
             document.getElementById('quiz-namestep').style.display='none';
@@ -2481,7 +2488,7 @@
                     _answersArray(receptionQuestions, quizGivenAnswers, quizAnswerCorrect));
                 setTimeout(saveGame, 200); // Ticket + Inventar direkt sichern
                 playerInventory.push({name:'Eintrittsticket',icon:'🎟️',isReadable:true,content:'Ein offizielles Eintrittsticket des Mathe-Museums.\n\nAusgestellt an der Anmeldung.\nGilt für alle Ausstellungsräume und den Shop.'});
-                setTimeout(()=>openDocument({title:'🎟️ Eintrittsticket erhalten!',content:'Frau Berger lächelt Sie an:\n\n„Herzlich willkommen im Mathe-Museum! Hier ist Ihr Eintrittsticket — damit können Sie nun alle Ausstellungsräume und den Shop besuchen.\n\nViel Spaß beim Entdecken!"'}),80);
+                setTimeout(()=>openDocument({title:'🎟️ Eintrittsticket erhalten!',content:'Frau Berger lächelt Sie an:\n\n„Herzlich willkommen im Mathe-Museum! Hier ist Ihr Eintrittsticket. Damit können Sie nun alle Ausstellungsräume und den Shop besuchen.\n\nViel Spaß beim Entdecken!"'}),80);
             } else { renderQuizQuestion(); }
         }
 
@@ -2491,7 +2498,7 @@
         function showTurnstileHint(){
             if(Date.now()<_guardHintCooldown)return;
             _guardHintCooldown=Date.now()+2500;
-            openDocument({title:'💂 Wachmann Konrad Stein',content:'Konrad Stein tritt vor Sie:\n\n„Halt! Hier kommen Sie ohne gültiges Eintrittsticket nicht weiter.\n\nBitte gehen Sie zur Anmeldung am Empfang — dort erhalten Sie Ihr Ticket für alle Ausstellungsräume und den Shop."'});
+            openDocument({title:'💂 Wachmann Konrad Stein',content:'Konrad Stein tritt vor Sie:\n\n„Halt! Hier kommen Sie ohne gültiges Eintrittsticket nicht weiter.\n\nBitte gehen Sie zur Anmeldung am Empfang. Dort erhalten Sie Ihr Ticket für alle Ausstellungsräume und den Shop."'});
         }
         // Kopf
         let activeReceptionNearMe=false;
@@ -2539,7 +2546,7 @@
             if(mDist(mapMarkedPoint,mapTreasure)<TOL){
                 mapSolved=true; mapRender();
                 logCheckpoint('Schatzkarte');
-                mapSetStatus('🏆','Richtig! Du hast den Schatzpunkt gefunden. Geh jetzt zu Kurator Dr. Albrecht und berichte ihm — er wartet auf dich!','ok');
+                mapSetStatus('🏆','Richtig! Du hast den Schatzpunkt gefunden. Geh jetzt zu Kurator Dr. Albrecht und berichte ihm. Er wartet auf dich!','ok');
                 return;
             }
             // 3) Falsch — ohne Erklärung, wie zu konstruieren ist
@@ -2860,7 +2867,7 @@
                 '<br><span class="tvar-a">● a</span> <span class="tvar-b">● b</span> <span class="tvar-c">● c</span>';
             document.getElementById('tresor-intro').textContent = tresorSolved
                 ? 'Dieser Wandtresor ist bereits geöffnet.'
-                : 'Ein schwerer Wandtresor. Auf der Tür steht ein Term — sein Wert ist der Zahlencode.';
+                : 'Ein schwerer Wandtresor. Auf der Tür steht ein Term. Sein Wert ist der Zahlencode.';
             const fb=document.getElementById('tresor-feedback');
             fb.className='tresor-feedback'; fb.textContent = tresorSolved ? '✅ Bereits geöffnet.' : '';
             const inp=document.getElementById('tresor-input');
@@ -2889,7 +2896,7 @@
                 logCheckpoint('Tresor');
                 saveGame();
                 setTimeout(()=>{ closeTresor(); openDocument({title:'🔓 Tresor geöffnet!',
-                    content:'Der Code stimmt — die schwere Tür schwingt auf.\n\nIm Inneren liegt ein Stück des verschwundenen Gemäldes „Harmonie der Mathematik". Du steckst es ein.'}); }, 900);
+                    content:'Der Code stimmt! Die schwere Tür schwingt auf.\n\nIm Inneren liegt ein Stück des verschwundenen Gemäldes „Harmonie der Mathematik". Du steckst es ein.'}); }, 900);
             } else {
                 fb.className='tresor-feedback err';
                 fb.textContent='❌ Falscher Code. Prüfe deine Zahlen und den Rechenweg.'+(noteWrongTry('tresor')?' '+BOOK_HINT:'');
@@ -3449,7 +3456,7 @@
             stopTimer();
             logCheckpoint('Abschlusstest');
             saveGame();
-            openDocument({title:'✅ Das Gemälde hängt wieder!', content:'Dr. Faber betrachtet die zusammengesetzten Stücke lange und nickt schließlich zufrieden.\n\n„Ja … das ist es. Ich bin überzeugt: Dies ist unser echtes Prunkstück.\n\n*Feierlich setzt er die Stücke in den großen Ehrenrahmen ein* …da hängt es wieder — ›Harmonie der Mathematik‹, in vollkommener mathematischer Harmonie!\n\nIhre Zeit wurde gestoppt bei '+_elapsedStr()+'. Sie haben das Mathe-Museum gerettet — von ganzem Herzen: Danke!"'});
+            openDocument({title:'✅ Das Gemälde hängt wieder!', content:'Dr. Faber betrachtet die zusammengesetzten Stücke lange und nickt schließlich zufrieden.\n\n„Ja … das ist es. Ich bin überzeugt: Dies ist unser echtes Prunkstück.\n\n*Feierlich setzt er die Stücke in den großen Ehrenrahmen ein* …da hängt es wieder ›Harmonie der Mathematik‹, in vollkommener mathematischer Harmonie!\n\nIhre Zeit wurde gestoppt bei '+_elapsedStr()+'. Sie haben das Mathe-Museum gerettet! Von ganzem Herzen: Danke!"'});
         }
 
         // --- 8. EINRICHTUNG MUSEUMSSHOP & AUTOMAT ---
@@ -3663,19 +3670,19 @@
         let activeNpcNearMe = false;
         let activeCuratorNearMe = false;
         let curatorRewardGiven = false;
-        const curatorDialogRiddle = { title: "💬 Kurator Dr. Albrecht", content: "Ah, ein Besucher! Kommen Sie näher...\n\nIch bin Dr. Albrecht — Kurator, Historiker, und seit einigen Wochen: Rätselsucher.\n\nAuf meinem Schreibtisch liegt eine uralte Seekarte. Sie zeigt Inseln, die seit Jahrhunderten niemand mehr bereist hat. Und doch flüstert sie mir etwas zu:\n\n»Insel Alpha, Kap Delta und Insel Gamma tragen ein unsichtbares Band — ein Kreis, der jeden von ihnen streift. Ziehe eine Linie von Insel Beta — dem westlichen Vorposten — hinüber zu Insel Epsilon im fernen Osten. Wo diese Linie den Kreis berührt — dort, wo Kap Theta am nächsten ruft — liegt das, was die alten Seefahrer hüteten.«\n\nIch selbst komme nicht dahinter. Mein Rücken erlaubt keine langen Konstruktionen mehr...\n\nWenn Sie das Rätsel lösen und mir den Punkt zeigen — ich verspreche Ihnen im Gegenzug ein Stück meiner Sammlung. Ein Fragment eines alten Gemäldes, das schon lange auf den richtigen Finder wartet.\n\nDie Karte liegt auf dem Schreibtisch. Trauen Sie sich!" };
-        const curatorDialogSolved = { title: "💬 Kurator Dr. Albrecht", content: "*Er schaut Sie mit leuchtenden Augen an*\n\nSie haben es wirklich gefunden! Nach all diesen Jahren...\n\nDer Schnittpunkt liegt auf dem Umkreis der drei Inseln — und von den zwei Stellen, wo die Gerade durch die beiden anderen Inseln ihn kreuzt, ist es jener, der dem nördlichen Kap am nächsten liegt. Genau wie die alten Seeleute es in der Karte verborgen haben.\n\nWie versprochen: Nehmen Sie dieses Gemäldestück! Es hat lange genug hier verstaubt.\n\n*(Er überreicht Ihnen ein vergilbtes Gemäldefragment.)*\n\nVielen Dank — Sie sind ein wahrer Mathematiker." };
-        const curatorDialogAfter  = { title: "💬 Kurator Dr. Albrecht", content: "Ah, da sind Sie wieder!\n\nDanke nochmals für Ihre Hilfe. Der Schatzpunkt war schon immer da — er wartete nur auf jemanden, der die richtigen Kreise zu ziehen weiß.\n\n*schmunzelt*\n\nPassen Sie gut auf das Gemäldestück auf." };
+        const curatorDialogRiddle = { title: "💬 Kurator Dr. Albrecht", content: "Ah, ein Besucher! Kommen Sie näher...\n\nIch bin Dr. Albrecht. Kurator, Historiker, und seit einigen Wochen: Rätselsucher.\n\nAuf meinem Schreibtisch liegt eine uralte Seekarte. Sie zeigt Inseln, die seit Jahrhunderten niemand mehr bereist hat. Und doch flüstert sie mir etwas zu:\n\n»Insel Alpha, Kap Delta und Insel Gamma tragen ein unsichtbares Band. Ein Kreis, der jeden von ihnen streift. Ziehe eine Linie von Insel Beta, dem westlichen Vorposten, hinüber zu Insel Epsilon im fernen Osten. Wo diese Linie den Kreis berührt, dort, wo Kap Theta am nächsten ruft, liegt das, was die alten Seefahrer hüteten.«\n\nIch selbst komme nicht dahinter. Mein Rücken erlaubt keine langen Konstruktionen mehr...\n\nWenn Sie das Rätsel lösen und mir den Punkt zeigen, ich verspreche Ihnen im Gegenzug ein Stück meiner Sammlung. Ein Fragment eines alten Gemäldes, das schon lange auf den richtigen Finder wartet.\n\nDie Karte liegt auf dem Schreibtisch. Trauen Sie sich!" };
+        const curatorDialogSolved = { title: "💬 Kurator Dr. Albrecht", content: "*Er schaut Sie mit leuchtenden Augen an*\n\nSie haben es wirklich gefunden! Nach all diesen Jahren...\n\nDer Schnittpunkt liegt auf dem Umkreis der drei Inseln und von den zwei Stellen, wo die Gerade durch die beiden anderen Inseln ihn kreuzt, ist es jener, der dem nördlichen Kap am nächsten liegt. Genau wie die alten Seeleute es in der Karte verborgen haben.\n\nWie versprochen: Nehmen Sie dieses Gemäldestück! Es hat lange genug hier verstaubt.\n\n*(Er überreicht Ihnen ein vergilbtes Gemäldefragment.)*\n\nVielen Dank! Sie sind ein wahrer Mathematiker." };
+        const curatorDialogAfter  = { title: "💬 Kurator Dr. Albrecht", content: "Ah, da sind Sie wieder!\n\nDanke nochmals für Ihre Hilfe. Der Schatzpunkt war schon immer da. Er wartete nur auf jemanden, der die richtigen Kreise zu ziehen weiß.\n\n*schmunzelt*\n\nPassen Sie gut auf das Gemäldestück auf." };
 
         const npcDialogs = [
-            { _sophia: true, title: "💬 Kassiererin Sophia", content: "Willkommen im Mathe-Museum-Shop!\n\nIch bin Sophia. Die Kasse ist leider kaputt und ich kann nicht mehr ausrechnen, wie viel man zahlen muss.\n\nEs kam eben aber eine Bestellung eines Kunden rein. Er möchte kaufen:\n  • 2x Pyramiden-Modell\n  • 1x Mathebuch 'Geometrie erleben'\n  • 3x Mathetasse\n\nDer ausgeschilderte Preis der Pyramide ist leider noch der um 20% reduzierte Preis — der Kunde hat aber online bestellt und muss daher den normalen Preis zahlen.\n\nAm Ende bekommt er noch 5% Rabatt auf seinen gesamten Einkauf.\n\nKannst du mir sagen, wie viel er am Ende zahlen muss?" },
+            { _sophia: true, title: "💬 Kassiererin Sophia", content: "Willkommen im Mathe-Museum-Shop!\n\nIch bin Sophia. Die Kasse ist leider kaputt und ich kann nicht mehr ausrechnen, wie viel man zahlen muss.\n\nEs kam eben aber eine Bestellung eines Kunden rein. Er möchte kaufen:\n  • 2x Pyramiden-Modell\n  • 1x Mathebuch 'Geometrie erleben'\n  • 3x Mathetasse\n\nDer ausgeschilderte Preis der Pyramide ist leider noch der um 20% reduzierte Preis Der Kunde hat aber online bestellt und muss daher den normalen Preis zahlen.\n\nAm Ende bekommt er noch 5% Rabatt auf seinen gesamten Einkauf.\n\nKannst du mir sagen, wie viel er am Ende zahlen muss?" },
         ];
         let npcDialogIndex = 0;
         // Nach gelöstem Rätsel stellt Sophia die Aufgabe nicht erneut, sondern bedankt sich.
         // (_sophia bleibt aus → keine Antwort-Buttons mehr)
         const sophiaThanksDialog = { title: "💬 Kassiererin Sophia", content:
             "Sophia strahlt dich an, als sie dich wiedersieht.\n\n" +
-            "„Da bist du ja wieder! Nochmal vielen Dank für deine Hilfe — der Kunde hat seine 76,00 € bezahlt.\n\n" +
+            "„Da bist du ja wieder! Nochmal vielen Dank für deine Hilfe! Der Kunde hat seine 76,00 € bezahlt.\n\n" +
             "Die Kasse ist zwar immer noch kaputt, aber jetzt weiß ich ja, wie man es ausrechnet.\n\n" +
             "Schau dich ruhig weiter im Shop um!\"" };
 
@@ -4106,6 +4113,22 @@
                 x.strokeStyle='#7fd1ff'; x.lineWidth=3; x.beginPath(); x.moveTo(20,cy); x.lineTo(S-20,cy); x.moveTo(cx,20); x.lineTo(cx,S-20); x.stroke();
                 x.strokeStyle='#ff6b81'; x.lineWidth=6; x.beginPath();
                 for(let px=0;px<=S;px+=6){ const xx=(px-cx)/70; const yy=cy - (xx*xx*46) + 120; if(px===0)x.moveTo(px,yy); else x.lineTo(px,yy); } x.stroke();
+            } else if(kind==='symmetrie'){
+                // Achsensymmetrischer Schmetterling mit senkrechter Spiegelachse
+                const wing=(mir)=>{ x.beginPath();
+                    x.moveTo(cx,cy);
+                    x.bezierCurveTo(cx+mir*30, cy-160, cx+mir*210, cy-140, cx+mir*150, cy-30);
+                    x.bezierCurveTo(cx+mir*230, cy+10, cx+mir*180, cy+150, cx+mir*70, cy+120);
+                    x.bezierCurveTo(cx+mir*40, cy+150, cx+mir*20, cy+120, cx, cy+40);
+                    x.closePath(); };
+                const grad=(mir)=>{ const g2=x.createLinearGradient(cx,0,cx+mir*220,0); g2.addColorStop(0,'#7fd1ff'); g2.addColorStop(1,'#b06bff'); return g2; };
+                [-1,1].forEach(mir=>{ wing(mir); x.fillStyle=grad(mir); x.fill(); x.strokeStyle='#0e1626'; x.lineWidth=3; x.stroke(); });
+                // Körper + Fühler
+                x.fillStyle='#2a1a3a'; x.beginPath(); x.ellipse(cx,cy+30,10,90,0,0,7); x.fill();
+                x.strokeStyle='#2a1a3a'; x.lineWidth=3;
+                [-1,1].forEach(mir=>{ x.beginPath(); x.moveTo(cx,cy-58); x.quadraticCurveTo(cx+mir*24,cy-110,cx+mir*44,cy-96); x.stroke(); });
+                // Spiegelachse
+                x.strokeStyle='#e5b93c'; x.lineWidth=3; x.setLineDash([12,9]); x.beginPath(); x.moveTo(cx,24); x.lineTo(cx,S-24); x.stroke(); x.setLineDash([]);
             } else { // magisches Quadrat
                 const nums=[[8,1,6],[3,5,7],[4,9,2]], t=138, ox=49, oy=49;
                 for(let r=0;r<3;r++)for(let c=0;c<3;c++){ x.fillStyle=`hsl(${nums[r][c]*40},60%,50%)`; x.fillRect(ox+c*t,oy+r*t,t-8,t-8); x.fillStyle='#fff'; x.font='bold 70px sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(nums[r][c], ox+c*t+t/2-4, oy+r*t+t/2-4); }
@@ -4246,14 +4269,14 @@
         makeWallPicture('graph',  'Die Parabel',      -11.85, 3,  7, Math.PI/2);
         // Frontwand (z=+12) → Blick nach -z, links & rechts des Lobby-Durchgangs
         makeWallPicture('dreieck','Sierpinski-Dreieck', -8, 3, 11.85, Math.PI,
-            'Man verbindet die Seitenmitten eines Dreiecks und nimmt das mittlere Dreieck heraus. Mit den drei übrigen Dreiecken macht man dasselbe — immer weiter.\n\nJeder noch so kleine Ausschnitt sieht aus wie das große Ganze.');
+            'Man verbindet die Seitenmitten eines Dreiecks und nimmt das mittlere Dreieck heraus. Mit den drei übrigen Dreiecken macht man dasselbe, immer weiter.\n\nJeder noch so kleine Ausschnitt sieht aus wie das große Ganze.');
         makeWallPicture('muster', 'Parkettierung',       8, 3, 11.85, Math.PI,
-            'Eine Parkettierung füllt die Fläche lückenlos und ohne Überlappung.\n\nMit lauter gleichen regelmäßigen Vielecken gelingt das nur mit Dreiecken, Vierecken und Sechsecken — deshalb bauen Bienen ihre Waben sechseckig.');
+            'Eine Parkettierung füllt die Fläche lückenlos und ohne Überlappung.\n\nMit lauter gleichen regelmäßigen Vielecken gelingt das nur mit Dreiecken, Vierecken und Sechsecken. Deshalb bauen Bienen ihre Waben sechseckig.');
         // Rechte Wand (x=+12) → Blick nach -x, neben der Bürotür
         makeWallPicture('magisch','Magisches Quadrat', 11.85, 3, -6, -Math.PI/2,
-            'In einem magischen Quadrat ergibt jede Zeile, jede Spalte und jede Diagonale dieselbe Summe.\n\nBeim 3×3-Quadrat mit den Zahlen 1 bis 9 ist diese Zahl immer 15 — und die 5 steht stets in der Mitte.');
-        makeWallPicture('kreis',  'Konzentrische Kreise', 11.85, 3, 6, -Math.PI/2,
-            'Konzentrische Kreise haben denselben Mittelpunkt, aber verschiedene Radien.\n\nMan sieht sie als Wellen im Wasser, in Jahresringen von Bäumen — und auf jeder Zielscheibe.');
+            'In einem magischen Quadrat ergibt jede Zeile, jede Spalte und jede Diagonale dieselbe Summe.\n\nBeim 3×3-Quadrat mit den Zahlen 1 bis 9 ist diese Zahl immer 15 und die 5 steht stets in der Mitte.');
+        makeWallPicture('symmetrie',  'Achsensymmetrie', 11.85, 3, 6, -Math.PI/2,
+            'Eine Figur ist achsensymmetrisch, wenn eine Spiegelachse sie in zwei deckungsgleiche Hälften teilt.\n\nKlappt man die Figur an der Achse, liegen beide Hälften genau aufeinander, wie bei den Flügeln dieses Schmetterlings.');
 
         // ── LICHTLABOR-KONSOLE (Winkel-Station, Code direkt eingebettet, iframe via srcdoc) ──
         let isLichtlaborOpen = false, activeLichtlaborNearMe = false, lichtlaborSolved = false;
@@ -4400,7 +4423,7 @@
       <h3>🎛️ Blende an Schiene B einstellen</h3>
       <div class="plaque" style="margin-bottom:10px">
         Stelle die Blende an Schiene B auf den gesuchten Winkel <b style="color:#00d4ff">φ</b>
-        ein (in der Grafik blau markiert) — dann läuft das Licht weiter zum Sensor.
+        ein (in der Grafik blau markiert) dann läuft das Licht weiter zum Sensor.
       </div>
       <div class="ctrl-row">
         <label class="angle-input">
@@ -4440,7 +4463,7 @@ const ROUNDS = [
 ];
 // In allen Runden derselbe Text — er nennt die Winkelart bewusst nicht.
 const STORY = '<b>Dr. Faber:</b> „Der Saboteur hat den Lichtstrahl umgelenkt, der einst das Gemälde beleuchtete. '
-            + 'Justiert die Blende an der zweiten Schiene. Die Schienen verlaufen exakt <b>parallel</b> — nutzt die Winkelbeziehungen!"';
+            + 'Justiert die Blende an der zweiten Schiene. Die Schienen verlaufen exakt <b>parallel</b>, nutzt die Winkelbeziehungen!"';
 
 // ── Szenen-Geometrie (feste Bildkoordinaten, Canvas 880×480) ──
 const CW=880, CH=480;
@@ -4679,7 +4702,7 @@ function onHit(){
 function onMiss(v,correct){
   const fb=document.getElementById('feedback');
   fb.className='feedback err';
-  let msg='❌ Der Strahl wird an der Blende blockiert — der Schlitz zeigt nicht in Strahlrichtung.';
+  let msg='❌ Der Strahl wird an der Blende blockiert, der Schlitz zeigt nicht in Strahlrichtung.';
   // Der Fehlversuch-Zähler liegt im Hauptspiel, damit er ein Schließen der Station übersteht.
   // Im eigenständigen Betrieb (ohne Museum) entfällt der Hinweis.
   try{
@@ -4700,7 +4723,7 @@ function finish(){
   const embedded = !!(window.parent && window.parent !== window);
   if(!embedded){
     document.getElementById('winText').innerHTML=
-      'Alle drei Schienen justiert — das <b>Gemäldefragment</b> löst sich aus dem Lichtstrahl!';
+      'Alle drei Schienen justiert. Das <b>Gemäldefragment</b> löst sich aus dem Lichtstrahl!';
     document.getElementById('winCode').textContent=code.split('').join(' ');
     document.getElementById('overlay').classList.add('open');
   }
@@ -4719,7 +4742,7 @@ loadRound();
         function openLichtlabor(){
             // Bereits gelöst → Aufgabe nicht erneut stellen, nur Rückmeldung geben
             if(lichtlaborSolved){
-                openDocument({title:'🔦 Lichtlabor', content:'Die Blenden sind an allen drei Schienen korrekt justiert — der Laserstrahl läuft wieder sauber bis zum Sensor, der grün leuchtet.\n\nHier ist alles repariert. Das Gemäldestück hast du bereits an dich genommen.'});
+                openDocument({title:'🔦 Lichtlabor', content:'Die Blenden sind an allen drei Schienen korrekt justiert. Der Laserstrahl läuft wieder sauber bis zum Sensor, der grün leuchtet.\n\nHier ist alles repariert. Das Gemäldestück hast du bereits an dich genommen.'});
                 return;
             }
             isLichtlaborOpen=true;
@@ -4739,13 +4762,13 @@ loadRound();
                 lichtlaborSolved=true;
                 if(!playerInventory.some(it=>it&&it.name==='Gemäldestück (Lichtlabor)')){
                     playerInventory.push({name:'Gemäldestück (Lichtlabor)', icon:'🖼️', isReadable:true,
-                        content:'Ein Stück des Gemäldes „Harmonie der Mathematik".\nIm Lichtlabor freigelegt — durch die richtige Justage der Spiegel an den parallelen Schienen.'});
+                        content:'Ein Stück des Gemäldes „Harmonie der Mathematik".\nIm Lichtlabor freigelegt durch die richtige Justage der Spiegel an den parallelen Schienen.'});
                 }
                 logCheckpoint('Lichtlabor');
                 saveGame();
             }
             setTimeout(()=>{ closeLichtlabor(); openDocument({title:'🔦 Lichtlabor gelöst!',
-                content:'Der Sensor leuchtet auf — im gebündelten Lichtstrahl erscheint ein weiteres Gemäldestück des verschwundenen Prunkstücks. Du nimmst es an dich.'}); }, 500);
+                content:'Der Sensor leuchtet auf. Im gebündelten Lichtstrahl erscheint ein weiteres Gemäldestück des verschwundenen Prunkstücks. Du nimmst es an dich.'}); }, 500);
         });
 
         // ── GLEICHUNGSWAAGE (3D-interaktiv: Äquivalenzumformung durch Antippen) ──
@@ -4862,7 +4885,7 @@ loadRound();
             if(kind==='cube'){ if((side==='L'?s.cubesL:s.cubesR)<=0) return; if(side==='L') s.cubesL--; else s.cubesR--; }
             else { if((side==='L'?s.bagsL:s.bagsR)<=0) return; if(side==='L') s.bagsL--; else s.bagsR--; }
             waageRefresh();
-            waageFeedback('warn','Nur auf der '+(side==='L'?'linken':'rechten')+' Seite entfernt — die Waage kippt! Tu dasselbe auf der anderen Seite, um das Gleichgewicht zu halten.');
+            waageFeedback('warn','Nur auf der '+(side==='L'?'linken':'rechten')+' Seite entfernt. Die Waage kippt! Tu dasselbe auf der anderen Seite, um das Gleichgewicht zu halten.');
         }
         function waageAct(op){
             const s=waageState;
@@ -4881,7 +4904,7 @@ loadRound();
             else if(op==='div'){ const k=Math.max(2,n); for(const sd of sides){ if(getC(sd)%k!==0 || getB(sd)%k!==0){ waageFeedback('warn','Auf der gewählten Seite geht ÷'+k+' nicht sauber auf.'); return; } } sides.forEach(sd=>{ setC(sd,getC(sd)/k); setB(sd,getB(sd)/k); }); }
             waageRefresh();
             const one = waageTarget!=='both';
-            waageFeedback(one?'warn':'ok', one?'Nur eine Seite verändert — achte auf das Gleichgewicht!':'Auf beiden Seiten gleich umgeformt.');
+            waageFeedback(one?'warn':'ok', one?'Nur eine Seite verändert. Achte auf das Gleichgewicht!':'Auf beiden Seiten gleich umgeformt.');
         }
         function waageOnCanvasClick(ev){
             if(!isWaageOpen) return;
@@ -4938,12 +4961,12 @@ loadRound();
                 waageSolved=true;
                 if(!playerInventory.some(it=>it&&it.name==='Gemäldestück (Gleichungswaage)')){
                     playerInventory.push({name:'Gemäldestück (Gleichungswaage)', icon:'🖼️', isReadable:true,
-                        content:'Ein Stück des Gemäldes „Harmonie der Mathematik".\nAn der Gleichungswaage freigelegt — durch geschicktes Umformen, bis x allein stand.'});
+                        content:'Ein Stück des Gemäldes „Harmonie der Mathematik".\nAn der Gleichungswaage freigelegt durch geschicktes Umformen, bis x allein stand.'});
                 }
                 logCheckpoint('Gleichungswaage'); saveGame();
             }
             openDocument({title:'⚖️ Gleichungswaage gelöst!',
-                content:'Die Waage steht im Gleichgewicht — im Zentrum erscheint ein weiteres Gemäldestück des verschwundenen Prunkstücks. Du nimmst es an dich.'});
+                content:'Die Waage steht im Gleichgewicht. Im Zentrum erscheint ein weiteres Gemäldestück des verschwundenen Prunkstücks. Du nimmst es an dich.'});
         }
         renderer.domElement.addEventListener('click', waageOnCanvasClick);
         // ── SPIEGELWAND (Symmetrie, an den echten Museums-Lichtschalter gekoppelt) ──
@@ -5021,12 +5044,12 @@ loadRound();
             const sub=document.getElementById('spiegel-title-sub');
             document.getElementById('spiegel-feedback').textContent='';
             if(spiegelSolved){
-                notice.style.display='block'; notice.textContent='✅ Die Spiegelwand ist vollständig — das Gemäldestück ist geborgen.';
+                notice.style.display='block'; notice.textContent='✅ Die Spiegelwand ist vollständig. Das Gemäldestück ist geborgen.';
                 grid.style.display='none'; controls.style.display='none'; sub.textContent=''; return;
             }
             if(!dark){
                 notice.style.display='block';
-                notice.innerHTML='💡 Es ist zu hell — das phosphoreszierende Muster bleibt unsichtbar.<br>Vielleicht findest du im Raum eine Möglichkeit, es <b>dunkler</b> zu machen … dann öffne die Wand erneut.';
+                notice.innerHTML='💡 Es ist zu hell. Das phosphoreszierende Muster bleibt unsichtbar.<br>Vielleicht findest du im Raum eine Möglichkeit, es <b>dunkler</b> zu machen … dann öffne die Wand erneut.';
                 grid.style.display='none'; controls.style.display='none'; sub.textContent=''; return;
             }
             notice.style.display='none'; grid.style.display='grid'; controls.style.display='flex';
@@ -5061,7 +5084,7 @@ loadRound();
                     }
                     logCheckpoint('Symmetrie'); saveGame(); drawSpiegel();
                     setTimeout(()=>{ closeSpiegel(); openDocument({title:'🔷 Spiegelwand vollendet!',
-                        content:'Alle Muster sind perfekt gespiegelt — im Licht erscheint ein weiteres Gemäldestück des verschwundenen Prunkstücks. Du nimmst es an dich.'}); }, 900);
+                        content:'Alle Muster sind perfekt gespiegelt. Im Licht erscheint ein weiteres Gemäldestück des verschwundenen Prunkstücks. Du nimmst es an dich.'}); }, 900);
                 } else {
                     spiegelStudentCells.clear(); setTimeout(spiegelRenderGrid, 700);
                 }
@@ -5309,7 +5332,7 @@ loadRound();
             }
             if (activeShelfNearMe) { openDocument(priceListDoc); return; }
             if (activeGuardNearMe) {
-                openDocument({title:'💂 Wachmann Konrad Stein', content:'Konrad Stein nickt Ihnen ernst zu:\n\n„Guten Tag. Mein Name ist Konrad Stein, ich bin der Wachmann hier.\n\nIch passe auf, dass niemand ohne gültiges Eintrittsticket das Museum oder den Shop betritt.\n\nIhr Ticket erhalten Sie am Empfang — meine Kollegin Frau Berger hilft Ihnen gerne weiter."'});
+                openDocument({title:'💂 Wachmann Konrad Stein', content:'Konrad Stein nickt Ihnen ernst zu:\n\n„Guten Tag. Mein Name ist Konrad Stein, ich bin der Wachmann hier.\n\nIch passe auf, dass niemand ohne gültiges Eintrittsticket das Museum oder den Shop betritt.\n\nIhr Ticket erhalten Sie am Empfang. Meine Kollegin Frau Berger hilft Ihnen gerne weiter."'});
                 return;
             }
             if (activeDirectorNearMe) {
@@ -5317,15 +5340,15 @@ loadRound();
                 const TOTAL_PIECES = 8;
                 let faberContent;
                 if (pieces === 0) {
-                    faberContent = 'Der ältere Herr dreht sich zu Ihnen um und seufzt tief.\n\n„Ah, Sie bemerken es also auch... dieser leere Rahmen dort.\n\nDas Prunkstück unserer Ausstellung — das Gemälde ›Harmonie der Mathematik‹ — ist verschwunden. Spurlos. Es war das wertvollste Stück des ganzen Museums.\n\nDer Künstler soll darin die verborgene Schönheit der Mathematik eingefangen haben — Kreise, Geraden, Proportionen, Gleichungen — alles in perfekter Harmonie.\n\nMan munkelt, ein Saboteur habe es in einzelne Stücke zerlegt und überall im Museum versteckt — hinter den mathematischen Rätseln der Ausstellung.\n\nBitte, helfen Sie mir: Lösen Sie die Rätsel, finden Sie die Gemäldestücke und bringen Sie mir unser Prunkstück zurück!"';
+                    faberContent = 'Der ältere Herr dreht sich zu Ihnen um und seufzt tief.\n\n„Ah, Sie bemerken es also auch... dieser leere Rahmen dort.\n\nDas Prunkstück unserer Ausstellung. Das Gemälde ›Harmonie der Mathematik‹ ist verschwunden. Spurlos. Es war das wertvollste Stück des ganzen Museums.\n\nDer Künstler soll darin die verborgene Schönheit der Mathematik eingefangen haben. Kreise, Geraden, Proportionen, Gleichungen, alles in perfekter Harmonie.\n\nMan munkelt, ein Saboteur habe es in einzelne Stücke zerlegt und überall im Museum versteckt, hinter den mathematischen Rätseln der Ausstellung.\n\nBitte, helfen Sie mir: Lösen Sie die Rätsel, finden Sie die Gemäldestücke und bringen Sie mir unser Prunkstück zurück!"';
                 } else if (pieces < TOTAL_PIECES) {
-                    faberContent = 'Dr. Faber blickt auf die Gemäldestücke in Ihrem Rucksack, seine Augen leuchten.\n\n„Ausgezeichnet! Sie haben bereits ' + pieces + ' von ' + TOTAL_PIECES + ' Teilen der ›Harmonie der Mathematik‹ gefunden!\n\nJedes Stück steckte hinter einem der mathematischen Rätsel. Suchen Sie weiter — ' + (TOTAL_PIECES - pieces) + ' Teil' + (TOTAL_PIECES - pieces === 1 ? '' : 'e') + ' fehlt noch irgendwo im Museum.\n\nWir kommen der Sache näher, ich spüre es!"';
+                    faberContent = 'Dr. Faber blickt auf die Gemäldestücke in Ihrem Rucksack, seine Augen leuchten.\n\n„Ausgezeichnet! Sie haben bereits ' + pieces + ' von ' + TOTAL_PIECES + ' Teilen der ›Harmonie der Mathematik‹ gefunden!\n\nJedes Stück steckte hinter einem der mathematischen Rätsel. Suchen Sie weiter — ' + (TOTAL_PIECES - pieces) + ' Teil' + (TOTAL_PIECES - pieces === 1 ? '' : 'e') + ' fehlen noch irgendwo im Museum.\n\nWir kommen der Sache näher, ich spüre es!"';
                 } else if (finalTestPassed) {
-                    faberContent = 'Dr. Faber betrachtet zufrieden das wiederhergestellte Gemälde an der Wand.\n\n„Da hängt es wieder — die echte ›Harmonie der Mathematik‹. Nochmals: von ganzem Herzen vielen Dank!\n\nIhre benötigte Zeit: ' + _elapsedStr() + '."';
+                    faberContent = 'Dr. Faber betrachtet zufrieden das wiederhergestellte Gemälde an der Wand.\n\n„Da hängt es wieder, die echte ›Harmonie der Mathematik‹. Nochmals: von ganzem Herzen vielen Dank!\n\nIhre benötigte Zeit: ' + _elapsedStr() + '."';
                 } else {
                     // Alle Stücke da, Echtheit aber noch nicht geprüft → Abschlusstest verlangen
                     finalTestPending = true;
-                    faberContent = 'Dr. Faber blickt auf die sieben Gemäldestücke in Ihren Händen — dann runzelt er besorgt die Stirn.\n\n„Unglaublich, Sie haben alle Teile gefunden! Und doch... eine Sorge lässt mir keine Ruhe: Was, wenn dies eine geschickte Fälschung ist?\n\nBevor ich das Prunkstück in den Ehrenrahmen einsetze, muss ich ganz sichergehen. Erlauben Sie mir eine kleine Echtheitsprüfung — fünf Fragen, so wie einst bei Ihrer Anmeldung. Bestehen Sie sie, setze ich das Gemälde ein.\n\n(Schließen Sie dieses Fenster — dann beginnt die Prüfung.)"';
+                    faberContent = 'Dr. Faber blickt auf die Gemäldestücke in Ihren Händen. Dann runzelt er besorgt die Stirn.\n\n„Unglaublich, Sie haben alle Teile gefunden! Und doch... eine Sorge lässt mir keine Ruhe: Was, wenn dies eine geschickte Fälschung ist?\n\nBevor ich das Prunkstück in den Ehrenrahmen einsetze, muss ich ganz sichergehen. Erlauben Sie mir eine kleine Echtheitsprüfung. Sechs Fragen, so wie einst bei Ihrer Anmeldung. Bestehen Sie sie, setze ich das Gemälde ein.\n\n(Schließen Sie dieses Fenster. Dann beginnt die Prüfung.)"';
                 }
                 openDocument({title:'💬 Dr. Heinrich Faber — Museumsleiter', content: faberContent});
                 return;
@@ -5334,7 +5357,7 @@ loadRound();
                 if (paintingRevealed) {
                     openDocument({title:'🖼️ Harmonie der Mathematik', content:'Das wiedergefundene Prunkstück hängt wieder in seinem prächtigen, vergoldeten Rahmen.\n\n*Messingtafel:* „Harmonie der Mathematik" — Unbekannter Meister, 18. Jh.\n\nKreise, Geraden, der Goldene Schnitt und berühmte Formeln fügen sich zu einem harmonischen Ganzen. Dank deiner gelösten Rätsel erstrahlt es wieder.'});
                 } else {
-                    openDocument({title:'🖼️ Leerer Bilderrahmen', content:'Ein prächtiger, vergoldeter Rahmen — doch die Leinwand dahinter ist leer.\n\n*Eine kleine Messingtafel am unteren Rand trägt die Aufschrift:*\n\n„Harmonie der Mathematik"\n— Unbekannter Meister, 18. Jh. —\n\nHier sollte das berühmte Gemälde „Harmonie der Mathematik" hängen.\nSammle alle Gemäldestücke aus den Rätseln und bring sie zu Dr. Faber.'});
+                    openDocument({title:'🖼️ Leerer Bilderrahmen', content:'Ein prächtiger, vergoldeter Rahmen. Doch die Leinwand dahinter ist leer.\n\n*Eine kleine Messingtafel am unteren Rand trägt die Aufschrift:*\n\n„Harmonie der Mathematik"\n— Unbekannter Meister, 18. Jh. —\n\nHier sollte das berühmte Gemälde „Harmonie der Mathematik" hängen.\nSammle alle Gemäldestücke aus den Rätseln und bring sie zu Dr. Faber.'});
                 }
                 return;
             }
@@ -5350,7 +5373,7 @@ loadRound();
                     playerInventory.push({ name: 'Zirkel', icon: ZIRKEL_ICON, isReadable: true, content: 'Ein präziser Zirkel aus dem Museumsshop.\nMit ihm lassen sich Kreise und Bögen exakt konstruieren.\nVielleicht ist er später bei einer Konstruktion nützlich.' });
                 }
                 saveGame();
-                openDocument({title:'🧭 Zirkel mitgenommen', content:'Auf dem Warentisch liegt ein hochwertiger Zirkel.\n\nDu steckst ihn ein — vielleicht ist er später für eine Konstruktion nützlich.\n\n(Gegenstand „Zirkel" erhalten.)'});
+                openDocument({title:'🧭 Zirkel mitgenommen', content:'Auf dem Warentisch liegt ein hochwertiger Zirkel.\n\nDu steckst ihn ein. Vielleicht ist er später für eine Konstruktion nützlich.\n\n(Gegenstand „Zirkel" erhalten.)'});
                 return;
             }
             if (activeReceptionNearMe) {
@@ -5419,7 +5442,7 @@ loadRound();
             if (!playerInventory.some(it => it && it.name === 'Gemäldestück (Bilderwand)')) {
                 playerInventory.push({ name: 'Gemäldestück (Bilderwand)', icon: '🖼️', isReadable: true, content: 'Ein Stück des Gemäldes „Harmonie der Mathematik".\nHinter dem mittleren Saal-Diagramm zum Vorschein gekommen, als die Bilderwand richtig geordnet war.' });
             }
-            setTimeout(() => openDocument({ title: '🖼️ Bilderwand gelöst!', content: 'Die Diagramme hängen wieder in der richtigen Reihenfolge — die Wand summt zufrieden.\n\nHinter einem der Rahmen löst sich ein verstecktes Gemäldestück!\n\n(Gemäldestück erhalten — bring alle Stücke zu Dr. Faber.)' }), 150);
+            setTimeout(() => openDocument({ title: '🖼️ Bilderwand gelöst!', content: 'Die Diagramme hängen wieder in der richtigen Reihenfolge. Die Wand summt zufrieden.\n\nHinter einem der Rahmen löst sich ein verstecktes Gemäldestück!\n\n(Gemäldestück erhalten. Bring alle Stücke zu Dr. Faber.)' }), 150);
         }
         function restartGame() {
             isGameWon = false; playerInventory.length = 0; hasWonTicketBefore = false; const mixed = [4, 1, 5, 2, 3]; exhibits.forEach((ex, i) => { ex.currentNumber = mixed[i]; updateExhibitVisual(ex); });
