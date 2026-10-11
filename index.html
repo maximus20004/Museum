@@ -2360,7 +2360,13 @@
                     hasWonTicketBefore: hasWonTicketBefore,
                     isGameWon: isGameWon,
                     exhibits: exhibits.map(ex => ex.currentNumber),
-                    inventory: playerInventory.map(it => ({ name: it.name, icon: it.icon, isReadable: it.isReadable, content: it.content })),
+                    // Ein aus der Bilderwand entnommenes Bild liegt im Inventar als reine Zahl (currentNumber) vor,
+                    // nicht als Objekt {name, icon, ...} wie alle anderen Gegenstände (vgl. Zeile ~5485/5495).
+                    // Früher wurde hier jedes Element blind in ein Objekt gemappt, wodurch eine Zahl zu
+                    // {name:undefined, icon:undefined, ...} wurde — die Bild-ID ging beim Speichern verloren.
+                    // Nach einem Relog erschien der Gegenstand dann ohne Icon/Name und ließ sich nicht mehr
+                    // an der Bilderwand platzieren. Zahlen deshalb unverändert durchreichen:
+                    inventory: playerInventory.map(it => typeof it === 'number' ? it : ({ name: it.name, icon: it.icon, isReadable: it.isReadable, content: it.content })),
                     elapsedMs: _effElapsedMs(),
                     savedAt: Date.now()
                 }));
